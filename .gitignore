@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# Data artifacts (raw pulls can be large; commit derived/curated sets deliberately)
+data/raw/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Models
+*.joblib
+*.pkl
