@@ -12,7 +12,7 @@ Two layers do different jobs:
 - **Prediction models (classical ML):** linear regression for stat lines, XGBoost for win probability. Fed clean engineered features, exposed as callable tools.
 - **Analyst agent (LLM):** decides what data to retrieve for a specific matchup (injuries, head-to-head, fatigue splits), invokes the models, and writes the reasoning.
 
-All data lives in a date-gated store: every query carries an as-of date and only returns records from before it. That lets the evaluation harness replay the completed 2025-26 season game by game with zero leakage, run data-source ablations, and compare LLM-direct vs. classifier vs. hybrid prediction.
+All data lives in a date-gated store: every query carries an as-of date and only returns records from before it. That lets the evaluation harness replay the 2025-26 games that postdate the local eval model's knowledge cutoff with zero leakage, run data-source ablations, and compare LLM-direct vs. classifier vs. hybrid prediction.
 
 Full plan: see the Proposal Development Plan (linked in the course submission).
 
