@@ -20,15 +20,39 @@ Full plan: see the Proposal Development Plan (linked in the course submission).
 
 | Folder | What goes here | Owner |
 |---|---|---|
-| `data/` | Source integrations, cleaning pipeline, feature engineering, date-gated store | Patrick |
+| `data/` | Source integrations, cleaning pipeline, feature engineering, date-gated store | Patrick + Kirtan |
 | `models/` | Regression + XGBoost training, statistical summarization study | Sarvvesh |
 | `agent/` | Tool-use loop, agent actions, model-invocation interface | Josh |
-| `eval/` | Replay harness, metrics, ablation runner | Kirtan |
-| `ui/` | Streamlit app | Josh + Kirtan |
+| `eval/` | Replay harness, metrics, ablation runner | Kirtan (with Patrick on store design) |
+| `ui/` | Streamlit app | Josh + Kirtan (weeks 6-7) |
+| `docs/` | Shared contracts and notes | team |
+
+Roles locked after the 2026-07-07 PDP review with Prof. Sadovnik. Architecture spine: **date-gated retrieval** (every query has an as-of date; no future leakage). Agent builds in parallel on mock / partial data so Josh is not blocked waiting on the full data layer.
+
+Shared tool shapes: see [`docs/tool-contracts.md`](docs/tool-contracts.md).
+
+## Quick start (agent scaffold, Week 1)
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# No API key needed: exercises tools + prints a sample report
+python -m agent.run --dry-run
+
+# Full LangChain agent loop (needs personal Anthropic credits)
+cp .env.example .env   # then set ANTHROPIC_API_KEY
+python -m agent.run --matchup LAL-BOS-2026-01-15 --as-of 2026-01-14
+```
+
+Build mode uses Anthropic (personal credits) for fast iteration. Replay / production runs will use a local Ollama model with a known knowledge cutoff so we do not leak future results.
+
+Mock matchup lives in `data/mock/`. Tool signatures already take an `as_of_date` so Patrick/Kirtan's date-gated retrieval can drop in later without rewriting the agent.
 
 ## Working agreements
 
-- Python 3.11+. Dependencies in `requirements.txt` (coming with the first code).
+- Python 3.11+. Dependencies in `requirements.txt`.
 - Feature branches + pull requests. No direct pushes to `main` once code lands.
 - Never commit API keys. Copy `.env.example` to `.env` locally (gitignored).
 - AI-assisted code is fine per course policy, but you own and can explain every line you merge.

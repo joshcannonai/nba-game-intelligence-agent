@@ -1,0 +1,75 @@
+{
+	"matchup_id": "LAL-BOS-2026-01-15",
+	"game_date": "2026-01-15",
+	"home_team": {
+		"abbr": "BOS",
+		"name": "Boston Celtics",
+		"record": "28-12",
+		"off_rating": 118.4,
+		"def_rating": 109.1,
+		"pace": 98.2
+	},
+	"away_team": {
+		"abbr": "LAL",
+		"name": "Los Angeles Lakers",
+		"record": "24-16",
+		"off_rating": 114.7,
+		"def_rating": 112.3,
+		"pace": 100.1
+	},
+	"rest": {
+		"home_days_rest": 2,
+		"away_days_rest": 0,
+		"away_back_to_back": true
+	},
+	"key_players": [
+		{
+			"team": "BOS",
+			"name": "Jayson Tatum",
+			"pts_avg": 27.1,
+			"reb_avg": 8.2,
+			"ast_avg": 5.4,
+			"b2b_pts_avg": 24.0
+		},
+		{
+			"team": "BOS",
+			"name": "Jaylen Brown",
+			"pts_avg": 23.4,
+			"reb_avg": 5.8,
+			"ast_avg": 4.1,
+			"b2b_pts_avg": 21.2
+		},
+		{
+			"team": "LAL",
+			"name": "LeBron James",
+			"pts_avg": 24.2,
+			"reb_avg": 7.5,
+			"ast_avg": 8.1,
+			"b2b_pts_avg": 20.8
+		},
+		{
+			"team": "LAL",
+			"name": "Anthony Davis",
+			"pts_avg": 25.6,
+			"reb_avg": 11.9,
+			"ast_avg": 3.4,
+			"b2b_pts_avg": 22.1
+		}
+	],
+	"injuries": [
+		{
+			"team": "LAL",
+			"player": "Austin Reaves",
+			"status": "Questionable",
+			"note": "Ankle soreness",
+			"published": "2026-01-14"
+		}
+	],
+	"h2h_last_5": [
+		{ "date": "2025-12-08", "winner": "BOS", "score": "121-108" },
+		{ "date": "2025-11-02", "winner": "LAL", "score": "117-114" },
+		{ "date": "2025-03-08", "winner": "BOS", "score": "122-115" },
+		{ "date": "2025-01-28", "winner": "BOS", "score": "110-101" },
+		{ "date": "2024-12-25", "winner": "LAL", "score": "126-120" }
+	]
+}
