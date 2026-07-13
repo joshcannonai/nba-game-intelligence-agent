@@ -1,108 +1,111 @@
-"""Tool stubs the agent calls. Real date-gated retrieval and models plug in later."""
+"""Tools the agent calls. Data comes from a Source (mock or real).
+
+Signatures are the contract with the rest of the team (docs/tool-contracts.md)
+and do not change when the underlying source does -- that is the whole point:
+Kirtan/Patrick can swap what is behind retrieve_*, and the agent never notices.
+"""
 
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 from langchain_core.tools import tool
 
-MOCK_DIR = Path(__file__).resolve().parents[1] / "data" / "mock"
-DEFAULT_MATCHUP = MOCK_DIR / "matchup_lal_bos.json"
+from agent.sources import get_source
 
 
-def _load_matchup(matchup_id: str | None = None) -> dict:
-    path = DEFAULT_MATCHUP
-    if matchup_id:
-        candidate = MOCK_DIR / f"matchup_{matchup_id.lower().replace('-', '_')}.json"
-        if candidate.exists():
-            path = candidate
-    with path.open() as f:
-        return json.load(f)
+def build_tools(source):
+    """Bind a source (mock or real) into the tool set the agent gets."""
+
+    @tool
+    def retrieve_matchup_context(matchup_id: str, as_of_date: str) -> str:
+        """Return team ratings, rest, injuries, and H2H for a matchup as of a date.
+
+        Only records published on or before as_of_date are returned. Fields that
+        cannot be computed from available data come back null with a reason --
+        treat those as unknown, never as zero.
+
+        Args:
+            matchup_id: AWAY-HOME-YYYY-MM-DD, e.g. LAL-BOS-2026-01-15
+            as_of_date: ISO date (YYYY-MM-DD). Nothing after this date is read.
+        """
+        return json.dumps(source.matchup_context(matchup_id, as_of_date), indent=2)
+
+    @tool
+    def retrieve_player_splits(player_name: str, back_to_back: bool = False) -> str:
+        """Return a player's season averages, optionally their back-to-back split.
+
+        Args:
+            player_name: Full player name.
+            back_to_back: If true, include the fatigue split when the source has one.
+        """
+        return json.dumps(source.player_splits(player_name, back_to_back), indent=2)
+
+    @tool
+    def predict_win_probability(home_abbr: str, away_abbr: str, as_of_date: str) -> str:
+        """Stub win-probability model. Later this wraps Sarvvesh's XGBoost tool.
+
+        Args:
+            home_abbr: Home team abbreviation.
+            away_abbr: Away team abbreviation.
+            as_of_date: ISO date for the prediction.
+        """
+        return json.dumps(
+            _stub_win_probability(source, home_abbr, away_abbr, as_of_date), indent=2
+        )
+
+    return [retrieve_matchup_context, retrieve_player_splits, predict_win_probability]
 
 
-@tool
-def retrieve_matchup_context(matchup_id: str, as_of_date: str) -> str:
-    """Return team ratings, rest, injuries, and H2H for a matchup as of a date.
+def _stub_win_probability(
+    source, home_abbr: str, away_abbr: str, as_of_date: str
+) -> dict:
+    """Net-rating + rest heuristic. Placeholder until the XGBoost tool lands.
 
-    Args:
-        matchup_id: e.g. LAL-BOS-2026-01-15
-        as_of_date: ISO date (YYYY-MM-DD). Mock store ignores gating for now
-            but the signature matches the real retrieve_*(as_of) contract.
+    Reads ratings through the same source the agent uses, so it inherits the
+    same date gating.
     """
-    data = _load_matchup(matchup_id)
-    # Keep the as_of_date in the payload so the agent (and later harness) see it.
-    payload = {
-        "as_of_date": as_of_date,
-        "matchup_id": data["matchup_id"],
-        "game_date": data["game_date"],
-        "home_team": data["home_team"],
-        "away_team": data["away_team"],
-        "rest": data["rest"],
-        "injuries": [inj for inj in data["injuries"] if inj["published"] <= as_of_date],
-        "h2h_last_5": [g for g in data["h2h_last_5"] if g["date"] <= as_of_date],
-    }
-    return json.dumps(payload, indent=2)
+    from agent.sources import season_end_year, parse_date, team_ratings
+    from agent.teams import normalize_abbr
 
+    home_abbr, away_abbr = normalize_abbr(home_abbr), normalize_abbr(away_abbr)
 
-@tool
-def retrieve_player_splits(player_name: str, back_to_back: bool = False) -> str:
-    """Return season averages, optionally the player's back-to-back scoring split.
-
-    Args:
-        player_name: Full player name as it appears in the mock roster.
-        back_to_back: If true, include b2b_pts_avg (fatigue context).
-    """
-    data = _load_matchup()
-    for p in data["key_players"]:
-        if p["name"].lower() == player_name.lower():
-            out = {
-                "name": p["name"],
-                "team": p["team"],
-                "pts_avg": p["pts_avg"],
-                "reb_avg": p["reb_avg"],
-                "ast_avg": p["ast_avg"],
+    if source.name == "real":
+        prior = season_end_year(parse_date(as_of_date))
+        home = team_ratings(home_abbr, prior - 1)
+        away = team_ratings(away_abbr, prior - 1)
+        if not home or not away:
+            return {
+                "model": "stub_net_rating_v0",
+                "as_of_date": as_of_date,
+                "home": home_abbr,
+                "away": away_abbr,
+                "home_win_prob": None,
+                "away_win_prob": None,
+                "error": "No prior-season ratings for one or both teams.",
             }
-            if back_to_back:
-                out["b2b_pts_avg"] = p["b2b_pts_avg"]
-                out["note"] = (
-                    "Player is on a back-to-back; prefer b2b split over season avg."
-                )
-            return json.dumps(out, indent=2)
-    return json.dumps({"error": f"player not found: {player_name}"})
+        rest_edge = 0.0  # real rest needs game logs; do not guess
+    else:
+        ctx = source.matchup_context(f"{away_abbr}-{home_abbr}-2026-01-15", as_of_date)
+        home, away = ctx["home_team"], ctx["away_team"]
+        rest_edge = 3.0 if ctx["rest"].get("away_back_to_back") else 0.0
 
-
-@tool
-def predict_win_probability(home_abbr: str, away_abbr: str, as_of_date: str) -> str:
-    """Stub win-probability model. Later this wraps Sarvvesh's XGBoost tool.
-
-    Args:
-        home_abbr: Home team abbreviation.
-        away_abbr: Away team abbreviation.
-        as_of_date: ISO date for the prediction (unused by stub, kept for contract).
-    """
-    data = _load_matchup()
-    home = data["home_team"]
-    away = data["away_team"]
-    # Tiny heuristic so the stub is not a constant: net rating + rest.
     home_net = home["off_rating"] - home["def_rating"]
     away_net = away["off_rating"] - away["def_rating"]
-    rest_edge = 3.0 if data["rest"]["away_back_to_back"] else 0.0
-    edge = home_net - away_net + rest_edge
-    # Map edge roughly into [0.35, 0.75]
-    home_win_prob = max(0.35, min(0.75, 0.5 + edge / 40.0))
-    return json.dumps(
-        {
-            "model": "stub_net_rating_v0",
-            "as_of_date": as_of_date,
-            "home": home_abbr,
-            "away": away_abbr,
-            "home_win_prob": round(home_win_prob, 3),
-            "away_win_prob": round(1.0 - home_win_prob, 3),
-            "note": "Placeholder until XGBoost tool is wired.",
-        },
-        indent=2,
-    )
+    edge = home_net - away_net + rest_edge + 2.5  # 2.5 = league-average home edge
+    home_win_prob = max(0.15, min(0.85, 0.5 + edge / 40.0))
+
+    return {
+        "model": "stub_net_rating_v0",
+        "as_of_date": as_of_date,
+        "home": home_abbr,
+        "away": away_abbr,
+        "home_win_prob": round(home_win_prob, 3),
+        "away_win_prob": round(1.0 - home_win_prob, 3),
+        "basis": home.get("basis", "mock fixture"),
+        "note": "Placeholder until the XGBoost tool is wired.",
+    }
 
 
-TOOLS = [retrieve_matchup_context, retrieve_player_splits, predict_win_probability]
+# Default tool set (mock) so `from agent.tools import TOOLS` still works.
+TOOLS = build_tools(get_source("mock"))
