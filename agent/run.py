@@ -55,7 +55,7 @@ Rules:
 # path (week 3) wants a model whose training cutoff we actually know, which is why
 # it will be a local one. Model ids get retired, so both are env-overridable rather
 # than baked in -- a retired id should be a 5-second fix, not a debugging session.
-GOOGLE_MODEL = os.getenv("GOOGLE_MODEL", "gemini-2.5-flash")
+GOOGLE_MODEL = os.getenv("GOOGLE_MODEL", "gemini-3.5-flash")
 ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5")
 
 
