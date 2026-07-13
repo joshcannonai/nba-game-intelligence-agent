@@ -26,7 +26,36 @@ Anything that cannot be computed comes back `null` **with a reason** — never a
 
 ## Open data-layer gap
 
-`retrieve_matchup_context` needs a game-by-game **schedule + results** table. The four datasets on `main` are all season aggregates and carry none. `scripts/fetch_game_logs.py` pulls a thin version via `nba_api` (`data/samples/game_logs_<season>.csv`, ~1,225 games/season) so the agent's shapes match live data — it is a **sample, not the data layer**. The real scrape (more seasons, injury reports with true publication timestamps via `nbainjuries`) stays with Patrick + Kirtan.
+`retrieve_matchup_context` needs a game-by-game **schedule + results** table. The four datasets on `main` are all season aggregates and carry none. `scripts/fetch_game_logs.py` pulls a thin version via `nba_api` (`data/samples/game_logs_<season>.csv`, ~1,230 games/season) so the agent's shapes match live data — it is a **sample, not the data layer**. The real scrape (injury reports with true publication timestamps via `nbainjuries`) stays with Patrick + Kirtan.
+
+## The betting line (the evaluation baseline)
+
+Two CC0 datasets, both gitignored under `data/raw/odds/` — rebuild with:
+
+```bash
+kaggle datasets download -d cviaxmiwnptr/nba-betting-data-october-2007-to-june-2024 --unzip -p data/raw/odds/primary
+kaggle datasets download -d erichqiu/nba-odds-and-scores --unzip -p data/raw/odds/crosscheck
+python scripts/build_odds.py     # -> data/samples/odds.csv (committed)
+```
+
+`primary` is one line per game, 2008–2026: spread + total for every season, moneylines through 2022-23 (they stop after that). `crosscheck` is 2012-13 → 2018-19 but far richer: **opening line, per-book closing lines** (Pinnacle, Bovada, 5dimes, Betonline, Heritage), **percentage of bets on each side**, and best/worst line across books.
+
+`build_odds.py` joins the lines onto the game logs on `(game_date, home, away)` after normalising team codes. **Join rate: 10,744 / 10,744 = 100%.** Output carries, per game: `spread`, `total`, both moneylines, `overround`, de-vigged `p_home_fair` / `p_away_fair`, `home_won`, `home_covered`.
+
+**Why de-vig?** The book's two implied probabilities sum to more than 1 (that excess *is* the house's fee). Scoring our forecast against the raw prices would mark the market down for charging a fee, which is not a forecasting error. Dividing each side by the overround recovers the market's actual *opinion*, which is the thing worth beating.
+
+Measured on the joined set (7,723 games with moneylines):
+
+| | |
+|---|---|
+| mean overround | **1.0387** (3.87% above fair) |
+| games priced above fair | **100.000%** — zero exceptions |
+| best price ever offered | 1.0106 (still above fair) |
+| market picks the winner (de-vigged) | 66.9% |
+| home team covers the spread | 48.9% (i.e. the spread works) |
+| break-even at −110 | **52.381%** |
+
+Those last two lines are the whole problem: the spread is engineered to be a coin flip, but you must win 52.381% to break even.
 
 ## Data tools (Patrick + Kirtan)
 

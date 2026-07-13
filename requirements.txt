@@ -11,3 +11,6 @@ nba_api>=1.10.0
 
 # Tests (leakage guarantees live in tests/test_date_gating.py)
 pytest>=8.0.0
+
+# Odds join + eval (scripts/build_odds.py)
+pandas>=2.0.0
