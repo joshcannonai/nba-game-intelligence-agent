@@ -14,3 +14,6 @@ pytest>=8.0.0
 
 # Odds join + eval (scripts/build_odds.py)
 pandas>=2.0.0
+
+# Free-tier build-mode LLM (--provider google)
+langchain-google-genai>=4.0.0

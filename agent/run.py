@@ -1,12 +1,16 @@
 """LangChain tool-calling analyst agent for a single NBA matchup.
 
-Build mode uses Anthropic (personal credits). Replay/production path will swap
-the chat model for a local Ollama model with a known cutoff.
+Build mode defaults to Gemini on Google's free tier -- we have no token budget, and
+for iteration only *relative* quality matters. The leakage-safe replay path (week 3)
+swaps the chat model for a LOCAL one whose training cutoff we actually know; that is
+the whole point, since a hosted model may have memorised the games we test on.
 
-    python -m agent.run --dry-run                      # no API key, mock data
+    python -m agent.run --dry-run                      # no API key at all, mock data
     python -m agent.run --dry-run --source real \
         --matchup LAL-BOS-2024-12-25 --as-of 2024-12-24
-    python -m agent.run --source real --matchup ... --as-of ...   # live LLM
+    python -m agent.run --source real \
+        --matchup LAL-BOS-2024-12-25 --as-of 2024-12-24   # live, free Gemini
+    python -m agent.run --provider anthropic ...          # live, paid
 """
 
 from __future__ import annotations
@@ -47,22 +51,49 @@ Rules:
 """
 
 
-def build_agent(source):
-    from langchain.agents import create_agent
+# Two providers, one agent. Build mode wants cheap + fast; the leakage-safe replay
+# path (week 3) wants a model whose training cutoff we actually know, which is why
+# it will be a local one. Model ids get retired, so both are env-overridable rather
+# than baked in -- a retired id should be a 5-second fix, not a debugging session.
+GOOGLE_MODEL = os.getenv("GOOGLE_MODEL", "gemini-2.5-flash")
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5")
+
+
+def build_chat_model(provider: str):
+    if provider == "google":
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
+        if not os.getenv("GOOGLE_API_KEY"):
+            raise SystemExit(
+                "GOOGLE_API_KEY missing.\n"
+                "  1. Get a free key at https://aistudio.google.com/apikey\n"
+                "  2. Copy it, then run:  ./scripts/set-key.sh google\n"
+                "Or run with --dry-run (no LLM, exercises the same tools and data)."
+            )
+        return ChatGoogleGenerativeAI(model=GOOGLE_MODEL, temperature=0)
+
     from langchain_anthropic import ChatAnthropic
 
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
+    if not os.getenv("ANTHROPIC_API_KEY"):
         raise SystemExit(
-            "ANTHROPIC_API_KEY missing. Copy .env.example to .env and set your key, "
-            "or run with --dry-run (no LLM, exercises the same tools and data)."
+            "ANTHROPIC_API_KEY missing. Run  ./scripts/set-key.sh anthropic\n"
+            "Or use the free provider:  --provider google"
         )
-    model = ChatAnthropic(model="claude-sonnet-4-5", api_key=api_key, temperature=0)
-    return create_agent(model, build_tools(source), system_prompt=SYSTEM)
+    return ChatAnthropic(model=ANTHROPIC_MODEL, temperature=0)
 
 
-def run_matchup(matchup_id: str, as_of_date: str, source) -> str:
-    agent = build_agent(source)
+def build_agent(source, provider: str = "google"):
+    from langchain.agents import create_agent
+
+    return create_agent(
+        build_chat_model(provider), build_tools(source), system_prompt=SYSTEM
+    )
+
+
+def run_matchup(
+    matchup_id: str, as_of_date: str, source, provider: str = "google"
+) -> str:
+    agent = build_agent(source, provider)
     user = (
         f"Produce a pregame report for matchup_id={matchup_id} as_of_date={as_of_date}."
     )
@@ -197,6 +228,12 @@ def main() -> None:
         help="mock = fixture (deterministic); real = date-gated CSVs on main",
     )
     parser.add_argument(
+        "--provider",
+        choices=["google", "anthropic"],
+        default="google",
+        help="LLM for build mode. google = free tier (default); anthropic = paid.",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Exercise tools + print a report without calling an LLM",
@@ -207,7 +244,7 @@ def main() -> None:
     if args.dry_run:
         print(dry_run(args.matchup, args.as_of, source))
     else:
-        print(run_matchup(args.matchup, args.as_of, source))
+        print(run_matchup(args.matchup, args.as_of, source, args.provider))
 
 
 if __name__ == "__main__":
