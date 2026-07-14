@@ -187,3 +187,30 @@ def test_real_player_splits_admit_missing_b2b_instead_of_inventing():
     assert out["pts_avg"] is not None
     assert out["b2b_pts_avg"] is None
     assert "b2b_unavailable" in out
+
+
+def test_normalise_report_fixes_percentage_probabilities():
+    """qwen3.5:9b returned 83.8 where gemini returned 0.838. Scored raw, that is
+    silently garbage -- and the eval would never flag it."""
+    from agent.run import normalise_report
+
+    out = json.loads(
+        normalise_report('{"home_win_prob": 83.8, "away_win_prob": 16.2}')
+    )
+    assert out["home_win_prob"] == 0.838
+    assert out["away_win_prob"] == 0.162
+
+
+def test_normalise_report_renormalises_probabilities_that_do_not_sum_to_one():
+    from agent.run import normalise_report
+
+    out = json.loads(normalise_report('{"home_win_prob": 0.7, "away_win_prob": 0.5}'))
+    assert abs(out["home_win_prob"] + out["away_win_prob"] - 1.0) < 1e-6
+
+
+def test_normalise_report_strips_code_fences_and_passes_through_garbage():
+    from agent.run import normalise_report
+
+    fenced = '```json\n{"home_win_prob": 0.6, "away_win_prob": 0.4}\n```'
+    assert json.loads(normalise_report(fenced))["home_win_prob"] == 0.6
+    assert normalise_report("not json at all") == "not json at all"

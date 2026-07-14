@@ -1,12 +1,16 @@
 """LangChain tool-calling analyst agent for a single NBA matchup.
 
-Build mode uses Anthropic (personal credits). Replay/production path will swap
-the chat model for a local Ollama model with a known cutoff.
+Build mode defaults to Gemini on Google's free tier -- we have no token budget, and
+for iteration only *relative* quality matters. The leakage-safe replay path (week 3)
+swaps the chat model for a LOCAL one whose training cutoff we actually know; that is
+the whole point, since a hosted model may have memorised the games we test on.
 
-    python -m agent.run --dry-run                      # no API key, mock data
+    python -m agent.run --dry-run                      # no API key at all, mock data
     python -m agent.run --dry-run --source real \
         --matchup LAL-BOS-2024-12-25 --as-of 2024-12-24
-    python -m agent.run --source real --matchup ... --as-of ...   # live LLM
+    python -m agent.run --source real \
+        --matchup LAL-BOS-2024-12-25 --as-of 2024-12-24   # live, free Gemini
+    python -m agent.run --provider anthropic ...          # live, paid
 """
 
 from __future__ import annotations
@@ -43,26 +47,96 @@ Rules:
 - Final answer must be valid JSON with keys:
   matchup_id, as_of_date, home_win_prob, away_win_prob, key_factors (list of
   short strings), narrative (2-4 sentences).
+- home_win_prob and away_win_prob are DECIMALS BETWEEN 0 AND 1 (0.838, not 83.8),
+  and they must sum to 1.0. Copy the numbers the prediction tool returned.
 - Do not invent stats that tools did not return.
 """
 
 
-def build_agent(source):
-    from langchain.agents import create_agent
+# Two providers, one agent. Build mode wants cheap + fast; the leakage-safe replay
+# path (week 3) wants a model whose training cutoff we actually know, which is why
+# it will be a local one. Model ids get retired, so both are env-overridable rather
+# than baked in -- a retired id should be a 5-second fix, not a debugging session.
+# Replay path: 27b for dev/demo quality, 9b for the multi-hour eval sweeps.
+# Sadovnik, 7/07: for ablations relative accuracy matters, so small+fast wins.
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3.5:27b")
+GOOGLE_MODEL = os.getenv("GOOGLE_MODEL", "gemini-3.5-flash")
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5")
+
+
+def build_chat_model(provider: str):
+    if provider == "ollama":
+        from langchain_ollama import ChatOllama
+
+        # The replay path. No quota, no vendor, and the weights never change under
+        # us -- so an eval run stays reproducible and the training cutoff is a fact
+        # we can measure (scripts/memorization_probe.py) instead of a claim we trust.
+        return ChatOllama(model=OLLAMA_MODEL, temperature=0)
+
+    if provider == "google":
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
+        if not os.getenv("GOOGLE_API_KEY"):
+            raise SystemExit(
+                "GOOGLE_API_KEY missing.\n"
+                "  1. Get a free key at https://aistudio.google.com/apikey\n"
+                "  2. Copy it, then run:  ./scripts/set-key.sh google\n"
+                "Or run with --dry-run (no LLM, exercises the same tools and data)."
+            )
+        return ChatGoogleGenerativeAI(model=GOOGLE_MODEL, temperature=0)
+
     from langchain_anthropic import ChatAnthropic
 
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
+    if not os.getenv("ANTHROPIC_API_KEY"):
         raise SystemExit(
-            "ANTHROPIC_API_KEY missing. Copy .env.example to .env and set your key, "
-            "or run with --dry-run (no LLM, exercises the same tools and data)."
+            "ANTHROPIC_API_KEY missing. Run  ./scripts/set-key.sh anthropic\n"
+            "Or use a free provider:  --provider google  |  --provider ollama"
         )
-    model = ChatAnthropic(model="claude-sonnet-4-5", api_key=api_key, temperature=0)
-    return create_agent(model, build_tools(source), system_prompt=SYSTEM)
+    return ChatAnthropic(model=ANTHROPIC_MODEL, temperature=0)
 
 
-def run_matchup(matchup_id: str, as_of_date: str, source) -> str:
-    agent = build_agent(source)
+def build_agent(source, provider: str = "google"):
+    from langchain.agents import create_agent
+
+    return create_agent(
+        build_chat_model(provider), build_tools(source), system_prompt=SYSTEM
+    )
+
+
+def normalise_report(text: str) -> str:
+    """Repair the two things models get wrong about the output contract.
+
+    Small local models are markedly sloppier here than the hosted ones: qwen3.5:9b
+    returned home_win_prob=83.8 where gemini returned 0.838. Scored as a probability
+    that is silently garbage -- so we fix it in code rather than trusting a prompt.
+    Returns the text unchanged if it is not parseable JSON (caller still sees it).
+    """
+    raw = text.strip()
+    if raw.startswith("```"):  # strip ```json fences
+        raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+    try:
+        d = json.loads(raw)
+    except (json.JSONDecodeError, ValueError):
+        return text
+
+    for key in ("home_win_prob", "away_win_prob"):
+        v = d.get(key)
+        if isinstance(v, (int, float)) and v > 1.0:
+            d[key] = round(v / 100.0, 4)  # 83.8 -> 0.838
+
+    h, a = d.get("home_win_prob"), d.get("away_win_prob")
+    if isinstance(h, (int, float)) and isinstance(a, (int, float)):
+        total = h + a
+        if total and abs(total - 1.0) > 0.02:  # renormalise, do not silently accept
+            d["home_win_prob"] = round(h / total, 4)
+            d["away_win_prob"] = round(a / total, 4)
+    return json.dumps(d, indent=2)
+
+
+def run_matchup(
+    matchup_id: str, as_of_date: str, source, provider: str = "google"
+) -> str:
+    agent = build_agent(source, provider)
     user = (
         f"Produce a pregame report for matchup_id={matchup_id} as_of_date={as_of_date}."
     )
@@ -74,7 +148,7 @@ def run_matchup(matchup_id: str, as_of_date: str, source) -> str:
     if isinstance(content, list):
         parts = [b.get("text", "") if isinstance(b, dict) else str(b) for b in content]
         content = "\n".join(p for p in parts if p)
-    return str(content)
+    return normalise_report(str(content))
 
 
 def dry_run(matchup_id: str, as_of_date: str, source) -> str:
@@ -197,6 +271,13 @@ def main() -> None:
         help="mock = fixture (deterministic); real = date-gated CSVs on main",
     )
     parser.add_argument(
+        "--provider",
+        choices=["google", "anthropic", "ollama"],
+        default="google",
+        help="google = free tier (default, but ~20 req/day); ollama = local, no quota, "
+        "known cutoff -- the leakage-safe replay path; anthropic = paid.",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Exercise tools + print a report without calling an LLM",
@@ -207,7 +288,7 @@ def main() -> None:
     if args.dry_run:
         print(dry_run(args.matchup, args.as_of, source))
     else:
-        print(run_matchup(args.matchup, args.as_of, source))
+        print(run_matchup(args.matchup, args.as_of, source, args.provider))
 
 
 if __name__ == "__main__":
