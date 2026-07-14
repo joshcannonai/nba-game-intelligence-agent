@@ -31,24 +31,46 @@ Roles locked after the 2026-07-07 PDP review with Prof. Sadovnik. Architecture s
 
 Shared tool shapes: see [`docs/tool-contracts.md`](docs/tool-contracts.md).
 
-## Quick start (agent scaffold, Week 1)
+## Quick start
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# No API key needed: exercises tools + prints a sample report
-python -m agent.run --dry-run
+# No API key needed: exercises the tools + prints a report
+python -m agent.run --dry-run                        # mock fixture
+python -m agent.run --dry-run --source real \
+    --matchup LAL-BOS-2024-12-25 --as-of 2024-12-24  # real data, date-gated
 
 # Full LangChain agent loop (needs personal Anthropic credits)
 cp .env.example .env   # then set ANTHROPIC_API_KEY
-python -m agent.run --matchup LAL-BOS-2026-01-15 --as-of 2026-01-14
+python -m agent.run --source real --matchup LAL-BOS-2024-12-25 --as-of 2024-12-24
+
+# Leakage guarantees
+pytest
 ```
 
 Build mode uses Anthropic (personal credits) for fast iteration. Replay / production runs will use a local Ollama model with a known knowledge cutoff so we do not leak future results.
 
-Mock matchup lives in `data/mock/`. Tool signatures already take an `as_of_date` so Patrick/Kirtan's date-gated retrieval can drop in later without rewriting the agent.
+### Two data sources, one contract
+
+`--source mock` reads `data/mock/` — deterministic, no data files, what the tests run on.
+`--source real` reads the datasets on `main`, filtered so nothing published after `--as-of` reaches the agent. Same tool signatures either way, which is the point: the data layer can be swapped without touching the agent.
+
+The date gating is real, not decorative. Same game, three as-of dates:
+
+| as-of | players known out | rest | H2H games known |
+|---|---|---|---|
+| 2024-11-01 | 1 (Porziņģis) | 1d / 1d | 2 |
+| 2024-12-01 | 6 | 1d / 1d | 2 |
+| 2024-12-24 | 1 (Jaxson Hayes) | 1d / 1d | 2 |
+
+Injury knowledge moves with the as-of date; rest does not (the schedule is published in August — see `docs/tool-contracts.md` for where that line sits, and why the season-aggregate CSVs would leak if used naively).
+
+### Game logs
+
+The datasets on `main` are season aggregates with no schedule or results, so rest / back-to-back / H2H and the eval harness have nothing to stand on. `scripts/fetch_game_logs.py --season 2025` pulls a thin game-by-game table via `nba_api` into `data/samples/`. This is a **sample so shapes match live data**, not the data layer — the real scrape stays with Patrick + Kirtan.
 
 ## Working agreements
 
