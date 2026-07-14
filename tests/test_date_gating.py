@@ -7,7 +7,7 @@ as_of_date. These tests are what make that claim checkable instead of asserted.
 from __future__ import annotations
 
 import json
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
@@ -15,6 +15,7 @@ from agent.sources import (
     STALE_INJURY_DAYS,
     CsvSource,
     MockSource,
+    get_source,
     injuries_as_of,
     injury_data_through,
     parse_matchup_id,
@@ -187,3 +188,65 @@ def test_real_player_splits_admit_missing_b2b_instead_of_inventing():
     assert out["pts_avg"] is not None
     assert out["b2b_pts_avg"] is None
     assert "b2b_unavailable" in out
+
+
+# --- the tool interface is the contract with the team -----------------------
+
+EXPECTED_TOOLS = {
+    "retrieve_matchup_context",
+    "retrieve_player_splits",
+    "retrieve_schedule",
+    "retrieve_team_form",
+    "retrieve_injuries",
+    "retrieve_news",
+    "retrieve_betting_line",
+    "predict_win_probability",
+    "predict_stat_line",
+    "predict_best_player",
+}
+
+
+@pytest.mark.parametrize("kind", ["mock", "real"])
+def test_every_agreed_tool_exists(kind):
+    """The whole surface is present NOW, so the data layer can drop in behind it."""
+    names = {t.name for t in build_tools(get_source(kind))}
+    assert EXPECTED_TOOLS <= names, f"missing: {EXPECTED_TOOLS - names}"
+
+
+@pytest.mark.parametrize("kind", ["mock", "real"])
+def test_unbuilt_tools_say_so_and_name_an_owner(kind):
+    """A placeholder must never fabricate. It must announce itself and name a human.
+
+    This is the guard against the failure mode where an unimplemented tool quietly
+    returns an empty list and the agent reports 'nobody is injured'.
+    """
+    args = {
+        "matchup_id": "LAL-BOS-2024-12-25",
+        "as_of_date": "2024-12-24",
+        "team_abbr": "BOS",
+        "home_abbr": "BOS",
+        "away_abbr": "LAL",
+        "player_name": "Jayson Tatum",
+    }
+    for t in build_tools(get_source(kind)):
+        payload = json.loads(t.invoke({k: v for k, v in args.items() if k in t.args}))
+        if payload.get("status") == "not_implemented":
+            assert payload.get("owner"), f"{t.name} is unbuilt but names no owner"
+            assert payload.get("needs"), f"{t.name} is unbuilt but says what it needs"
+
+
+def test_injuries_past_the_end_of_the_log_warn_rather_than_report_nobody_hurt():
+    """The log stops 2025-01-12. Past that, 'no injuries' is a LIE, not a fact."""
+    src = get_source("real")
+    end = injury_data_through()
+    after = (end + timedelta(days=30)).isoformat()
+    payload = src.injuries("BOS", after)
+    assert payload["injuries"] == [] or payload.get("warnings")
+    assert payload.get("warnings"), "must warn that injuries are unknown, not zero"
+    assert "UNKNOWN" in payload["warnings"][0]
+
+
+def test_injuries_admit_they_carry_no_measure_of_player_importance():
+    """Six bench players and one MVP must not look identical without saying so."""
+    payload = get_source("real").injuries("LAL", "2024-12-24")
+    assert "importance_unavailable" in payload

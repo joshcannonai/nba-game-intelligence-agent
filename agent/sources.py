@@ -375,6 +375,17 @@ class MockSource:
             "h2h_last_5": [g for g in data["h2h_last_5"] if g["date"] <= as_of_date],
         }
 
+    def injuries(self, team_abbr: str, as_of_date: str) -> dict:
+        """Who was known to be out, as of a date. Mock fixture."""
+        ctx = self.matchup_context("LAL-BOS-2026-01-15", as_of_date)
+        out = [i for i in ctx["injuries"] if i["team"] == team_abbr.upper()]
+        return {
+            "source": "mock",
+            "team": team_abbr.upper(),
+            "as_of_date": as_of_date,
+            "injuries": out,
+        }
+
     def player_splits(self, player_name: str, back_to_back: bool = False) -> dict:
         data = self._fixture()
         for p in data["key_players"]:
@@ -444,6 +455,33 @@ class CsvSource:
         payload.update(schedule_context(away, home, game_date, as_of))
         if warnings:
             payload["warnings"] = warnings
+        return payload
+
+    def injuries(self, team_abbr: str, as_of_date: str) -> dict:
+        """Who was known to be out that morning -- the log replayed, stopped at as_of.
+
+        Two limits are stated in the payload rather than hidden: the log ends
+        2025-01-12, and it carries no measure of how much a player matters, so a
+        10th man and a franchise player weigh exactly the same here.
+        """
+        as_of = parse_date(as_of_date)
+        payload = {
+            "source": "real",
+            "team": normalize_abbr(team_abbr),
+            "as_of_date": as_of_date,
+            "injuries": injuries_as_of(normalize_abbr(team_abbr), as_of),
+            "importance_unavailable": (
+                "This is a COUNT, not an impact. Six bench players and one MVP look "
+                "identical here. Player-value weighting is not built."
+            ),
+        }
+        end = injury_data_through()
+        if end and as_of > end:
+            payload["warnings"] = [
+                f"as_of_date is past the end of the injury log ({end}). Injuries for "
+                "this date are UNKNOWN, not zero. Report that; do not report an "
+                "empty list as though nobody is hurt."
+            ]
         return payload
 
     def player_splits(self, player_name: str, back_to_back: bool = False) -> dict:
