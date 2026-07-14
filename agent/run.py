@@ -37,12 +37,17 @@ Rules:
 - If either team is on a back-to-back, call retrieve_player_splits with
   back_to_back=true for that team's key players.
 - Always call predict_win_probability.
-- Tool output may contain nulls with an "unavailable" or "warnings" note. Those
-  mean the data does not exist yet. Say so in key_factors. Never fill a gap with
-  a guess, and never treat a null as zero.
+- MANY TOOLS ARE NOT BUILT YET. A tool may return {"status": "not_implemented",
+  "owner": ..., "needs": ...}. That is not an error and it is not an empty result.
+  It means the data layer for it does not exist. When that happens, add a line to
+  "missing" naming the tool and its owner, and carry on with what you do have.
+- Tool output may also contain nulls with an "unavailable" or "warnings" note.
+  Same rule. Never fill a gap with a guess. Never treat a null or a missing tool
+  as zero. An unknown injury list is not "nobody is hurt".
 - Final answer must be valid JSON with keys:
   matchup_id, as_of_date, home_win_prob, away_win_prob, key_factors (list of
-  short strings), narrative (2-4 sentences).
+  short strings), missing (list of "tool_name -- owner -- what it needs"),
+  narrative (2-4 sentences).
 - Do not invent stats that tools did not return.
 """
 
