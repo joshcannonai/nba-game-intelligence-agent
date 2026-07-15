@@ -1,12 +1,22 @@
 """LangChain tool-calling analyst agent for a single NBA matchup.
 
-Build mode uses Anthropic (personal credits). Replay/production path will swap
-the chat model for a local Ollama model with a known cutoff.
+Two chat model backends, picked with --model:
+
+  anthropic (default)  Claude, personal API credits. Fast iteration while
+                       building -- this is "build mode" from the README.
+  ollama               Local Gemma 4 via Ollama, no API key, no cost. This is
+                       the leakage-safe path: Claude's training cutoff isn't
+                       something we can pin to a date the way an open model's
+                       release date is, so replay/production runs (testing
+                       against real past games) need a model whose cutoff we
+                       can actually verify predates the test window. Requires
+                       `ollama pull gemma4` once and the Ollama server running.
 
     python -m agent.run --dry-run                      # no API key, mock data
     python -m agent.run --dry-run --source real \
         --matchup LAL-BOS-2024-12-25 --as-of 2024-12-24
-    python -m agent.run --source real --matchup ... --as-of ...   # live LLM
+    python -m agent.run --source real --matchup ... --as-of ...            # Claude
+    python -m agent.run --model ollama --source real --matchup ... --as-of ...  # Gemma 4
 """
 
 from __future__ import annotations
@@ -52,22 +62,36 @@ Rules:
 """
 
 
-def build_agent(source):
+def build_agent(source, model_backend: str = "anthropic"):
     from langchain.agents import create_agent
-    from langchain_anthropic import ChatAnthropic
 
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise SystemExit(
-            "ANTHROPIC_API_KEY missing. Copy .env.example to .env and set your key, "
-            "or run with --dry-run (no LLM, exercises the same tools and data)."
-        )
-    model = ChatAnthropic(model="claude-sonnet-4-5", api_key=api_key, temperature=0)
+    if model_backend == "anthropic":
+        from langchain_anthropic import ChatAnthropic
+
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise SystemExit(
+                "ANTHROPIC_API_KEY missing. Copy .env.example to .env and set your "
+                "key, or run with --dry-run (no LLM), or --model ollama for the "
+                "local Gemma 4 path (no API key needed)."
+            )
+        model = ChatAnthropic(model="claude-sonnet-4-5", api_key=api_key, temperature=0)
+    elif model_backend == "ollama":
+        from langchain_ollama import ChatOllama
+
+        # Local, free, and -- the actual point -- a training cutoff we can
+        # verify predates the games we're testing on. See module docstring.
+        model = ChatOllama(model="gemma4", temperature=0)
+    else:
+        raise ValueError(f"unknown model backend: {model_backend!r}")
+
     return create_agent(model, build_tools(source), system_prompt=SYSTEM)
 
 
-def run_matchup(matchup_id: str, as_of_date: str, source) -> str:
-    agent = build_agent(source)
+def run_matchup(
+    matchup_id: str, as_of_date: str, source, model_backend: str = "anthropic"
+) -> str:
+    agent = build_agent(source, model_backend)
     user = (
         f"Produce a pregame report for matchup_id={matchup_id} as_of_date={as_of_date}."
     )
@@ -206,13 +230,24 @@ def main() -> None:
         action="store_true",
         help="Exercise tools + print a report without calling an LLM",
     )
+    parser.add_argument(
+        "--model",
+        choices=["anthropic", "ollama"],
+        default="anthropic",
+        help=(
+            "anthropic = Claude, needs ANTHROPIC_API_KEY (build mode); "
+            "ollama = local Gemma 4, no API key, needs `ollama pull gemma4` "
+            "and the Ollama server running (the leakage-safe path -- see "
+            "module docstring). Ignored with --dry-run, which never calls an LLM."
+        ),
+    )
     args = parser.parse_args()
 
     source = get_source(args.source)
     if args.dry_run:
         print(dry_run(args.matchup, args.as_of, source))
     else:
-        print(run_matchup(args.matchup, args.as_of, source))
+        print(run_matchup(args.matchup, args.as_of, source, args.model))
 
 
 if __name__ == "__main__":
