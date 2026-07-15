@@ -15,12 +15,21 @@ python -m agent.run --dry-run --source real \
 ```
 
 exercises the real tool contracts and date gating with no LLM call --
-deterministic, free, and what `pytest` runs against. The full run
-(`python -m agent.run --source real ...`, no `--dry-run`) is the actual
-LangChain tool-calling loop, using Anthropic's API in build mode. A local
-Ollama model with a real, pre-2026 training cutoff is the swap for the
-replay/production path -- that's explicitly a later-week item per the repo
-README, not a Tuesday blocker.
+deterministic, free, and what `pytest` runs against. The full run is the
+actual LangChain tool-calling loop, with a `--model` flag choosing the
+backend:
+
+```
+python -m agent.run --source real --matchup ... --as-of ...              # Claude (build mode, default)
+python -m agent.run --model ollama --source real --matchup ... --as-of ...  # local Gemma 4, no API key
+```
+
+`--model ollama` is the leakage-safe path for replay/production: Claude's
+training cutoff isn't something we can pin to a date the way an open
+model's release date is. Verified live, not just wired -- ran the full
+loop against two real matchups on local Gemma 4 (`ollama pull gemma4`),
+both producing valid structured reports pulling real data through the
+tools.
 
 ## The honest-placeholder pattern
 
@@ -81,11 +90,13 @@ Verified by running the commands myself, not asserted from memory:
   `retrieve_team_form`, `retrieve_news`, `retrieve_betting_line` (data
   layer -- Patrick/Kirtan), `predict_stat_line`, `predict_best_player`
   (models -- Sarvesh).
-- **Not yet run:** the full LLM reasoning loop end to end. It needs a
-  personal `ANTHROPIC_API_KEY` in a local `.env` (see `.env.example`) that I
-  haven't set on this machine session. The dry-run path proves the same
-  tool/data plumbing without spending a token; running the live loop before
-  Tuesday is a five-minute task once the key is in place.
+- **Full LLM loop, now verified:** ran end to end on `--model ollama`
+  (local Gemma 4, no API key) against two real matchups, both producing
+  valid structured reports with real injuries/rest/ratings/H2H and no
+  hallucinated stats. The Anthropic path (`--model anthropic`, still the
+  default) is unchanged code but untested this session -- no personal
+  `ANTHROPIC_API_KEY` set in `.env` on this machine. Both backends share
+  the same tools and system prompt, so this isn't two different agents.
 
 ## What's proposed, not built, for Tuesday
 
@@ -113,10 +124,11 @@ or not:
 ## AI-disclosure
 
 Per the course's AI-use policy ("AI-assisted code is fine, but you own and
-can explain every line you merge"): this document and the two proposal
-artifacts above were drafted by Claude (Anthropic), overnight, at my
-direction, on top of the `agent/` code that was already built and merged to
-`main` before this session (PRs #7-9). **I have not yet read through this
-line by line** -- that review is the required next step before I present
-any of it, not an afterthought. Nothing here should be presented or merged
-as final until I've done that.
+can explain every line you merge"): this document, the two proposal
+artifacts above, and the `--model ollama` backend in `agent/run.py` were
+written by Claude (Anthropic), at my direction, on top of the `agent/`
+code that was already built and merged to `main` before this session
+(PRs #7-9). **I have not yet read through any of this line by line** --
+that review is the required next step before I present any of it, not an
+afterthought. Nothing here should be presented or merged as final until
+I've done that.
