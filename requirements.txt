@@ -9,5 +9,12 @@ python-dotenv>=1.0.0
 # season-aggregate CSVs on main do not carry.
 nba_api>=1.10.0
 
+# Data collection (Patrick) -- basketball_reference used as primary source
+# since nba_api is blocked by Codespaces/Azure IPs.
+basketball_reference_web_scraper>=4.21.0
+pandas>=2.0.0
+requests>=2.30.0
+
 # Tests (leakage guarantees live in tests/test_date_gating.py)
 pytest>=8.0.0
+
