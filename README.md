@@ -50,6 +50,9 @@ python -m agent.run --model ollama --source real --matchup LAL-BOS-2024-12-25 --
 
 # Leakage guarantees
 pytest
+
+# Which tools are built, which are stubs, and who owns the rest
+python -m agent.run --status --source real
 ```
 
 Build mode uses Anthropic (personal credits) for fast iteration. Replay / production runs use `--model ollama` -- a local Gemma 4 model (`ollama pull gemma4`) with a known knowledge cutoff so we do not leak future results; Claude's cutoff isn't something we can pin to a date the same way.

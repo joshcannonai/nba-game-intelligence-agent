@@ -17,6 +17,7 @@ Two chat model backends, picked with --model:
         --matchup LAL-BOS-2024-12-25 --as-of 2024-12-24
     python -m agent.run --source real --matchup ... --as-of ...            # Claude
     python -m agent.run --model ollama --source real --matchup ... --as-of ...  # Gemma 4
+    python -m agent.run --status --source real         # which tools are built, and who owns the rest
 """
 
 from __future__ import annotations
@@ -47,6 +48,11 @@ Rules:
 - If either team is on a back-to-back, call retrieve_player_splits with
   back_to_back=true for that team's key players.
 - Always call predict_win_probability.
+- The report we owe the user is: who wins, the likely best player, a narrative,
+  statistics, and the betting line. So also attempt retrieve_betting_line,
+  predict_best_player, and retrieve_news, plus predict_stat_line for a key
+  player. Attempt them even though some are not built yet -- a tool that
+  answers "not_implemented" is how we learn what is still blocking the report.
 - MANY TOOLS ARE NOT BUILT YET. A tool may return {"status": "not_implemented",
   "owner": ..., "needs": ...}. That is not an error and it is not an empty result.
   It means the data layer for it does not exist. When that happens, add a line to
@@ -104,6 +110,102 @@ def run_matchup(
         parts = [b.get("text", "") if isinstance(b, dict) else str(b) for b in content]
         content = "\n".join(p for p in parts if p)
     return str(content)
+
+
+def _probe_args(matchup_id: str, as_of_date: str) -> dict[str, dict]:
+    """Representative arguments for every tool, so each one can be called once."""
+    away, home = matchup_id.split("-")[0], matchup_id.split("-")[1]
+    player = "LeBron James"
+    return {
+        "retrieve_matchup_context": {
+            "matchup_id": matchup_id,
+            "as_of_date": as_of_date,
+        },
+        "retrieve_player_splits": {"player_name": player, "back_to_back": True},
+        "retrieve_schedule": {"as_of_date": as_of_date, "days_ahead": 1},
+        "retrieve_team_form": {
+            "team_abbr": home,
+            "as_of_date": as_of_date,
+            "last_n": 10,
+        },
+        "retrieve_injuries": {"team_abbr": home, "as_of_date": as_of_date},
+        "retrieve_news": {"team_abbr": home, "as_of_date": as_of_date, "limit": 5},
+        "retrieve_betting_line": {"matchup_id": matchup_id, "as_of_date": as_of_date},
+        "predict_win_probability": {
+            "home_abbr": home,
+            "away_abbr": away,
+            "as_of_date": as_of_date,
+        },
+        "predict_stat_line": {
+            "player_name": player,
+            "matchup_id": matchup_id,
+            "as_of_date": as_of_date,
+        },
+        "predict_best_player": {"matchup_id": matchup_id, "as_of_date": as_of_date},
+    }
+
+
+def status_board(matchup_id: str, as_of_date: str, source) -> str:
+    """Which tools are built, which are stubs, and who owns each gap.
+
+    Deterministic and free: calls every tool once and reports what came back.
+    The report we pitched on 7/07 needs all ten, so an honest board is also the
+    team's blocking list -- it names the owner of everything still missing.
+    """
+    tools = {t.name: t for t in build_tools(source)}
+    args = _probe_args(matchup_id, as_of_date)
+
+    built, stubbed, missing = [], [], []
+    for name, tool in tools.items():
+        try:
+            payload = json.loads(tool.invoke(args[name]))
+        except Exception as exc:  # a tool that raises is a gap too, not a crash
+            missing.append((name, "unknown", f"raised {type(exc).__name__}: {exc}"))
+            continue
+
+        if payload.get("status") == "not_implemented":
+            missing.append((name, payload.get("owner", "?"), payload.get("needs", "")))
+        elif payload.get("warning") or str(payload.get("model", "")).startswith(
+            "stub_"
+        ):
+            stubbed.append((name, payload.get("warning", "placeholder logic")))
+        else:
+            built.append(name)
+
+    total = len(tools)
+    lines = [
+        "NBA Game Intelligence Agent -- tool status",
+        f"source={source.name}  matchup={matchup_id}  as_of={as_of_date}",
+        "",
+        f"BUILT ({len(built)}/{total})",
+    ]
+    lines += [f"  {n}" for n in built] or ["  (none)"]
+
+    lines += [
+        "",
+        f"PLACEHOLDER LOGIC ({len(stubbed)}/{total}) -- runs, but not the real model",
+    ]
+    for name, warning in stubbed:
+        lines += [f"  {name}", f"      {warning}"]
+    if not stubbed:
+        lines.append("  (none)")
+
+    lines += ["", f"NOT BUILT ({len(missing)}/{total}) -- blocked on:"]
+    for name, owner, needs in missing:
+        lines += [f"  {name}  --  {owner}", f"      needs: {needs}"]
+    if not missing:
+        lines.append("  (none)")
+
+    by_owner: dict[str, list[str]] = {}
+    for name, owner, _ in missing:
+        # "Kirtan (ESPN / RotoWire)" and "Kirtan (odds data)" are one person
+        by_owner.setdefault(owner.split(" (")[0], []).append(name)
+    if by_owner:
+        lines += ["", "BLOCKING LIST"]
+        for owner, names in sorted(by_owner.items()):
+            lines.append(f"  {owner}: {', '.join(names)}")
+
+    return "\n".join(lines)
 
 
 def dry_run(matchup_id: str, as_of_date: str, source) -> str:
@@ -192,6 +294,21 @@ def dry_run(matchup_id: str, as_of_date: str, source) -> str:
         )
     )
 
+    # Same "missing" contract the LLM path is held to (see SYSTEM), computed
+    # deterministically: every tool that is not built, and who owns it.
+    tools = {t.name: t for t in build_tools(source)}
+    probes = _probe_args(matchup_id, as_of_date)
+    missing = []
+    for name, tool in tools.items():
+        try:
+            payload = json.loads(tool.invoke(probes[name]))
+        except Exception:
+            continue
+        if payload.get("status") == "not_implemented":
+            missing.append(
+                f"{name} -- {payload.get('owner', '?')} -- {payload.get('needs', '')}"
+            )
+
     return json.dumps(
         {
             "matchup_id": ctx["matchup_id"],
@@ -200,6 +317,7 @@ def dry_run(matchup_id: str, as_of_date: str, source) -> str:
             "home_win_prob": pred.get("home_win_prob"),
             "away_win_prob": pred.get("away_win_prob"),
             "key_factors": key_factors,
+            "missing": missing,
             "narrative": narrative,
             "mode": "dry_run_no_llm",
         },
@@ -231,6 +349,11 @@ def main() -> None:
         help="Exercise tools + print a report without calling an LLM",
     )
     parser.add_argument(
+        "--status",
+        action="store_true",
+        help="Print which tools are built, which are stubs, and who owns the rest",
+    )
+    parser.add_argument(
         "--model",
         choices=["anthropic", "ollama"],
         default="anthropic",
@@ -244,7 +367,9 @@ def main() -> None:
     args = parser.parse_args()
 
     source = get_source(args.source)
-    if args.dry_run:
+    if args.status:
+        print(status_board(args.matchup, args.as_of, source))
+    elif args.dry_run:
         print(dry_run(args.matchup, args.as_of, source))
     else:
         print(run_matchup(args.matchup, args.as_of, source, args.model))
