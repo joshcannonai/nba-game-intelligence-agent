@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from datetime import date, timedelta
+from pathlib import Path
 
 import pytest
 
@@ -248,7 +249,53 @@ def test_injuries_past_the_end_of_the_log_warn_rather_than_report_nobody_hurt():
     assert "UNKNOWN" in payload["warnings"][0]
 
 
-def test_injuries_admit_they_carry_no_measure_of_player_importance():
-    """Six bench players and one MVP must not look identical without saying so."""
-    payload = get_source("real").injuries("LAL", "2024-12-24")
-    assert "importance_unavailable" in payload
+def test_injuries_weight_a_star_above_a_bench_player():
+    """The advisor's 2026-07-21 note: an MVP and a 10th man must not weigh the same."""
+    payload = get_source("real").injuries("LAL", "2024-12-01")
+    assert "importance_basis" in payload, "must say how importance was derived"
+
+    by_name = {i["player"]: i for i in payload["injuries"]}
+    star = by_name.get("Austin Reaves")
+    bench = by_name.get("Jaxson Hayes")
+    assert star and bench, f"expected both players out, got {list(by_name)}"
+    assert star["importance"] > bench["importance"], (
+        f"{star['player']} ({star['importance']}) must outweigh "
+        f"{bench['player']} ({bench['importance']})"
+    )
+    assert star["tier"] != bench["tier"]
+
+
+def test_importance_is_none_not_zero_for_a_player_with_no_prior_season():
+    """A rookie is unknown, not worthless -- None, never 0.0."""
+    payload = get_source("real").injuries("LAL", "2024-12-01")
+    rookies = [i for i in payload["injuries"] if i.get("tier") == "unknown"]
+    assert rookies, "expected at least one player with no prior season"
+    assert all(r["importance"] is None for r in rookies)
+
+
+def test_odds_file_carries_no_scores():
+    """Structural leakage guarantee: the betting file cannot contain the answer.
+
+    The raw source keeps score_away/score_home in the same row as the line.
+    scripts/build_2026_testset.py splits them; this asserts the split held.
+    """
+    path = Path(__file__).resolve().parents[1] / "data" / "samples" / "odds_2026.csv"
+    if not path.exists():
+        pytest.skip("odds_2026.csv not built")
+    with open(path) as fh:
+        header = fh.readline().lower()
+    for banned in ("score", "_pts", "winner"):
+        assert banned not in header, (
+            f"odds file leaks results: {banned!r} in {header!r}"
+        )
+
+
+def test_betting_line_tool_never_returns_a_result():
+    """Even wired up, the line tool must not hand back who won or the score."""
+    tools = {t.name: t for t in build_tools(get_source("real"))}
+    out = tools["retrieve_betting_line"].invoke(
+        {"matchup_id": "NYK-SAS-2026-06-13", "as_of_date": "2026-06-12"}
+    )
+    payload = json.loads(out)
+    for banned in ("score_home", "score_away", "winner", "home_pts", "away_pts"):
+        assert banned not in payload, f"betting line leaked {banned}"

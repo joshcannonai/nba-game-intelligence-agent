@@ -153,9 +153,50 @@ def injuries_as_of(team_abbr: str, as_of: date) -> list[dict]:
         if age > STALE_INJURY_DAYS:
             continue  # unrecorded departure, not an injury
         inj["days_out"] = age
+        inj.update(player_importance(player, as_of))
         active.append(inj)
 
-    return sorted(active, key=lambda i: i["published"], reverse=True)
+    # importance is None for players with no prior season, so `or 0.0` not a default
+    return sorted(active, key=lambda i: -(i.get("importance") or 0.0))
+
+
+def player_importance(player_name: str, as_of: date) -> dict:
+    """How much this player actually matters, from the PRIOR completed season.
+
+    The advisor's 2026-07-21 note: the injury list weighted a franchise player
+    and a tenth man identically, so a team losing its best player looked the
+    same as a team losing a bench body.
+
+    Minutes carry most of the signal -- a coach's own revealed ranking of who
+    matters -- with scoring as a secondary term. Prior season only, same gating
+    rule as team ratings: using the current season mid-year would leak.
+    """
+    row = player_season_averages(player_name, season_end_year(as_of) - 1)
+    if not row:
+        return {
+            "importance": None,
+            "tier": "unknown",
+            "importance_basis": "no prior season",
+        }
+
+    minutes = min((row.get("min_avg") or 0.0) / 36.0, 1.0)
+    points = min((row.get("pts_avg") or 0.0) / 28.0, 1.0)
+    score = round(0.6 * minutes + 0.4 * points, 3)
+
+    if score >= 0.70:
+        tier = "star"
+    elif score >= 0.45:
+        tier = "starter"
+    elif score >= 0.25:
+        tier = "rotation"
+    else:
+        tier = "bench"
+
+    return {
+        "importance": score,
+        "tier": tier,
+        "importance_basis": row.get("basis", "prior completed season"),
+    }
 
 
 @lru_cache(maxsize=1)
@@ -460,9 +501,9 @@ class CsvSource:
     def injuries(self, team_abbr: str, as_of_date: str) -> dict:
         """Who was known to be out that morning -- the log replayed, stopped at as_of.
 
-        Two limits are stated in the payload rather than hidden: the log ends
-        2025-01-12, and it carries no measure of how much a player matters, so a
-        10th man and a franchise player weigh exactly the same here.
+        Each entry carries an `importance` (0-1) and a `tier`, so a 10th man and a
+        franchise player no longer weigh the same. The remaining limit is stated in
+        the payload rather than hidden: the log ends 2025-01-12.
         """
         as_of = parse_date(as_of_date)
         payload = {
@@ -470,9 +511,10 @@ class CsvSource:
             "team": normalize_abbr(team_abbr),
             "as_of_date": as_of_date,
             "injuries": injuries_as_of(normalize_abbr(team_abbr), as_of),
-            "importance_unavailable": (
-                "This is a COUNT, not an impact. Six bench players and one MVP look "
-                "identical here. Player-value weighting is not built."
+            "importance_basis": (
+                "importance = 0.6*(min/36) + 0.4*(pts/28) from the PRIOR completed "
+                "season; tier is a band on that. A minutes/points proxy for role, "
+                "not a fitted impact coefficient. None = no prior season (rookie)."
             ),
         }
         end = injury_data_through()
@@ -503,6 +545,34 @@ class CsvSource:
             "source": self.name,
             "error": f"player not found in nba_stats: {player_name}",
         }
+
+    def betting_line(self, matchup_id: str) -> dict | None:
+        """The closing spread/total for a game, or None if we do not have it.
+
+        Reads the score-free odds file, so this cannot return a result even by
+        accident. See scripts/build_2026_testset.py for why the split exists.
+        """
+        row = _odds_rows().get(matchup_id)
+        if not row:
+            return None
+        return {
+            "matchup_id": matchup_id,
+            "source": self.name,
+            "whos_favored": row.get("whos_favored"),
+            "spread": row.get("spread"),
+            "total": row.get("total"),
+            "playoffs": row.get("playoffs") == "1",
+            "basis": "closing line",
+        }
+
+
+@lru_cache(maxsize=1)
+def _odds_rows() -> dict[str, dict]:
+    path = SAMPLE_DIR / "odds_2026.csv"
+    if not path.exists():
+        return {}
+    with open(path) as fh:
+        return {r["matchup_id"]: r for r in csv.DictReader(fh)}
 
 
 def get_source(kind: str):

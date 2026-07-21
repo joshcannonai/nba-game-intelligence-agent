@@ -51,9 +51,57 @@ python -m agent.run --model ollama --source real --matchup LAL-BOS-2024-12-25 --
 # Leakage guarantees
 pytest
 
-# Which tools are built, which are stubs, and who owns the rest
+# Which tools have data, and where the missing inputs come from
 python -m agent.run --status --source real
+
+# Replay the season and score it against baselines
+python scripts/build_2026_testset.py          # once, builds the test set
+python -m eval.replay --playoffs              # the 85-game held-out set
 ```
+
+## Evaluation
+
+The team's 2026-07-21 decision: **the 2026 playoffs are the test set**, the regular
+season is context. `eval/replay.py` walks the season game by game, sets `as_of` to the
+morning before tip-off, asks `predict_win_probability` using only what was knowable
+then, and scores the answer three ways — accuracy, log loss, and Brier — against two
+baselines.
+
+Current numbers, from the placeholder heuristic (**not** the XGBoost model yet):
+
+| | accuracy | log loss | Brier |
+|---|---|---|---|
+| **2025-26 season** (1,322 games) | | | |
+| stub_net_rating_v1 | 59.5% | 0.676 | 0.240 |
+| always-pick-home | 55.5% | 0.687 | 0.247 |
+| Vegas closing line | **69.0%** | **0.578** | **0.198** |
+| **2026 playoffs** (85 games, held out) | | | |
+| stub_net_rating_v1 | 58.8% | 0.725 | 0.260 |
+| always-pick-home | 55.3% | 0.688 | 0.247 |
+| Vegas closing line | 58.8% | **0.656** | **0.234** |
+
+Two things worth noting before anyone quotes these. The heuristic beats always-home on
+the full season but loses to the market by ~9.5 points, which is the expected shape.
+And the playoffs are *much* harder for everyone — Vegas itself falls from 69.0% to
+58.8%, where our stub matches it on raw accuracy while remaining worse calibrated
+(higher log loss). Matching the market's hit rate on 85 games is small-sample noise,
+not a result; the calibration gap is the real signal.
+
+### Why the betting line lives in its own file
+
+The raw odds source keeps `score_away` / `score_home` in the **same row** as the line.
+A retrieval tool reading that row would hand the agent the final score.
+`scripts/build_2026_testset.py` splits it into two files that cannot leak into each
+other:
+
+- `data/samples/game_logs_2026.csv` — schedule + results. The answer key. Read only by
+  the eval harness, *after* a prediction is made. No tool can reach it.
+- `data/samples/odds_2026.csv` — the market's price. **No score columns, ever.**
+  This is what `retrieve_betting_line` reads.
+
+Per the advisor (2026-07-21), the line is an **evaluation baseline, not a model
+input** — otherwise the system reads the answer off the market instead of predicting.
+`tests/test_date_gating.py` asserts both the file-level and tool-level guarantees.
 
 Build mode uses Anthropic (personal credits) for fast iteration. Replay / production runs use `--model ollama` -- a local Gemma 4 model (`ollama pull gemma4`) with a known knowledge cutoff so we do not leak future results; Claude's cutoff isn't something we can pin to a date the same way.
 

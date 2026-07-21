@@ -174,23 +174,40 @@ def build_tools(source):
 
     @tool
     def retrieve_betting_line(matchup_id: str, as_of_date: str) -> str:
-        """The market's price on this game: spread, moneyline, total.
+        """The market's price on this game: spread and total.
 
-        This is our evaluation baseline (Sadovnik, 7/07 -- beating the line is a better
-        signal than beating the result, because games have upsets). The line is also
-        what the agent's prediction gets compared against.
+        CONTEXT ONLY -- do NOT let this drive the win probability. The advisor's
+        call on 2026-07-21: the line is an evaluation baseline, not a model input,
+        or the system just reads the answer off the market instead of predicting.
+
+        Reads data/samples/odds_2026.csv, which is built without any score column
+        (scripts/build_2026_testset.py), so this tool structurally cannot leak the
+        result even if it wanted to.
 
         Args:
             matchup_id: AWAY-HOME-YYYY-MM-DD
-            as_of_date: ISO date. Use the line as it stood on that date.
+            as_of_date: ISO date. The line is the closing line for that game.
         """
+        line = (
+            source.betting_line(matchup_id) if hasattr(source, "betting_line") else None
+        )
+        if line:
+            return json.dumps(
+                {
+                    **line,
+                    "as_of_date": as_of_date,
+                    "usage": "Evaluation baseline and narrative context only. Do not "
+                    "use this to set the win probability.",
+                },
+                indent=2,
+            )
         return _todo(
             "retrieve_betting_line",
-            "Josh (have the data, wiring it up)",
-            "Historical odds per game (spread, moneyline, total). Covered: 24,441 games "
-            "2008-2026, including all 1,322 games of 2025-26 and its 85 playoff games. "
-            "LEAKAGE NOTE: the file carries score_away/score_home in the same row as the "
-            "line -- this tool must return the line columns ONLY.",
+            "Josh (2025-26 wired; other seasons pending)",
+            "Closing spread + total per game. data/samples/odds_2026.csv covers all "
+            "1,322 games of 2025-26 including its 85 playoff games, with no score "
+            "columns. This matchup is not in that file -- other seasons still need "
+            "building from the raw odds set.",
             matchup_id=matchup_id,
             as_of_date=as_of_date,
         )
@@ -270,12 +287,12 @@ def build_tools(source):
 def _stub_win_probability(
     source, home_abbr: str, away_abbr: str, as_of_date: str
 ) -> dict:
-    """Net-rating + rest heuristic. Placeholder until the XGBoost tool lands.
+    """Net-rating + rest + injury heuristic. Placeholder until XGBoost lands.
 
     Reads ratings through the same source the agent uses, so it inherits the same
     date gating.
     """
-    from agent.sources import parse_date, season_end_year, team_ratings
+    from agent.sources import injuries_as_of, parse_date, season_end_year, team_ratings
     from agent.teams import normalize_abbr
 
     home_abbr, away_abbr = normalize_abbr(home_abbr), normalize_abbr(away_abbr)
@@ -300,20 +317,53 @@ def _stub_win_probability(
         home, away = ctx["home_team"], ctx["away_team"]
         rest_edge = 3.0 if ctx["rest"].get("away_back_to_back") else 0.0
 
+    # Injury cost, weighted by who is actually out (advisor, 2026-07-21: a star
+    # and a bench player used to count the same). 6.0 = net-rating points a full
+    # replacement-level loss of one star is worth; deliberately a round number
+    # until the model is fit.
+    def injury_cost(abbr: str) -> tuple[float, list[dict]]:
+        try:
+            out = injuries_as_of(abbr, parse_date(as_of_date))
+        except Exception:
+            return 0.0, []
+        weight = sum(i.get("importance") or 0.0 for i in out)
+        return round(6.0 * weight, 2), out
+
+    home_inj_cost, home_out = injury_cost(home_abbr)
+    away_inj_cost, away_out = injury_cost(away_abbr)
+
     home_net = home["off_rating"] - home["def_rating"]
     away_net = away["off_rating"] - away["def_rating"]
-    edge = home_net - away_net + rest_edge + 2.5  # 2.5 = league-average home edge
+    edge = (
+        home_net
+        - away_net
+        + rest_edge
+        + 2.5  # league-average home edge
+        - home_inj_cost
+        + away_inj_cost
+    )
     home_win_prob = max(0.15, min(0.85, 0.5 + edge / 40.0))
 
     return {
-        "model": "stub_net_rating_v0",
+        "model": "stub_net_rating_v1",
         "as_of_date": as_of_date,
         "home": home_abbr,
         "away": away_abbr,
         "home_win_prob": round(home_win_prob, 3),
         "away_win_prob": round(1.0 - home_win_prob, 3),
         "basis": home.get("basis", "mock fixture"),
-        "warning": "Placeholder. Ignores injuries entirely -- see predict_win_probability.",
+        "injury_impact": {
+            "home_cost_net_rating": home_inj_cost,
+            "away_cost_net_rating": away_inj_cost,
+            "home_out": [
+                {"player": i["player"], "tier": i.get("tier")} for i in home_out[:5]
+            ],
+            "away_out": [
+                {"player": i["player"], "tier": i.get("tier")} for i in away_out[:5]
+            ],
+        },
+        "warning": "Placeholder heuristic, not the XGBoost model. Injury weighting is "
+        "a minutes/points proxy, not a fitted coefficient.",
     }
 
 
