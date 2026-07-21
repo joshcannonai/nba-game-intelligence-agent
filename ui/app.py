@@ -166,10 +166,10 @@ with report_tab:
 
     missing = report.get("missing", [])
     if missing:
-        st.subheader(f"Not available yet — {len(missing)} of 10 tools")
+        st.subheader(f"Awaiting input — {len(missing)} of 10 tools")
         st.markdown(
-            '<div class="lede">The agent reports gaps instead of guessing. These are the '
-            "tools the full report still needs, and who owes each one.</div>",
+            '<div class="lede">The agent reports gaps instead of guessing. These tools '
+            "are written and callable — they are waiting on data or a model.</div>",
             unsafe_allow_html=True,
         )
         for m in missing:
@@ -192,8 +192,8 @@ with tools_tab:
     st.markdown(
         '<div class="lede">These ten functions are the agent\'s entire world. It cannot '
         "query a database, browse the web, or invent a number — it can only call these, "
-        "and every one of them takes an <b>as-of date</b>. The LLM decides <i>which</i> to "
-        "call and in what order; the tools decide what data comes back.</div>",
+        "and every one takes an <b>as-of date</b>. All ten are written by the agent lane; "
+        "what varies is whether the data or model behind each one exists yet.</div>",
         unsafe_allow_html=True,
     )
 
@@ -203,17 +203,17 @@ with tools_tab:
     STATE = {
         "built": ("✅ built", "#22C55E"),
         "stub": ("⚠️ placeholder logic", "#F59E0B"),
-        "gap": ("⛔ not built", "#64748B"),
+        "gap": ("⏳ awaiting input", "#64748B"),
     }
 
     for name, tool in tools.items():
         try:
             payload = json.loads(tool.invoke(probes[name]))
         except Exception as exc:
-            payload = {"status": "not_implemented", "owner": "?", "needs": str(exc)}
+            payload = {"status": "awaiting_input", "needs_from": "?", "needs": str(exc)}
 
-        if payload.get("status") == "not_implemented":
-            key, owner = "gap", payload.get("owner", "?")
+        if payload.get("status") == "awaiting_input":
+            key, owner = "gap", payload.get("needs_from", "?")
             detail = payload.get("needs", "")
         elif payload.get("warning") or str(payload.get("model", "")).startswith(
             "stub_"
@@ -221,7 +221,7 @@ with tools_tab:
             key, owner = "stub", "Sarvvesh"
             detail = payload.get("warning", "placeholder logic")
         else:
-            key, owner, detail = "built", "Josh", "Returns real, date-gated data."
+            key, owner, detail = "built", "—", "Returns real, date-gated data."
 
         label, colour = STATE[key]
         summary = tool.description.strip().split("\n")[0]
@@ -229,7 +229,7 @@ with tools_tab:
 
         st.markdown(
             f'<div class="card" style="border-left-color:{colour}">'
-            f'<div class="k">{label} &nbsp;·&nbsp; owner: {owner}</div>'
+            f'<div class="k">{label} &nbsp;·&nbsp; input from: {owner}</div>'
             f'<div class="v"><b>{name}</b>({args})<br>{summary}<br>'
             f'<span style="opacity:.65">{detail}</span></div></div>',
             unsafe_allow_html=True,

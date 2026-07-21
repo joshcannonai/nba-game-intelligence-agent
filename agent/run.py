@@ -17,7 +17,7 @@ Two chat model backends, picked with --model:
         --matchup LAL-BOS-2024-12-25 --as-of 2024-12-24
     python -m agent.run --source real --matchup ... --as-of ...            # Claude
     python -m agent.run --model ollama --source real --matchup ... --as-of ...  # Gemma 4
-    python -m agent.run --status --source real         # which tools are built, and who owns the rest
+    python -m agent.run --status --source real         # which tools have data, and where the rest comes from
 """
 
 from __future__ import annotations
@@ -52,17 +52,17 @@ Rules:
   statistics, and the betting line. So also attempt retrieve_betting_line,
   predict_best_player, and retrieve_news, plus predict_stat_line for a key
   player. Attempt them even though some are not built yet -- a tool that
-  answers "not_implemented" is how we learn what is still blocking the report.
-- MANY TOOLS ARE NOT BUILT YET. A tool may return {"status": "not_implemented",
-  "owner": ..., "needs": ...}. That is not an error and it is not an empty result.
+  answers "awaiting_input" is how we learn what is still blocking the report.
+- SOME TOOLS HAVE NO DATA YET. A tool may return {"status": "awaiting_input",
+  "needs_from": ..., "needs": ...}. That is not an error and not an empty result.
   It means the data layer for it does not exist. When that happens, add a line to
-  "missing" naming the tool and its owner, and carry on with what you do have.
+  "missing" naming the tool and where its input comes from, then carry on.
 - Tool output may also contain nulls with an "unavailable" or "warnings" note.
   Same rule. Never fill a gap with a guess. Never treat a null or a missing tool
   as zero. An unknown injury list is not "nobody is hurt".
 - Final answer must be valid JSON with keys:
   matchup_id, as_of_date, home_win_prob, away_win_prob, key_factors (list of
-  short strings), missing (list of "tool_name -- owner -- what it needs"),
+  short strings), missing (list of "tool_name -- needs_from -- what it needs"),
   narrative (2-4 sentences).
 - Do not invent stats that tools did not return.
 """
@@ -146,11 +146,11 @@ def _probe_args(matchup_id: str, as_of_date: str) -> dict[str, dict]:
 
 
 def status_board(matchup_id: str, as_of_date: str, source) -> str:
-    """Which tools are built, which are stubs, and who owns each gap.
+    """Which tools return data, which are stubs, and where the rest is waiting on.
 
     Deterministic and free: calls every tool once and reports what came back.
-    The report we pitched on 7/07 needs all ten, so an honest board is also the
-    team's blocking list -- it names the owner of everything still missing.
+    All ten tools are the agent lane's; what varies is whether the data or model
+    behind each one exists. So this doubles as the project's input-blocking list.
     """
     tools = {t.name: t for t in build_tools(source)}
     args = _probe_args(matchup_id, as_of_date)
@@ -163,8 +163,10 @@ def status_board(matchup_id: str, as_of_date: str, source) -> str:
             missing.append((name, "unknown", f"raised {type(exc).__name__}: {exc}"))
             continue
 
-        if payload.get("status") == "not_implemented":
-            missing.append((name, payload.get("owner", "?"), payload.get("needs", "")))
+        if payload.get("status") == "awaiting_input":
+            missing.append(
+                (name, payload.get("needs_from", "?"), payload.get("needs", ""))
+            )
         elif payload.get("warning") or str(payload.get("model", "")).startswith(
             "stub_"
         ):
@@ -177,7 +179,10 @@ def status_board(matchup_id: str, as_of_date: str, source) -> str:
         "NBA Game Intelligence Agent -- tool status",
         f"source={source.name}  matchup={matchup_id}  as_of={as_of_date}",
         "",
-        f"BUILT ({len(built)}/{total})",
+        f"All {total} tools are written and callable (agent lane). What follows is",
+        "whether the data or model behind each one exists yet.",
+        "",
+        f"RETURNING REAL DATA ({len(built)}/{total})",
     ]
     lines += [f"  {n}" for n in built] or ["  (none)"]
 
@@ -190,20 +195,23 @@ def status_board(matchup_id: str, as_of_date: str, source) -> str:
     if not stubbed:
         lines.append("  (none)")
 
-    lines += ["", f"NOT BUILT ({len(missing)}/{total}) -- blocked on:"]
-    for name, owner, needs in missing:
-        lines += [f"  {name}  --  {owner}", f"      needs: {needs}"]
+    lines += [
+        "",
+        f"AWAITING INPUT ({len(missing)}/{total}) -- tool is ready, data is not:",
+    ]
+    for name, needs_from, needs in missing:
+        lines += [f"  {name}  --  input from: {needs_from}", f"      needs: {needs}"]
     if not missing:
         lines.append("  (none)")
 
-    by_owner: dict[str, list[str]] = {}
-    for name, owner, _ in missing:
-        # "Kirtan (ESPN / RotoWire)" and "Kirtan (odds data)" are one person
-        by_owner.setdefault(owner.split(" (")[0], []).append(name)
-    if by_owner:
-        lines += ["", "BLOCKING LIST"]
-        for owner, names in sorted(by_owner.items()):
-            lines.append(f"  {owner}: {', '.join(names)}")
+    by_source: dict[str, list[str]] = {}
+    for name, needs_from, _ in missing:
+        # "Josh (have the data)" and "Josh (scope-cut candidate)" are one person
+        by_source.setdefault(needs_from.split(" (")[0], []).append(name)
+    if by_source:
+        lines += ["", "INPUTS WE ARE WAITING ON"]
+        for who, names in sorted(by_source.items()):
+            lines.append(f"  {who}: {', '.join(names)}")
 
     return "\n".join(lines)
 
@@ -309,9 +317,9 @@ def dry_run(matchup_id: str, as_of_date: str, source) -> str:
             payload = json.loads(tool.invoke(probes[name]))
         except Exception:
             continue
-        if payload.get("status") == "not_implemented":
+        if payload.get("status") == "awaiting_input":
             missing.append(
-                f"{name} -- {payload.get('owner', '?')} -- {payload.get('needs', '')}"
+                f"{name} -- {payload.get('needs_from', '?')} -- {payload.get('needs', '')}"
             )
 
     return json.dumps(
@@ -356,7 +364,7 @@ def main() -> None:
     parser.add_argument(
         "--status",
         action="store_true",
-        help="Print which tools are built, which are stubs, and who owns the rest",
+        help="Print which tools have data, and where the missing inputs come from",
     )
     parser.add_argument(
         "--model",

@@ -4,21 +4,27 @@ Every function the agent needs in order to produce the report we described on 7/
 (who wins · best player · a narrative · statistics · the betting line) exists here
 NOW, with a stable name and a stable signature.
 
-Some of them work. Most of them are placeholders that return:
+EVERY tool in this file is written by the agent lane (Josh). Nobody else writes
+agent code. What varies is whether the data or model each tool reads from exists
+yet -- so a placeholder returns:
 
-    {"status": "not_implemented", "owner": "...", "needs": "..."}
+    {"status": "awaiting_input", "needs_from": "...", "needs": "..."}
+
+`needs_from` names whoever produces that INPUT, not someone who owes a function.
+Sarvvesh trains the model; the tool that calls it is still mine. Patrick pulls the
+schedule; the tool that reads it is still mine.
 
 That is deliberate. A placeholder is not a stub that lies -- it tells the agent, in
-plain terms, that the data does not exist yet and who is building it. The agent then
-reports the gap in its output instead of inventing an answer. So running the agent
-today prints an honest status board of the whole project.
+plain terms, that the input does not exist yet and where it comes from. The agent
+reports the gap instead of inventing an answer, so running it today prints an honest
+status board of the whole project.
 
-To implement one: keep the name and the arguments, replace the body. The agent never
-notices -- that is the entire point of putting the interface in first.
+To finish one: keep the name and the arguments, replace the body once its input
+lands. The agent never notices -- that is the entire point of the interface.
 
-    data layer   (Patrick + Kirtan) -> everything named retrieve_*
-    models       (Sarvvesh)         -> everything named predict_*
-    agent        (Josh)             -> the loop that calls them
+    inputs: data     (Patrick + Kirtan) -> feeds the retrieve_* tools
+    inputs: models   (Sarvvesh)         -> feeds the predict_* tools
+    all tools + loop (Josh)             -> this file and agent/run.py
 """
 
 from __future__ import annotations
@@ -30,18 +36,22 @@ from langchain_core.tools import tool
 from agent.sources import get_source
 
 
-def _todo(tool_name: str, owner: str, needs: str, **ctx) -> str:
-    """The honest placeholder. Never fabricates, always names an owner."""
+def _todo(tool_name: str, needs_from: str, needs: str, **ctx) -> str:
+    """The honest placeholder. Never fabricates; names where the input comes from.
+
+    The tool itself is mine either way -- `needs_from` is who produces the data or
+    model it reads, not who owes a function.
+    """
     return json.dumps(
         {
-            "status": "not_implemented",
+            "status": "awaiting_input",
             "tool": tool_name,
-            "owner": owner,
+            "needs_from": needs_from,
             "needs": needs,
             **ctx,
             "note": (
-                "This tool is not built yet. Report it as unavailable in your output. "
-                "Do NOT invent a value and do NOT treat it as zero."
+                "This tool's input does not exist yet. Report it as unavailable in "
+                "your output. Do NOT invent a value and do NOT treat it as zero."
             ),
         },
         indent=2,
