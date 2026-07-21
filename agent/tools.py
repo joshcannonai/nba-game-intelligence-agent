@@ -92,9 +92,11 @@ def build_tools(source):
         """
         return _todo(
             "retrieve_schedule",
-            "Patrick (NBA API)",
-            "A game-by-game schedule table: date, home, away, tip-off time. None of "
-            "the datasets on main contain a single game -- they are all season totals.",
+            "Patrick (already pulled -- needs committing)",
+            "A game-by-game schedule table: date, home, away, tip-off time. Patrick's "
+            "data/pull_games.py writes season_schedule_2026.csv, but it lands in "
+            "data/raw/ which is gitignored, so it never reaches the repo. Commit the "
+            "derived table (or un-ignore a data/curated/ path) and this tool works.",
             as_of_date=as_of_date,
             days_ahead=days_ahead,
         )
@@ -114,9 +116,11 @@ def build_tools(source):
         """
         return _todo(
             "retrieve_team_form",
-            "Patrick + Kirtan (NBA API / Basketball Reference)",
+            "Josh (not in the PDP -- found while building)",
             "A rolling, as-of team rating computed from games played BEFORE as_of_date "
-            "(rolling net rating or Elo). Needs the game-by-game table first.",
+            "(rolling net rating or Elo). The PDP never specced this: we assumed the "
+            "season CSVs would serve, and they cannot without leaking. Needs the "
+            "game-by-game table first.",
             team_abbr=team_abbr,
             as_of_date=as_of_date,
             last_n=last_n,
@@ -150,9 +154,10 @@ def build_tools(source):
         """
         return _todo(
             "retrieve_news",
-            "Kirtan (ESPN / RotoWire)",
+            "Josh (scope-cut candidate)",
             "Scraped articles/notes each carrying a PUBLICATION TIMESTAMP, so they can "
-            "be filtered to as_of_date. Not started.",
+            "be filtered to as_of_date. Not started, and proposed for the Week-4 scope "
+            "cut: highest effort, lowest measurable contribution of the ten.",
             team_abbr=team_abbr,
             as_of_date=as_of_date,
         )
@@ -171,9 +176,11 @@ def build_tools(source):
         """
         return _todo(
             "retrieve_betting_line",
-            "Kirtan (odds data)",
-            "Historical odds per game (spread, moneyline, total). The data exists and is "
-            "free -- it just is not wired into the data layer yet.",
+            "Josh (have the data, wiring it up)",
+            "Historical odds per game (spread, moneyline, total). Covered: 24,441 games "
+            "2008-2026, including all 1,322 games of 2025-26 and its 85 playoff games. "
+            "LEAKAGE NOTE: the file carries score_away/score_home in the same row as the "
+            "line -- this tool must return the line columns ONLY.",
             matchup_id=matchup_id,
             as_of_date=as_of_date,
         )
