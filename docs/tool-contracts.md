@@ -66,9 +66,10 @@ Later: `predict_stat_line(...)` for the regression models.
 ## Agent (Josh)
 
 - LangChain tool-calling loop in `agent/run.py`
-- Build mode: Anthropic API (personal credits)
-- Replay / production mode: local Ollama model with a known knowledge cutoff (wired in a later week)
-- Dry run with no API key: `python -m agent.run --dry-run`
+- Build mode (`--model anthropic`, default): Anthropic API (personal credits)
+- Replay / production mode (`--model ollama`): local Gemma 4 via Ollama, known
+  knowledge cutoff, no API key -- `ollama pull gemma4` once
+- Dry run with no API key or model call: `python -m agent.run --dry-run`
 
 ## How to plug in
 
