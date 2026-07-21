@@ -253,9 +253,14 @@ def dry_run(matchup_id: str, as_of_date: str, source) -> str:
             )
             if flag
         ]
+
+        # None means no prior game in the log (season opener), not zero days rest
+        def _rest(days) -> str:
+            return f"{days}d" if days is not None else "no prior game"
+
         key_factors.append(
-            f"Rest: {home['abbr']} {rest.get('home_days_rest')}d, "
-            f"{away['abbr']} {rest.get('away_days_rest')}d"
+            f"Rest: {home['abbr']} {_rest(rest.get('home_days_rest'))}, "
+            f"{away['abbr']} {_rest(rest.get('away_days_rest'))}"
             + (f" -- {', '.join(b2b)} on a back-to-back" if b2b else "")
         )
 

@@ -19,3 +19,6 @@ requests>=2.30.0
 # Tests (leakage guarantees live in tests/test_date_gating.py)
 pytest>=8.0.0
 
+
+# UI (ui/app.py -- the Streamlit report front end)
+streamlit>=1.45.0
