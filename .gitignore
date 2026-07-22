@@ -10,8 +10,18 @@ venv/
 .env.local
 .env.*.local
 
-# Data artifacts (raw pulls can be large; commit derived/curated sets deliberately)
-data/raw/
+# Data: raw pulls ARE committed. Four people on a three-week project cannot
+# coordinate around data that only exists on the machine that pulled it --
+# data/raw/ was ignored, so every collector script wrote files that silently
+# never reached the repo. Whole dataset is ~43MB across many small files; no
+# single file is close to GitHub's 50MB warning. Keep it that way: if a pull
+# would add a single file over ~25MB, commit a derived/filtered table instead.
+#
+# Derived artifacts stay out -- they rebuild from the raw CSVs, and a binary
+# DB rewrites in full on every commit.
+data/*.db
+*.sqlite
+*.sqlite3
 
 # OS / editor
 .DS_Store
