@@ -230,8 +230,10 @@ def test_unbuilt_tools_say_so_and_name_an_owner(kind):
     }
     for t in build_tools(get_source(kind)):
         payload = json.loads(t.invoke({k: v for k, v in args.items() if k in t.args}))
-        if payload.get("status") == "not_implemented":
-            assert payload.get("owner"), f"{t.name} is unbuilt but names no owner"
+        if payload.get("status") == "awaiting_input":
+            assert payload.get("needs_from"), (
+                f"{t.name} awaits input but names no source"
+            )
             assert payload.get("needs"), f"{t.name} is unbuilt but says what it needs"
 
 

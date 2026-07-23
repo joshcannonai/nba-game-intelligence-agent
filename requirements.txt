@@ -1,5 +1,6 @@
 langchain>=0.3.0
 langchain-anthropic>=0.3.0
+langchain-ollama>=1.0.0
 langchain-core>=0.3.0
 anthropic>=0.40.0
 pydantic>=2.0.0
@@ -18,3 +19,6 @@ requests>=2.30.0
 # Tests (leakage guarantees live in tests/test_date_gating.py)
 pytest>=8.0.0
 
+
+# UI (ui/app.py -- the Streamlit report front end)
+streamlit>=1.45.0

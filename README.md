@@ -43,15 +43,19 @@ python -m agent.run --dry-run                        # mock fixture
 python -m agent.run --dry-run --source real \
     --matchup LAL-BOS-2024-12-25 --as-of 2024-12-24  # real data, date-gated
 
-# Full LangChain agent loop (needs personal Anthropic credits)
+# Full LangChain agent loop -- two backends, pick with --model
 cp .env.example .env   # then set ANTHROPIC_API_KEY
-python -m agent.run --source real --matchup LAL-BOS-2024-12-25 --as-of 2024-12-24
+python -m agent.run --source real --matchup LAL-BOS-2024-12-25 --as-of 2024-12-24            # Claude, build mode
+python -m agent.run --model ollama --source real --matchup LAL-BOS-2024-12-25 --as-of 2024-12-24  # local Gemma 4, no API key
 
 # Leakage guarantees
 pytest
+
+# Which tools are built, which are stubs, and who owns the rest
+python -m agent.run --status --source real
 ```
 
-Build mode uses Anthropic (personal credits) for fast iteration. Replay / production runs will use a local Ollama model with a known knowledge cutoff so we do not leak future results.
+Build mode uses Anthropic (personal credits) for fast iteration. Replay / production runs use `--model ollama` -- a local Gemma 4 model (`ollama pull gemma4`) with a known knowledge cutoff so we do not leak future results; Claude's cutoff isn't something we can pin to a date the same way.
 
 ### Two data sources, one contract
 
