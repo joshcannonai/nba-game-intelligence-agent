@@ -381,6 +381,55 @@ from datetime import timedelta  # noqa: E402
 _ONE_DAY = timedelta(days=1)
 
 
+def team_form_as_of(team_abbr: str, as_of: date, last_n: int = 10) -> dict | None:
+    """A team's CURRENT strength from games PLAYED before as_of, not last season.
+
+    The stale-ratings fix. Team ratings on file are end-of-season aggregates, so
+    mid-season they either leak (current season) or go stale (prior season, wrong
+    by December). This reads the game logs -- outcomes gated at as_of -- and
+    builds a rolling record and average point differential, a light net-rating
+    proxy that actually reflects who the team is right now.
+
+    Results are gated: a game counts only once it has been played AND is on or
+    before as_of. Returns None when there are no in-season games yet (opening
+    week), so the caller falls back to prior-season ratings rather than guess.
+    """
+    team = normalize_abbr(team_abbr)
+    season = season_end_year(as_of)
+    played = []
+    for g in _game_logs(season):
+        gd = parse_date(g["game_date"])
+        if gd >= as_of:
+            continue  # not yet played, or the game itself -- would leak
+        h, a = normalize_abbr(g["home"]), normalize_abbr(g["away"])
+        if team not in (h, a):
+            continue
+        is_home = team == h
+        pf = int(g["home_pts"] if is_home else g["away_pts"])
+        pa = int(g["away_pts"] if is_home else g["home_pts"])
+        played.append((gd, pf - pa, pf > pa))
+
+    if not played:
+        return None
+
+    played.sort(key=lambda x: x[0])
+    window = played[-last_n:]
+    wins = sum(1 for _, _, w in played if w)
+    recent_wins = sum(1 for _, _, w in window if w)
+    avg_margin = sum(m for _, m, _ in window) / len(window)
+
+    return {
+        "abbr": team,
+        "as_of": as_of.isoformat(),
+        "games_played": len(played),
+        "record": f"{wins}-{len(played) - wins}",
+        "last_n": len(window),
+        "recent_record": f"{recent_wins}-{len(window) - recent_wins}",
+        "avg_point_diff": round(avg_margin, 2),
+        "basis": f"rolling over last {len(window)} games before {as_of.isoformat()}",
+    }
+
+
 # --------------------------------------------------------------------------
 # Sources
 # --------------------------------------------------------------------------
@@ -564,6 +613,23 @@ class CsvSource:
             "playoffs": row.get("playoffs") == "1",
             "basis": "closing line",
         }
+
+    def team_form(self, team_abbr: str, as_of_date: str, last_n: int = 10) -> dict:
+        """Current rolling strength from game logs, or a reason it is unavailable."""
+        form = team_form_as_of(team_abbr, parse_date(as_of_date), last_n)
+        if form is None:
+            return {
+                "source": self.name,
+                "team": normalize_abbr(team_abbr),
+                "as_of": as_of_date,
+                "unavailable": (
+                    "No games played this season before as_of (opening week), or no "
+                    f"game logs for season {season_end_year(parse_date(as_of_date))}. "
+                    "Fall back to prior-season ratings; do not guess."
+                ),
+            }
+        form["source"] = self.name
+        return form
 
 
 @lru_cache(maxsize=1)

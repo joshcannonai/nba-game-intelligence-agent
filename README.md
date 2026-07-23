@@ -72,20 +72,25 @@ Current numbers, from the placeholder heuristic (**not** the XGBoost model yet):
 | | accuracy | log loss | Brier |
 |---|---|---|---|
 | **2025-26 season** (1,322 games) | | | |
-| stub_net_rating_v1 | 59.5% | 0.676 | 0.240 |
+| stub_net_rating_v2 | 66.3% | 0.617 | 0.222 |
 | always-pick-home | 55.5% | 0.687 | 0.247 |
 | Vegas closing line | **69.0%** | **0.578** | **0.198** |
 | **2026 playoffs** (85 games, held out) | | | |
-| stub_net_rating_v1 | 58.8% | 0.725 | 0.260 |
+| stub_net_rating_v2 | 63.5% | 0.637 | 0.226 |
 | always-pick-home | 55.3% | 0.688 | 0.247 |
-| Vegas closing line | 58.8% | **0.656** | **0.234** |
+| Vegas closing line | 58.8% | 0.656 | 0.234 |
 
-Two things worth noting before anyone quotes these. The heuristic beats always-home on
-the full season but loses to the market by ~9.5 points, which is the expected shape.
-And the playoffs are *much* harder for everyone — Vegas itself falls from 69.0% to
-58.8%, where our stub matches it on raw accuracy while remaining worse calibrated
-(higher log loss). Matching the market's hit rate on 85 games is small-sample noise,
-not a result; the calibration gap is the real signal.
+`v2` uses **current-season rolling form** (`retrieve_team_form`, built from the game
+logs) as the team-strength signal, instead of last season's end-of-season ratings. That
+one change took the full-season heuristic from 59.5% → 66.3% and closed the gap to the
+market from ~9.5 points to ~2.6. Prior-season ratings are stale by December; current
+form is the fix, and the game logs to compute it were already in the repo.
+
+Two honest caveats before anyone quotes these. On the full season the heuristic still
+sits below the market, which is the expected shape. On the **playoffs it appears to beat
+Vegas** (63.5% vs 58.8%) — but that is **85 games**, and playoff outcomes are noisy;
+treat it as encouraging, not as "we beat the market." The full-season number is the one
+to trust.
 
 ### Why the betting line lives in its own file
 
