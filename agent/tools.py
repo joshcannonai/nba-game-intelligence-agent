@@ -30,10 +30,11 @@ lands. The agent never notices -- that is the entire point of the interface.
 from __future__ import annotations
 
 import json
+import pandas as pd
 
 from langchain_core.tools import tool
 
-from agent.sources import get_source
+from agent.sources import get_source, parse_matchup_id
 
 
 def _todo(tool_name: str, needs_from: str, needs: str, **ctx) -> str:
@@ -184,16 +185,34 @@ def build_tools(source):
             matchup_id: AWAY-HOME-YYYY-MM-DD
             as_of_date: ISO date. Use the line as it stood on that date.
         """
-        return _todo(
-            "retrieve_betting_line",
-            "Josh (have the data, wiring it up)",
-            "Historical odds per game (spread, moneyline, total). Covered: 24,441 games "
-            "2008-2026, including all 1,322 games of 2025-26 and its 85 playoff games. "
-            "LEAKAGE NOTE: the file carries score_away/score_home in the same row as the "
-            "line -- this tool must return the line columns ONLY.",
-            matchup_id=matchup_id,
-            as_of_date=as_of_date,
-        )
+        away, home, game_date = parse_matchup_id(matchup_id)
+
+        df = pd.read_csv("data/samples/odds_only.csv")
+        df["date"] = pd.to_datetime(df["date"]).dt.date
+
+        match = df[
+            (df["away"].str.lower() == away.lower())
+            & (df["home"].str.lower() == home.lower())
+            & (df["date"] == game_date)
+        ]
+
+        if match.empty:
+            return json.dumps({
+                "status": "not_found",
+                "matchup_id": matchup_id,
+                "as_of_date": as_of_date,
+                "message": "No odds found for this matchup in odds_only.csv",
+            })
+
+        row = match.iloc[0]
+        return json.dumps({
+            "matchup_id": matchup_id,
+            "as_of_date": as_of_date,
+            "spread": row["spread"],
+            "total": row["total"],
+            "moneyline_away": row["moneyline_away"],
+            "moneyline_home": row["moneyline_home"],
+            })
 
     # ---------------------------------------------------- MODELS (Sarvvesh) TODO
 

@@ -252,3 +252,46 @@ def test_injuries_admit_they_carry_no_measure_of_player_importance():
     """Six bench players and one MVP must not look identical without saying so."""
     payload = get_source("real").injuries("LAL", "2024-12-24")
     assert "importance_unavailable" in payload
+
+
+def test_betting_line_never_contains_a_score():
+    """retrieve_betting_line must be structurally incapable of leaking a result.
+
+    It reads from data/samples/odds_only.csv, which scripts/odds_only.py
+    builds by keeping an allowlist of safe columns -- score_away, score_home,
+    and every quarter/OT column are never selected into that file. This test
+    checks the tool's actual output, not just the file, so a future change to
+    the tool itself would also be caught.
+    """
+    src = get_source("real")
+    tools = {t.name: t for t in build_tools(src)}
+
+    payload = json.loads(
+        tools["retrieve_betting_line"].invoke(
+            {"matchup_id": "DET-LAL-2024-12-23", "as_of_date": "2024-12-22"}
+        )
+    )
+
+    banned = {
+        "score_away", "score_home",
+        "q1_away", "q2_away", "q3_away", "q4_away", "ot_away",
+        "q1_home", "q2_home", "q3_home", "q4_home", "ot_home",
+        "winner",
+    }
+    leaked = banned & payload.keys()
+    assert not leaked, f"retrieve_betting_line leaked score field(s): {leaked}"
+
+
+def test_odds_only_csv_has_no_score_columns():
+    """File-level guarantee, independent of the tool: the source file itself
+    must never carry score data, no matter what column order it's saved in."""
+    import pandas as pd
+
+    df = pd.read_csv("data/samples/odds_only.csv")
+    banned = {
+        "score_away", "score_home",
+        "q1_away", "q2_away", "q3_away", "q4_away", "ot_away",
+        "q1_home", "q2_home", "q3_home", "q4_home", "ot_home",
+    }
+    leaked = banned & set(df.columns)
+    assert not leaked, f"odds_only.csv contains score column(s): {leaked}"
