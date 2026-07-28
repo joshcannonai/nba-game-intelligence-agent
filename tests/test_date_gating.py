@@ -21,12 +21,14 @@ from agent.sources import (
     INJURY_CSVS,
     _injury_rows,
     _odds_rows,
+    parse_date,
     get_source,
     injuries_as_of,
     injury_data_through,
     parse_matchup_id,
     season_end_year,
 )
+from agent import sources
 from agent.teams import TEAMS, odds_abbr
 from agent.tools import build_tools
 
@@ -453,3 +455,63 @@ def test_betting_line_tool_never_returns_a_result():
     payload = json.loads(out)
     for banned in ("score_home", "score_away", "winner", "home_pts", "away_pts"):
         assert banned not in payload, f"betting line leaked {banned}"
+
+
+def _scrub_results(rows, cutoff):
+    """Keep each row so its DATE survives, but destroy its RESULT."""
+    out = []
+    for g in rows:
+        g = dict(g)
+        if parse_date(g["game_date"]) >= cutoff:
+            g["home_pts"] = g["away_pts"] = "0"
+            g["winner"] = "SCRUBBED"
+        out.append(g)
+    return tuple(out)
+
+
+@pytest.mark.parametrize(
+    ("matchup", "as_of"),
+    [
+        ("NYK-BOS-2025-12-02", "2025-12-01"),
+        ("LAL-DEN-2026-01-15", "2026-01-10"),
+        ("MIA-BOS-2024-12-02", "2024-11-15"),
+        ("BOS-NYK-2026-03-01", "2025-11-01"),  # asking four months ahead
+    ],
+)
+def test_no_future_outcome_reaches_the_report(monkeypatch, matchup, as_of):
+    """The leakage claim in its strongest form: destroy the future, expect no change.
+
+    Every other test here checks that a particular field is filtered. This one
+    makes no assumption about which field: it erases every result dated on or
+    after as_of -- scores and winner -- and re-runs. If any code path consumes
+    an outcome it should not see, the two reports differ.
+
+    Schedule DATES are deliberately left intact. Rest is not gated on purpose
+    (the NBA publishes the schedule in August), so gating dates here would fail
+    the test for a behaviour we explicitly want -- see
+    test_rest_is_schedule_based_not_as_of_gated.
+    """
+    from agent.run import dry_run
+
+    cutoff = parse_date(as_of)
+    src = CsvSource()
+    full = json.loads(dry_run(matchup, as_of, src))
+
+    real_injuries = sources._injury_rows.__wrapped__
+    real_logs = sources._game_logs.__wrapped__
+    real_all = sources._all_game_logs.__wrapped__
+    gated = tuple(r for r in real_injuries() if r[0] <= cutoff)
+
+    monkeypatch.setattr(sources, "_injury_rows", lambda: gated)
+    monkeypatch.setattr(
+        sources, "_game_logs", lambda season: _scrub_results(real_logs(season), cutoff)
+    )
+    monkeypatch.setattr(
+        sources, "_all_game_logs", lambda: _scrub_results(real_all(), cutoff)
+    )
+
+    blind = json.loads(dry_run(matchup, as_of, src))
+    assert full == blind, (
+        "the report changed when future results were erased -- something read "
+        "an outcome dated after as_of"
+    )
