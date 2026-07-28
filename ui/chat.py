@@ -133,6 +133,61 @@ def render_betting_line(p: dict) -> str:
     return body
 
 
+def render_injuries(p: dict) -> str:
+    """Who is out, ranked by how much they matter."""
+    out = p.get("injuries", [])
+    if not out:
+        return (
+            f"<b>Nobody listed out</b> for {p.get('team')} as of {p.get('as_of_date')}."
+            "<div class='caveat'>An empty list means no report had been filed by that "
+            "date -- not that the roster is healthy.</div>"
+        )
+    rows = "".join(
+        f"<div><b>{i['player']}</b> — {i.get('tier', '?')}"
+        f"<span style='opacity:.65'> · out {i.get('days_out', '?')}d"
+        f" · {i.get('note', '')}</span></div>"
+        for i in out
+    )
+    return (
+        f"<b>{len(out)} out</b> for {p.get('team')} as of {p.get('as_of_date')}, "
+        "most important first:" + rows + "<div class='caveat'>Importance is a "
+        "minutes/points proxy from the prior season, not a fitted impact "
+        "coefficient.</div>"
+    )
+
+
+def render_win_prob(p: dict) -> str:
+    """The prediction, with the injury cost that moved it."""
+    hp, ap = p.get("home_win_prob"), p.get("away_win_prob")
+    if hp is None:
+        return "<b>No probability.</b> " + str(p.get("warning", ""))
+    body = (
+        f"<b>{p['home']} {hp:.1%}</b> &nbsp;·&nbsp; {p['away']} {ap:.1%}"
+        f"<div style='opacity:.75;font-size:.86rem;margin-top:.3rem'>"
+        f"{p.get('basis', '')}</div>"
+    )
+    imp = p.get("injury_impact") or {}
+    if imp:
+
+        def side(label, cost, outs):
+            who = ", ".join(f"{o['player']} ({o['tier']})" for o in outs) or "nobody"
+            return f"<div>{label} &minus;{cost:g} net rating — {who}</div>"
+
+        body += (
+            "<div class='caveat'>Injury cost applied<br>"
+            + side(
+                p["home"], imp.get("home_cost_net_rating", 0), imp.get("home_out", [])
+            )
+            + side(
+                p["away"], imp.get("away_cost_net_rating", 0), imp.get("away_out", [])
+            )
+            + "</div>"
+        )
+    if p.get("warning"):
+        body += f"<div class='caveat'>{p['warning']}</div>"
+    return body
+
+
 def answer_deterministically(question: str, matchup_id: str, as_of: str, source) -> str:
     name = route(question)
     if name is None:
@@ -152,8 +207,13 @@ def answer_deterministically(question: str, matchup_id: str, as_of: str, source)
 
     head = f"<div class='tool'>{name}</div>"
 
-    if name == "retrieve_betting_line":
-        return head + render_betting_line(payload)
+    renderers = {
+        "retrieve_betting_line": render_betting_line,
+        "retrieve_injuries": render_injuries,
+        "predict_win_probability": render_win_prob,
+    }
+    if name in renderers:
+        return head + renderers[name](payload)
 
     if payload.get("status") == "awaiting_input":
         return (
