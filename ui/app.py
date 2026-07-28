@@ -9,9 +9,12 @@ from __future__ import annotations
 
 import csv
 import json
+import os
+import socket
 import sys
 from datetime import date, timedelta
 from pathlib import Path
+from urllib.parse import urlparse
 
 import streamlit as st
 
@@ -70,6 +73,24 @@ def parse_iso(s: str) -> date:
     return date(y, m, d)
 
 
+# The chat front end runs as its own Streamlit app. Override the port with
+# NBA_CHAT_PORT if 8701 is taken.
+CHAT_PORT = int(os.environ.get("NBA_CHAT_PORT", "8701"))
+CHAT_URL = f"http://localhost:{CHAT_PORT}"
+
+
+@st.cache_data(ttl=10)
+def chat_is_up(url: str) -> bool:
+    """Is the chat app actually listening? A dead button mid-demo is worse
+    than a disabled one that says how to start it."""
+    host, port = urlparse(url).hostname, urlparse(url).port
+    try:
+        with socket.create_connection((host, port), timeout=0.4):
+            return True
+    except OSError:
+        return False
+
+
 st.title("🏀 NBA Game Intelligence Agent")
 st.markdown(
     '<div class="lede">Pick a game, then pick a date you are asking <b>from</b>. '
@@ -123,6 +144,19 @@ with st.sidebar:
     st.caption(f"`{matchup_id}`")
 
     source_kind = st.radio("Data source", ["real", "mock"], horizontal=True)
+
+    st.divider()
+    if chat_is_up(CHAT_URL):
+        st.link_button("🏀  Ask the agent", CHAT_URL, use_container_width=True)
+        st.caption("Same tools, same date gate — conversational.")
+    else:
+        st.button(
+            "🏀  Ask the agent",
+            disabled=True,
+            use_container_width=True,
+            help="The chat app is not running.",
+        )
+        st.caption(f"Start it: `streamlit run ui/chat.py --server.port {CHAT_PORT}`")
 
 source = get_source(source_kind)
 as_of_str = as_of.isoformat()
