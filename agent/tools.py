@@ -11,7 +11,7 @@ yet -- so a placeholder returns:
     {"status": "awaiting_input", "needs_from": "...", "needs": "..."}
 
 `needs_from` names whoever produces that INPUT, not someone who owes a function.
-Sarvvesh trains the model; the tool that calls it is still mine. Patrick pulls the
+Sarvesh trains the model; the tool that calls it is still mine. Patrick pulls the
 schedule; the tool that reads it is still mine.
 
 That is deliberate. A placeholder is not a stub that lies -- it tells the agent, in
@@ -23,7 +23,7 @@ To finish one: keep the name and the arguments, replace the body once its input
 lands. The agent never notices -- that is the entire point of the interface.
 
     inputs: data     (Patrick + Kirtan) -> feeds the retrieve_* tools
-    inputs: models   (Sarvvesh)         -> feeds the predict_* tools
+    inputs: models   (Sarvesh)         -> feeds the predict_* tools
     all tools + loop (Josh)             -> this file and agent/run.py
 """
 
@@ -145,8 +145,11 @@ def build_tools(source):
         """Who was KNOWN to be out, on the morning of the game.
 
         Works today by replaying the injury transaction log and stopping at as_of_date.
-        Two known limits: the log ends 2025-01-12, and it gives no measure of how much
-        a player matters -- a 10th man and a franchise player weigh the same.
+        The log now runs to 2026-05-29, so the 2025-26 replay window is covered.
+
+        Known limit: these are transaction dates -- when a player was placed on or
+        activated from the injured list -- not the moment the news broke. An as-of
+        query on the morning of a game can therefore see a same-day placement.
 
         Args:
             team_abbr: Team abbreviation.
@@ -210,13 +213,13 @@ def build_tools(source):
             }
         )
 
-    # ---------------------------------------------------- MODELS (Sarvvesh) TODO
+    # ---------------------------------------------------- MODELS (Sarvesh) TODO
 
     @tool
     def predict_win_probability(home_abbr: str, away_abbr: str, as_of_date: str) -> str:
         """Probability the home team wins. PLACEHOLDER: a net-rating + rest heuristic.
 
-        Sarvvesh's XGBoost replaces the body of this. Known weakness of the placeholder:
+        Sarvesh's XGBoost replaces the body of this. Known weakness of the placeholder:
         it ignores the injury list entirely, so the prediction does not move when the
         injury list does.
 
@@ -242,7 +245,7 @@ def build_tools(source):
         """
         return _todo(
             "predict_stat_line",
-            "Sarvvesh (linear regression)",
+            "Sarvesh (linear regression)",
             "The stat-line regression from the PDP. Not started.",
             player_name=player_name,
             matchup_id=matchup_id,
@@ -262,7 +265,7 @@ def build_tools(source):
         """
         return _todo(
             "predict_best_player",
-            "Sarvvesh (models)",
+            "Sarvesh (models)",
             "Ranks likely top performers. Depends on predict_stat_line. Not started.",
             matchup_id=matchup_id,
             as_of_date=as_of_date,

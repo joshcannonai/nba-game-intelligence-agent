@@ -2,7 +2,7 @@
 
 CECS 499 capstone (Summer 2026, UTK). An agentic prediction system for NBA games: pick a matchup, get a structured pregame report with win probability, projected stat lines, matchup context, and a plain-language explanation of what drove the prediction.
 
-**Team:** Josh Cannon · Patrick Haley · Sarvvesh Vinod Kumar · Kirtan Patel
+**Team:** Josh Cannon · Patrick Haley · Sarvesh Vinod Kumar · Kirtan Patel
 **Advisor:** Prof. Amir Sadovnik
 
 ## How it works
@@ -21,7 +21,7 @@ Full plan: see the Proposal Development Plan (linked in the course submission).
 | Folder | What goes here | Owner |
 |---|---|---|
 | `data/` | Source integrations, cleaning pipeline, feature engineering, date-gated store | Patrick + Kirtan |
-| `models/` | Regression + XGBoost training, statistical summarization study | Sarvvesh |
+| `models/` | Regression + XGBoost training, statistical summarization study | Sarvesh |
 | `agent/` | Tool-use loop, agent actions, model-invocation interface | Josh |
 | `eval/` | Replay harness, metrics, ablation runner | Kirtan (with Patrick on store design) |
 | `ui/` | Streamlit app | Josh + Kirtan (weeks 6-7) |
@@ -101,8 +101,9 @@ other:
 
 - `data/samples/game_logs_2026.csv` — schedule + results. The answer key. Read only by
   the eval harness, *after* a prediction is made. No tool can reach it.
-- `data/samples/odds_2026.csv` — the market's price. **No score columns, ever.**
-  This is what `retrieve_betting_line` reads.
+- `data/samples/odds_only.csv` — the market's price, every season 2008-2026.
+  **No score columns, ever** (built by `scripts/odds_only.py` from an allowlist).
+  This is what `retrieve_betting_line` and the eval harness both read.
 
 Per the advisor (2026-07-21), the line is an **evaluation baseline, not a model
 input** — otherwise the system reads the answer off the market instead of predicting.

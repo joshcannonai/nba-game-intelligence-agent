@@ -154,7 +154,7 @@ with report_tab:
         "injury penalty weighted by minutes. It is **not** the XGBoost model, and "
         "measured over all 1,322 games of 2025-26 the injury term currently makes "
         "it *worse* (63.4% vs 66.3% without it), so treat it as a placeholder with "
-        "a known flaw. Sarvvesh's model drops into this same tool signature."
+        "a known flaw. Sarvesh's model drops into this same tool signature."
     )
 
     st.subheader("What drove it")
@@ -226,7 +226,7 @@ with tools_tab:
         elif payload.get("warning") or str(payload.get("model", "")).startswith(
             "stub_"
         ):
-            key, owner = "stub", "Sarvvesh"
+            key, owner = "stub", "Sarvesh"
             detail = payload.get("warning", "placeholder logic")
         else:
             key, owner, detail = "built", "—", "Returns real, date-gated data."

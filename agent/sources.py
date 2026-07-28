@@ -729,9 +729,9 @@ class CsvSource:
         }
 
     def betting_line(self, matchup_id: str, as_of_date: str) -> dict:
-        # The week-5 branch had a second betting_line reading odds_2026.csv with
-        # no as-of gate. This one supersedes it: same data, gated, signed spread.
-        # eval/replay.py reads odds_2026.csv directly, so nothing else broke.
+        # The week-5 branch had a second betting_line with no as-of gate, reading
+        # a separate 2025-26 odds extract. Both are retired: one gated accessor,
+        # one odds file, used by the agent and the eval harness alike.
         away, home, game_date = parse_matchup_id(matchup_id)
         return closing_line(away, home, game_date, parse_date(as_of_date))
 

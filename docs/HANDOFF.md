@@ -81,7 +81,7 @@ quote it as a result. The calibration gap (log loss) is the real signal.
 4. **Agent-arm evaluation.** `eval/replay.py` currently scores the *tool*
    directly, which is the classifier arm. The agentic arm needs a subset run
    through `run_matchup` (~30s/game, so sample ~30 games, not 1,322).
-5. **Sit with Sarvvesh.** XGBoost drops into `predict_win_probability`'s existing
+5. **Sit with Sarvesh.** XGBoost drops into `predict_win_probability`'s existing
    signature; the harness picks it up with no other change.
 
 ---
@@ -89,9 +89,10 @@ quote it as a result. The calibration gap (log loss) is the real signal.
 ## Traps
 
 - **The odds file keeps `score_away`/`score_home` in the same row as the line.**
-  This is the single most likely way this project leaks. `odds_2026.csv` is built
-  without score columns and tests assert it — keep it that way, and tell Kirtan,
-  whose gating tool emits the same data.
+  This is the single most likely way this project leaks. `odds_only.csv` is built
+  without score columns and tests assert it — keep it that way. There used to be a
+  second 2025-26-only extract (`odds_2026.csv`); it was retired so the two could
+  not drift apart.
 - **Betting line is evaluation-only** (advisor, 07-21). It must not feed the
   prediction or the system reads the answer off the market.
 - **Model-knowledge gate only holds for 2025-26.** Gemma 4's cutoff is ~Jan 2025,

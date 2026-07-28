@@ -9,7 +9,6 @@ from __future__ import annotations
 import csv
 import json
 from datetime import date, timedelta
-from pathlib import Path
 
 import pytest
 
@@ -405,6 +404,8 @@ def test_the_two_injury_files_join_without_a_gap_or_an_overlap():
     assert not shared, (
         f"the two injury files cover the same dates: {sorted(shared)[:5]}"
     )
+
+
 def test_injuries_weight_a_star_above_a_bench_player():
     """The advisor's 2026-07-21 note: an MVP and a 10th man must not weigh the same."""
     payload = get_source("real").injuries("LAL", "2024-12-01")
@@ -433,12 +434,14 @@ def test_odds_file_carries_no_scores():
     """Structural leakage guarantee: the betting file cannot contain the answer.
 
     The raw source keeps score_away/score_home in the same row as the line.
-    scripts/build_2026_testset.py splits them; this asserts the split held.
+    scripts/odds_only.py splits them; this asserts the split held.
+
+    Deliberately not skippable: this used to point at odds_2026.csv and skip
+    when it was absent, so retiring that file would have quietly disarmed the
+    check rather than failed it.
     """
-    path = Path(__file__).resolve().parents[1] / "data" / "samples" / "odds_2026.csv"
-    if not path.exists():
-        pytest.skip("odds_2026.csv not built")
-    with open(path) as fh:
+    assert ODDS_CSV.exists(), f"{ODDS_CSV.name} missing -- run scripts/odds_only.py"
+    with ODDS_CSV.open() as fh:
         header = fh.readline().lower()
     for banned in ("score", "_pts", "winner"):
         assert banned not in header, (

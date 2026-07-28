@@ -1,6 +1,6 @@
 # Tool contracts (agent interface)
 
-These are the function shapes the agent expects. Patrick / Kirtan (data) and Sarvvesh (models) can implement the real versions behind the same names and argument lists. `agent/tools.py` serves them from a **source**, selected at runtime:
+These are the function shapes the agent expects. Patrick / Kirtan (data) and Sarvesh (models) can implement the real versions behind the same names and argument lists. `agent/tools.py` serves them from a **source**, selected at runtime:
 
 ```
 python -m agent.run --dry-run                                   # mock fixture
@@ -53,7 +53,7 @@ Suggested follow-ons (not stubbed yet):
 
 One function per source is fine, as long as the agent can call them as tools.
 
-## Model tools (Sarvvesh)
+## Model tools (Sarvesh)
 
 ### `predict_win_probability(home_abbr: str, away_abbr: str, as_of_date: str) -> str`
 JSON string with:

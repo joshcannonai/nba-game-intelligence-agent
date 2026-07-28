@@ -8,12 +8,14 @@ Handing that row to a retrieval tool would hand the agent the final score. So
 this script splits it into two files that cannot leak into each other:
 
     game_logs_2026.csv   schedule + results   (the answer key -- eval only)
-    odds_2026.csv        the market's price   (no scores, ever)
 
-`retrieve_betting_line` reads the second one. Nothing the agent can call reads
-the first. Per the advisor (2026-07-21), the line is an evaluation baseline,
-not a model input -- keeping the files apart makes that structural rather than
-a matter of remembering.
+Nothing the agent can call reads that file. The market's price lives in
+data/samples/odds_only.csv, built separately by scripts/odds_only.py from the
+same raw set and covering every season rather than just this one; this script
+used to emit a second 2025-26-only copy, which only invited the two to
+disagree. Per the advisor (2026-07-21), the line is an evaluation baseline and
+not a model input, and keeping scores out of the odds file makes that
+structural rather than a matter of remembering.
 
     python scripts/build_2026_testset.py
 """
@@ -26,7 +28,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "data/raw/odds/primary/nba_2008-2026.csv"
 OUT_GAMES = ROOT / "data/samples/game_logs_2026.csv"
-OUT_ODDS = ROOT / "data/samples/odds_2026.csv"
 SEASON = "2026"
 
 # odds-source code -> the abbreviation our game logs use
@@ -75,7 +76,7 @@ def main() -> None:
         )
 
     rows = [r for r in csv.DictReader(open(SRC)) if r["season"] == SEASON]
-    games, odds, skipped = [], [], 0
+    games, skipped = [], 0
 
     for r in sorted(rows, key=lambda x: x["date"]):
         home, away = TEAM_MAP.get(r["home"]), TEAM_MAP.get(r["away"])
@@ -102,37 +103,17 @@ def main() -> None:
                 }
             )
 
-        # deliberately no score columns -- see module docstring
-        odds.append(
-            {
-                "matchup_id": matchup_id,
-                "game_date": date,
-                "home": home,
-                "away": away,
-                "playoffs": "1" if playoffs else "0",
-                "whos_favored": r["whos_favored"],
-                "spread": r["spread"],
-                "total": r["total"],
-                "moneyline_home": r["moneyline_home"],
-                "moneyline_away": r["moneyline_away"],
-            }
-        )
 
     OUT_GAMES.parent.mkdir(parents=True, exist_ok=True)
     with open(OUT_GAMES, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(games[0].keys()))
         w.writeheader()
         w.writerows(games)
-    with open(OUT_ODDS, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(odds[0].keys()))
-        w.writeheader()
-        w.writerows(odds)
 
     po = sum(1 for g in games if g["playoffs"] == "1")
     print(
         f"{OUT_GAMES.name}: {len(games)} games ({po} playoff), {games[0]['game_date']} -> {games[-1]['game_date']}"
     )
-    print(f"{OUT_ODDS.name}:   {len(odds)} rows, no score columns")
     if skipped:
         print(f"skipped {skipped} rows with unmapped team codes")
 

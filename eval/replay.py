@@ -19,8 +19,9 @@ Scored against two baselines:
 
 Leakage: the harness reads results ONLY to score, after the prediction is made.
 The prediction path never touches game_logs -- it goes through the same gated
-tools the agent uses. The Vegas line comes from odds_2026.csv, which carries no
-score columns by construction (see scripts/build_2026_testset.py).
+tools the agent uses. The Vegas line comes from odds_only.csv, read through the
+same gated accessor the agent's tool uses; it carries no score columns by
+construction (see scripts/odds_only.py).
 
     python -m eval.replay --playoffs
     python -m eval.replay --limit 200 --out eval/results_regular.csv
@@ -38,7 +39,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from agent.sources import get_source, parse_date  # noqa: E402
+from agent.sources import (  # noqa: E402
+    closing_line,
+    get_source,
+    parse_date,
+    parse_matchup_id,
+)
 from agent.tools import build_tools  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -66,20 +72,19 @@ def _phi(x: float) -> float:
     return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
 
 
-def spread_home_prob(row: dict) -> float | None:
-    """Home win probability implied by the closing spread."""
-    try:
-        spread = float(row.get("spread", ""))
-    except (TypeError, ValueError):
+def spread_home_prob(line: dict) -> float | None:
+    """Home win probability implied by the closing spread.
+
+    spread_home is what the home team lays: -6.5 means favoured by 6.5, so the
+    expected home margin is its negation.
+    """
+    sh = line.get("spread_home")
+    if sh is None:
         return None
-    favored = (row.get("whos_favored") or "").strip().lower()
-    if favored not in {"home", "away"}:
-        return None
-    expected_home_margin = spread if favored == "home" else -spread
-    return _phi(expected_home_margin / MARGIN_SIGMA)
+    return _phi(-float(sh) / MARGIN_SIGMA)
 
 
-def vegas_home_prob(row: dict) -> float | None:
+def vegas_home_prob(line: dict) -> float | None:
     """The market's home win probability.
 
     Prefers the two moneylines: their implied probabilities sum above 1.0, and
@@ -87,11 +92,11 @@ def vegas_home_prob(row: dict) -> float | None:
     The 2025-26 rows carry no moneylines, only a spread, so fall back to that.
     """
     h, a = (
-        american_to_prob(row.get("moneyline_home")),
-        american_to_prob(row.get("moneyline_away")),
+        american_to_prob(line.get("moneyline_home")),
+        american_to_prob(line.get("moneyline_away")),
     )
     if h is None or a is None or (h + a) == 0:
-        return spread_home_prob(row)
+        return spread_home_prob(line)
     return h / (h + a)
 
 
@@ -119,7 +124,6 @@ def metrics(preds: list[tuple[float, int]]) -> dict:
 
 def load_rows(playoffs_only: bool, limit: int | None) -> tuple[list[dict], dict]:
     games_path = ROOT / "data/samples/game_logs_2026.csv"
-    odds_path = ROOT / "data/samples/odds_2026.csv"
     if not games_path.exists():
         raise SystemExit(
             f"missing {games_path.name}. Run: python scripts/build_2026_testset.py"
@@ -131,9 +135,17 @@ def load_rows(playoffs_only: bool, limit: int | None) -> tuple[list[dict], dict]
     if limit:
         games = games[:limit]
 
+    # One odds file for the whole project: data/samples/odds_only.csv, read
+    # through the same gated accessor the agent's tool uses. There used to be a
+    # second 2025-26-only extract here; both were derived from the same raw set,
+    # and keeping two invited them to disagree.
     odds = {}
-    if odds_path.exists():
-        odds = {r["matchup_id"]: r for r in csv.DictReader(open(odds_path))}
+    for g in games:
+        away, home, game_date = parse_matchup_id(g["game_id"])
+        # as_of = tip-off day: pre-game, so the gate allows it.
+        line = closing_line(away, home, game_date, game_date)
+        if line.get("status") == "ok":
+            odds[g["game_id"]] = line
     return games, odds
 
 
