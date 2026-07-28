@@ -19,7 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
 from agent.run import _probe_args, dry_run, status_board  # noqa: E402
-from agent.sources import get_source  # noqa: E402
+from agent.sources import SAMPLE_DIR, get_source  # noqa: E402
 from agent.tools import build_tools  # noqa: E402
 
 st.set_page_config(
@@ -84,7 +84,13 @@ st.markdown(
 # ---------------------------------------------------------------- sidebar
 with st.sidebar:
     st.header("Matchup")
-    season = st.selectbox("Season sample", [2025, 2024], index=0)
+    # Discovered from disk, newest first, so a season landing in data/samples
+    # shows up without editing this list. 2026 is the replay/test season.
+    seasons = sorted(
+        (int(p.stem.rsplit("_", 1)[1]) for p in SAMPLE_DIR.glob("game_logs_*.csv")),
+        reverse=True,
+    )
+    season = st.selectbox("Season sample", seasons, index=0)
     games = load_games(season)
 
     if not games:
@@ -144,9 +150,11 @@ with report_tab:
     c3.metric("As of", as_of_str)
 
     st.warning(
-        "Win probability is `stub_net_rating_v0` -- a net-rating heuristic, **not** the "
-        "XGBoost model. It ignores the injury list entirely. Sarvvesh's model drops into "
-        "this same tool signature."
+        "Win probability is `stub_net_rating_v2` -- net rating, rest and an "
+        "injury penalty weighted by minutes. It is **not** the XGBoost model, and "
+        "measured over all 1,322 games of 2025-26 the injury term currently makes "
+        "it *worse* (63.4% vs 66.3% without it), so treat it as a placeholder with "
+        "a known flaw. Sarvvesh's model drops into this same tool signature."
     )
 
     st.subheader("What drove it")

@@ -25,7 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
 from agent.run import _probe_args, dry_run  # noqa: E402
-from agent.sources import get_source  # noqa: E402
+from agent.sources import SAMPLE_DIR, get_source  # noqa: E402
 from agent.tools import build_tools  # noqa: E402
 
 ACCENT = "#F97316"
@@ -171,7 +171,11 @@ def answer_deterministically(question: str, matchup_id: str, as_of: str, source)
 # ---------------------------------------------------------------- sidebar
 with st.sidebar:
     st.header("Matchup")
-    season = st.selectbox("Season sample", [2025, 2024], index=0)
+    seasons = sorted(
+        (int(p.stem.rsplit("_", 1)[1]) for p in SAMPLE_DIR.glob("game_logs_*.csv")),
+        reverse=True,
+    )
+    season = st.selectbox("Season sample", seasons, index=0)
     games = load_games(season)
     if not games:
         st.error(f"data/samples/game_logs_{season}.csv not found.")
