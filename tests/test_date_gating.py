@@ -17,6 +17,8 @@ from agent.sources import (
     STALE_INJURY_DAYS,
     CsvSource,
     MockSource,
+    INJURY_CSVS,
+    _injury_rows,
     _odds_rows,
     get_source,
     injuries_as_of,
@@ -369,3 +371,40 @@ def test_every_team_abbreviation_resolves_in_the_odds_file():
     }
     unmapped = sorted(a for a in TEAMS if odds_abbr(a) not in codes)
     assert not unmapped, f"no odds-file spelling for: {unmapped}"
+
+
+def test_injury_log_covers_the_season_we_test_on():
+    """The replay window is 2025-26; the Kaggle set alone stops at 2025-01-12.
+
+    Without the continuation file every game in the test season reports zero
+    players out, which the agent cannot distinguish from a genuinely healthy
+    roster -- it would silently score the whole season on absent data.
+    """
+    through = injury_data_through()
+    assert through >= date(2026, 4, 1), (
+        f"injury log ends {through}; the 2025-26 replay window needs data "
+        "through the end of that season"
+    )
+    assert injuries_as_of("BOS", date(2026, 1, 20)), (
+        "no injuries found mid-2025-26 season -- the continuation file is "
+        "missing or not being read"
+    )
+
+
+def test_the_two_injury_files_join_without_a_gap_or_an_overlap():
+    """They are separate files to keep provenance, but one continuous log."""
+    dates = {d for d, *_ in _injury_rows()}
+    kaggle_end, pst_start = date(2025, 1, 12), date(2025, 1, 13)
+    assert kaggle_end in dates and pst_start in dates, "the seam has a hole in it"
+
+    # Overlap would double-count a transaction, so check the files are disjoint
+    # in time rather than that every row is unique -- the Kaggle file already
+    # carries one genuine duplicate of its own (Doug McDermott, 2022-12-08).
+    def file_dates(path):
+        with path.open(newline="") as f:
+            return {r["Date"] for r in csv.DictReader(f)}
+
+    shared = file_dates(INJURY_CSVS[0]) & file_dates(INJURY_CSVS[1])
+    assert not shared, (
+        f"the two injury files cover the same dates: {sorted(shared)[:5]}"
+    )

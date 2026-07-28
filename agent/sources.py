@@ -39,6 +39,14 @@ RAW_DIR = REPO_ROOT / "data" / "raw"
 SAMPLE_DIR = REPO_ROOT / "data" / "samples"
 
 INJURY_CSV = RAW_DIR / "injury_data_2016_2025" / "injury_data.csv"
+# The Kaggle set stops at 2025-01-12, which left the 2025-26 replay window with
+# no injuries at all. The second file continues the same log from 2025-01-13
+# (scraped from the same upstream source, identical columns) so the two join
+# without a gap or an overlap. Kept as separate files to preserve provenance.
+INJURY_CSVS = (
+    INJURY_CSV,
+    RAW_DIR / "injury_pst_2025_2026" / "injury_data.csv",
+)
 TEAM_SUMMARY_CSV = RAW_DIR / "nba_stats_1947_present" / "Team Summaries.csv"
 PLAYER_PER_GAME_CSV = RAW_DIR / "nba_stats_1947_present" / "Player Per Game.csv"
 ODDS_CSV = SAMPLE_DIR / "odds_only.csv"
@@ -78,21 +86,24 @@ def _injury_rows() -> tuple[tuple[date, str, str, str, str], ...]:
 
     direction is 'out' (Relinquished) or 'back' (Acquired).
     """
-    if not INJURY_CSV.exists():
-        return ()
     rows: list[tuple[date, str, str, str, str]] = []
-    with INJURY_CSV.open(newline="") as f:
-        for r in csv.DictReader(f):
-            abbr = abbr_from_nickname(r["Team"])
-            if not abbr:
-                continue
-            note = r["Notes"].strip()
-            acquired = r["Acquired"].strip()
-            relinquished = r["Relinquished"].strip()
-            if relinquished:
-                rows.append((parse_date(r["Date"]), abbr, relinquished, "out", note))
-            elif acquired:
-                rows.append((parse_date(r["Date"]), abbr, acquired, "back", note))
+    for path in INJURY_CSVS:
+        if not path.exists():
+            continue
+        with path.open(newline="") as f:
+            for r in csv.DictReader(f):
+                abbr = abbr_from_nickname(r["Team"])
+                if not abbr:
+                    continue
+                note = r["Notes"].strip()
+                acquired = r["Acquired"].strip()
+                relinquished = r["Relinquished"].strip()
+                if relinquished:
+                    rows.append(
+                        (parse_date(r["Date"]), abbr, relinquished, "out", note)
+                    )
+                elif acquired:
+                    rows.append((parse_date(r["Date"]), abbr, acquired, "back", note))
     rows.sort(key=lambda x: x[0])
     return tuple(rows)
 
