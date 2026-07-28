@@ -49,12 +49,35 @@ TEAMS: dict[str, tuple[str, str]] = {
 # used by the nba_stats CSVs.
 ABBR_ALIASES = {"BKN": "BRK", "CHA": "CHO", "PHX": "PHO"}
 
+# The historical odds file spells nine teams a fourth way (ESPN-style codes,
+# lowercased). Without this map every matchup involving one of them silently
+# missed -- 638 of the 1,225 games in the 2025-26 sample, because nine teams
+# touch just over half of all games. Everything not listed here is the
+# lowercased abbreviation.
+ODDS_ABBR_EXCEPTIONS = {
+    "BRK": "bkn",
+    "CHO": "cha",
+    "GSW": "gs",
+    "NOP": "no",
+    "NYK": "ny",
+    "PHO": "phx",
+    "SAS": "sa",
+    "UTA": "utah",
+    "WAS": "wsh",
+}
+
 NICKNAME_TO_ABBR = {nick: abbr for abbr, (_, nick) in TEAMS.items()}
 
 
 def normalize_abbr(abbr: str) -> str:
     a = abbr.strip().upper()
     return ABBR_ALIASES.get(a, a)
+
+
+def odds_abbr(abbr: str) -> str:
+    """Repo abbreviation -> the code used in the historical odds file."""
+    a = normalize_abbr(abbr)
+    return ODDS_ABBR_EXCEPTIONS.get(a, a.lower())
 
 
 def abbr_from_nickname(nickname: str) -> str | None:

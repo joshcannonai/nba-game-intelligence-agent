@@ -30,11 +30,10 @@ lands. The agent never notices -- that is the entire point of the interface.
 from __future__ import annotations
 
 import json
-import pandas as pd
 
 from langchain_core.tools import tool
 
-from agent.sources import get_source, parse_matchup_id
+from agent.sources import get_source
 
 
 def _todo(tool_name: str, needs_from: str, needs: str, **ctx) -> str:
@@ -175,44 +174,27 @@ def build_tools(source):
 
     @tool
     def retrieve_betting_line(matchup_id: str, as_of_date: str) -> str:
-        """The market's price on this game: spread, moneyline, total.
+        """The market's closing price on this game: spread, total, moneyline.
 
         This is our evaluation baseline (Sadovnik, 7/07 -- beating the line is a better
         signal than beating the result, because games have upsets). The line is also
         what the agent's prediction gets compared against.
 
+        It is the CLOSING line, so it is not knowable until tip-off. Report it and
+        compare against it; do not treat it as something we knew on as_of_date, and
+        do not let it stand in for a prediction of our own.
+
+        spread is an unsigned magnitude; favorite, spread_home and spread_away say
+        who is laying the points. A query dated after tip-off is refused outright.
+
         Args:
             matchup_id: AWAY-HOME-YYYY-MM-DD
-            as_of_date: ISO date. Use the line as it stood on that date.
+            as_of_date: ISO date. Must be on or before tip-off.
         """
-        away, home, game_date = parse_matchup_id(matchup_id)
-
-        df = pd.read_csv("data/samples/odds_only.csv")
-        df["date"] = pd.to_datetime(df["date"]).dt.date
-
-        match = df[
-            (df["away"].str.lower() == away.lower())
-            & (df["home"].str.lower() == home.lower())
-            & (df["date"] == game_date)
-        ]
-
-        if match.empty:
-            return json.dumps({
-                "status": "not_found",
-                "matchup_id": matchup_id,
-                "as_of_date": as_of_date,
-                "message": "No odds found for this matchup in odds_only.csv",
-            })
-
-        row = match.iloc[0]
-        return json.dumps({
-            "matchup_id": matchup_id,
-            "as_of_date": as_of_date,
-            "spread": row["spread"],
-            "total": row["total"],
-            "moneyline_away": row["moneyline_away"],
-            "moneyline_home": row["moneyline_home"],
-            })
+        payload = source.betting_line(matchup_id, as_of_date)
+        return json.dumps(
+            {"matchup_id": matchup_id, "as_of_date": as_of_date, **payload}
+        )
 
     # ---------------------------------------------------- MODELS (Sarvvesh) TODO
 

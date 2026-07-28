@@ -31,7 +31,7 @@ from datetime import date, datetime
 from functools import lru_cache
 from pathlib import Path
 
-from agent.teams import abbr_from_nickname, full_name, normalize_abbr
+from agent.teams import abbr_from_nickname, full_name, normalize_abbr, odds_abbr
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MOCK_DIR = REPO_ROOT / "data" / "mock"
@@ -41,6 +41,7 @@ SAMPLE_DIR = REPO_ROOT / "data" / "samples"
 INJURY_CSV = RAW_DIR / "injury_data_2016_2025" / "injury_data.csv"
 TEAM_SUMMARY_CSV = RAW_DIR / "nba_stats_1947_present" / "Team Summaries.csv"
 PLAYER_PER_GAME_CSV = RAW_DIR / "nba_stats_1947_present" / "Player Per Game.csv"
+ODDS_CSV = SAMPLE_DIR / "odds_only.csv"
 
 
 def parse_date(value: str) -> date:
@@ -341,6 +342,111 @@ _ONE_DAY = timedelta(days=1)
 
 
 # --------------------------------------------------------------------------
+# Historical betting lines
+# --------------------------------------------------------------------------
+
+# The file stores one row per game: the CLOSING line, the market's final
+# number. That is a fact about tip-off, not about the morning of. It is the
+# benchmark we score a prediction against -- it is not an as-of feature, and
+# feeding it to the model would teach the model to copy Vegas.
+CLOSING_LINE_CAVEAT = (
+    "Closing line -- the market's final number, not knowable until tip-off. "
+    "Score predictions against it; never hand it to a model as an as-of feature."
+)
+
+# moneyline_away/moneyline_home are empty from the 2023-24 season onward,
+# which is every season we actually test on. Spread and total are populated
+# throughout. Say so rather than returning a silent null.
+NO_MONEYLINE = (
+    "moneyline: the source file carries none from the 2023-24 season onward, "
+    "which includes the entire 2025-26 replay window. Spread and total are present."
+)
+
+
+@lru_cache(maxsize=1)
+def _odds_rows() -> dict[tuple[str, str, str], dict]:
+    """(away, home, iso date) -> row, keyed in the odds file's own spellings.
+
+    Callers come in with repo abbreviations and go through teams.odds_abbr.
+    """
+    if not ODDS_CSV.exists():
+        return {}
+    table: dict[tuple[str, str, str], dict] = {}
+    with ODDS_CSV.open(newline="") as f:
+        for r in csv.DictReader(f):
+            key = (
+                r["away"].strip().lower(),
+                r["home"].strip().lower(),
+                r["date"].strip(),
+            )
+            table[key] = r
+    return table
+
+
+def closing_line(away: str, home: str, game_date: date, as_of: date) -> dict:
+    """The closing line for one game, or a stated reason there is none.
+
+    Gated the same way matchup_context is: a query dated after tip-off is
+    refused. The line sits one column away from the result in the source data,
+    so it is exactly the field a replay must not be able to reach backwards for.
+    """
+    if as_of > game_date:
+        return {
+            "status": "gated",
+            "reason": (
+                f"as_of_date {as_of.isoformat()} is after tip-off "
+                f"{game_date.isoformat()}. Withheld: a replay query must not be "
+                "able to reach past the game it is predicting."
+            ),
+        }
+
+    row = _odds_rows().get((odds_abbr(away), odds_abbr(home), game_date.isoformat()))
+    if row is None:
+        return {
+            "status": "not_found",
+            "reason": (
+                f"No odds row for {normalize_abbr(away)} at {normalize_abbr(home)} "
+                f"on {game_date.isoformat()}."
+            ),
+        }
+
+    def num(key: str) -> float | None:
+        try:
+            return float(row[key])
+        except (KeyError, ValueError):
+            return None
+
+    spread = num("spread")
+    favored = row["whos_favored"].strip().lower()
+    favorite = normalize_abbr(home if favored == "home" else away) if favored else None
+
+    # The file stores an unsigned magnitude plus whos_favored, so "spread 6.5"
+    # alone cannot say who is laying the points. Sign it per team: the favorite
+    # is negative, the underdog positive.
+    spread_home = spread_away = None
+    if spread is not None and favored in ("home", "away"):
+        home_favored = favored == "home"
+        spread_home = -spread if home_favored else spread
+        spread_away = spread if home_favored else -spread
+
+    ml_away, ml_home = num("moneyline_away"), num("moneyline_home")
+
+    return {
+        "status": "ok",
+        "line_type": "closing",
+        "favorite": favorite,
+        "spread": spread,
+        "spread_home": spread_home,
+        "spread_away": spread_away,
+        "total": num("total"),
+        "moneyline_away": ml_away,
+        "moneyline_home": ml_home,
+        "unavailable": [] if ml_home is not None else [NO_MONEYLINE],
+        "caveat": CLOSING_LINE_CAVEAT,
+    }
+
+
+# --------------------------------------------------------------------------
 # Sources
 # --------------------------------------------------------------------------
 
@@ -405,6 +511,22 @@ class MockSource:
                     )
                 return out
         return {"error": f"player not found: {player_name}"}
+
+    def betting_line(self, matchup_id: str, as_of_date: str) -> dict:
+        # The fixture carries no odds. Gate first anyway, so mock and real
+        # refuse an after-tip query identically.
+        _, _, game_date = parse_matchup_id(matchup_id)
+        if parse_date(as_of_date) > game_date:
+            return {
+                "status": "gated",
+                "reason": (
+                    f"as_of_date {as_of_date} is after tip-off {game_date.isoformat()}."
+                ),
+            }
+        return {
+            "status": "not_found",
+            "reason": "The mock fixture carries no betting line. Use --source real.",
+        }
 
 
 class CsvSource:
@@ -503,6 +625,10 @@ class CsvSource:
             "source": self.name,
             "error": f"player not found in nba_stats: {player_name}",
         }
+
+    def betting_line(self, matchup_id: str, as_of_date: str) -> dict:
+        away, home, game_date = parse_matchup_id(matchup_id)
+        return closing_line(away, home, game_date, parse_date(as_of_date))
 
 
 def get_source(kind: str):

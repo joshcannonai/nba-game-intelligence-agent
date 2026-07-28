@@ -6,26 +6,57 @@ as_of_date. These tests are what make that claim checkable instead of asserted.
 
 from __future__ import annotations
 
+import csv
 import json
 from datetime import date, timedelta
 
 import pytest
 
 from agent.sources import (
+    ODDS_CSV,
     STALE_INJURY_DAYS,
     CsvSource,
     MockSource,
+    _odds_rows,
     get_source,
     injuries_as_of,
     injury_data_through,
     parse_matchup_id,
     season_end_year,
 )
+from agent.teams import TEAMS, odds_abbr
 from agent.tools import build_tools
 
 # A real matchup inside the injury log's coverage (log ends 2025-01-12).
 REAL_MATCHUP = "LAL-BOS-2024-12-25"
 REAL_AS_OF = "2024-12-24"
+
+# Everything in the raw odds file that describes how the game turned out.
+# scripts/odds_only.py must never select these into the sample.
+SCORE_COLUMNS = {
+    "score_away",
+    "score_home",
+    "q1_away",
+    "q2_away",
+    "q3_away",
+    "q4_away",
+    "ot_away",
+    "q1_home",
+    "q2_home",
+    "q3_home",
+    "q4_home",
+    "ot_home",
+    "winner",
+}
+
+
+def _line(matchup_id: str, as_of_date: str) -> dict:
+    tools = {t.name: t for t in build_tools(get_source("real"))}
+    return json.loads(
+        tools["retrieve_betting_line"].invoke(
+            {"matchup_id": matchup_id, "as_of_date": as_of_date}
+        )
+    )
 
 
 def test_season_end_year_splits_on_august():
@@ -263,35 +294,78 @@ def test_betting_line_never_contains_a_score():
     checks the tool's actual output, not just the file, so a future change to
     the tool itself would also be caught.
     """
-    src = get_source("real")
-    tools = {t.name: t for t in build_tools(src)}
+    payload = _line("DET-LAL-2024-12-23", "2024-12-22")
 
-    payload = json.loads(
-        tools["retrieve_betting_line"].invoke(
-            {"matchup_id": "DET-LAL-2024-12-23", "as_of_date": "2024-12-22"}
-        )
-    )
+    # A "not_found" payload would pass a key check trivially. Prove we got a
+    # real row first, or this test is only asserting that nothing happened.
+    assert payload["status"] == "ok", payload
 
-    banned = {
-        "score_away", "score_home",
-        "q1_away", "q2_away", "q3_away", "q4_away", "ot_away",
-        "q1_home", "q2_home", "q3_home", "q4_home", "ot_home",
-        "winner",
-    }
-    leaked = banned & payload.keys()
+    leaked = SCORE_COLUMNS & payload.keys()
     assert not leaked, f"retrieve_betting_line leaked score field(s): {leaked}"
 
 
 def test_odds_only_csv_has_no_score_columns():
     """File-level guarantee, independent of the tool: the source file itself
     must never carry score data, no matter what column order it's saved in."""
-    import pandas as pd
-
-    df = pd.read_csv("data/samples/odds_only.csv")
-    banned = {
-        "score_away", "score_home",
-        "q1_away", "q2_away", "q3_away", "q4_away", "ot_away",
-        "q1_home", "q2_home", "q3_home", "q4_home", "ot_home",
-    }
-    leaked = banned & set(df.columns)
+    with ODDS_CSV.open(newline="") as f:
+        columns = set(csv.DictReader(f).fieldnames or [])
+    leaked = SCORE_COLUMNS & columns
     assert not leaked, f"odds_only.csv contains score column(s): {leaked}"
+
+
+def test_betting_line_refuses_a_query_dated_after_tip_off():
+    """The line is the one field sitting next to the result in the raw data.
+
+    Dropping the score columns stops the tool returning a score; it does not
+    stop the tool answering a question asked from *after* the game. Without
+    this, a replay could ask on June 1st for a December game and be told the
+    market's final number -- which is a fact about tip-off, not about as_of.
+    """
+    after = _line("DET-LAL-2024-12-23", "2025-06-01")
+    assert after["status"] == "gated", after
+    assert "spread" not in after
+
+    on_the_day = _line("DET-LAL-2024-12-23", "2024-12-23")
+    assert on_the_day["status"] == "ok", on_the_day
+
+
+def test_betting_line_emits_valid_json_when_the_moneyline_is_missing():
+    """No NaN in the payload.
+
+    The odds file carries no moneyline from 2023-24 on, and a bare float('nan')
+    serialises to the token `NaN`, which is not valid JSON. Python's json.loads
+    accepts it, so a round-trip test cannot see the bug -- parse strictly.
+    """
+    tools = {t.name: t for t in build_tools(get_source("real"))}
+    raw = tools["retrieve_betting_line"].invoke(
+        {"matchup_id": "DET-LAL-2024-12-23", "as_of_date": "2024-12-22"}
+    )
+
+    def reject(token: str):
+        raise AssertionError(f"payload is not valid JSON: contains {token}")
+
+    payload = json.loads(raw, parse_constant=reject)
+    assert payload["moneyline_home"] is None
+    assert payload["unavailable"], "a missing moneyline must be stated, not silent"
+
+
+def test_betting_line_says_who_is_laying_the_points():
+    """`spread: 6.5` is unusable on its own -- the file stores a magnitude."""
+    payload = _line("DET-LAL-2024-12-23", "2024-12-22")
+    assert payload["favorite"] == "LAL"
+    assert payload["spread_home"] == -6.5  # LAL favoured, so LAL lays the points
+    assert payload["spread_away"] == 6.5
+
+
+def test_every_team_abbreviation_resolves_in_the_odds_file():
+    """The odds file spells nine teams a fourth way.
+
+    Unmapped codes do not raise -- they silently return "no odds for this
+    game", which reads like a data gap rather than a bug. That hid 638 of the
+    1,225 games in the 2025-26 sample.
+    """
+    codes = {away for away, _, _ in _odds_rows()} | {
+        home for _, home, _ in _odds_rows()
+    }
+    unmapped = sorted(a for a in TEAMS if odds_abbr(a) not in codes)
+    assert not unmapped, f"no odds-file spelling for: {unmapped}"
