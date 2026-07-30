@@ -11,6 +11,7 @@ import csv
 import json
 import os
 import socket
+import subprocess
 import sys
 from datetime import date, timedelta
 from pathlib import Path
@@ -24,6 +25,48 @@ sys.path.insert(0, str(REPO_ROOT))
 from agent.run import _probe_args, dry_run, status_board  # noqa: E402
 from agent.sources import SAMPLE_DIR, get_source  # noqa: E402
 from agent.tools import build_tools  # noqa: E402
+from scripts.gate_snapshot import build_snapshot  # noqa: E402
+
+
+@st.cache_data(show_spinner="Gating data to the as-of date…")
+def snapshot_for(as_of: str) -> str:
+    """Materialise the gated copy the agent will read. Cached per date."""
+    return str(build_snapshot(date(*(int(p) for p in as_of.split("-")))))
+
+
+def report_from_snapshot(
+    matchup: str, as_of: str, source_kind: str
+) -> tuple[dict, dict]:
+    """Run the report against a snapshot, in its own interpreter.
+
+    A subprocess, not an env var flipped in place: `agent.sources` captures its
+    directory constants at import and caches every reader, so an in-process
+    switch would keep reading the ungated data and the gate would be theatre.
+    """
+    snap = snapshot_for(as_of)
+    env = dict(os.environ, NBA_SNAPSHOT_DIR=snap)
+    out = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "agent.run",
+            "--dry-run",
+            "--source",
+            source_kind,
+            "--matchup",
+            matchup,
+            "--as-of",
+            as_of,
+        ],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    manifest = json.loads((Path(snap) / "_manifest.json").read_text())
+    return json.loads(out.stdout), manifest
+
 
 st.set_page_config(
     page_title="NBA Game Intelligence Agent", page_icon="🏀", layout="wide"
@@ -145,6 +188,16 @@ with st.sidebar:
 
     source_kind = st.radio("Data source", ["real", "mock"], horizontal=True)
 
+    # The advisor's architecture (2026-07-28): gate the data on disk first,
+    # then point the agent at only that copy. Off by default because it costs a
+    # subprocess per run; the query-time filter is always on either way.
+    pregate = st.checkbox(
+        "Pre-gate data on disk",
+        value=False,
+        help="Copy only what was knowable by the as-of date into "
+        "data/snapshots/<date>, then run the agent against that directory.",
+    )
+
     st.divider()
     if chat_is_up(CHAT_URL):
         st.link_button("🏀  Ask the agent", CHAT_URL, use_container_width=True)
@@ -167,11 +220,25 @@ report_tab, tools_tab, gating_tab, status_tab = st.tabs(
 
 # ---------------------------------------------------------------- report
 with report_tab:
+    manifest = None
     try:
-        report = json.loads(dry_run(matchup_id, as_of_str, source))
+        if pregate:
+            report, manifest = report_from_snapshot(matchup_id, as_of_str, source_kind)
+        else:
+            report = json.loads(dry_run(matchup_id, as_of_str, source))
     except Exception as exc:
         st.error(f"{type(exc).__name__}: {exc}")
         st.stop()
+
+    if manifest:
+        cleared = sum(f["outcomes_cleared"] for f in manifest["files"])
+        dropped = sum(f["rows_in"] - f["rows_out"] for f in manifest["files"])
+        st.success(
+            f"Agent read a gated copy of the data, not the repo. Building it "
+            f"dropped **{dropped:,} rows** and cleared **{cleared:,} game results** "
+            f"dated after {as_of_str}. The report below could not have used them "
+            "because they were not on disk."
+        )
 
     hp, ap = report.get("home_win_prob"), report.get("away_win_prob")
     c1, c2, c3 = st.columns(3)
@@ -316,6 +383,32 @@ with gating_tab:
         "If the injury lists differ across these columns, the gate is real: the system "
         "cannot see a report filed after the date you asked from."
     )
+
+    st.divider()
+    st.subheader("The second gate: what never reached the disk")
+    st.caption(
+        "The columns above prove the query-time filter refuses future records. "
+        "This proves something stronger -- with **Pre-gate data on disk** ticked "
+        "in the sidebar, the agent reads a copy that never contained them. "
+        "Built by `python -m scripts.gate_snapshot --as-of DATE`."
+    )
+    if manifest:
+        st.table(
+            [
+                {
+                    "file": f["file"],
+                    "kept": f"{f['rows_out']:,}",
+                    "dropped": f"{f['rows_in'] - f['rows_out']:,}",
+                    "results cleared": f"{f['outcomes_cleared']:,}",
+                    "rule": f["rule"],
+                }
+                for f in manifest["files"]
+            ]
+        )
+    else:
+        st.info(
+            "Tick **Pre-gate data on disk** in the sidebar to build and inspect it."
+        )
 
 # ---------------------------------------------------------------- status
 with status_tab:

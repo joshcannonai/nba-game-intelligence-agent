@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 from datetime import date, datetime
 from functools import lru_cache
 from pathlib import Path
@@ -34,9 +35,16 @@ from pathlib import Path
 from agent.teams import abbr_from_nickname, full_name, normalize_abbr, odds_abbr
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+# Set NBA_SNAPSHOT_DIR to a directory built by scripts/gate_snapshot.py and the
+# whole data layer reads from there instead -- a copy that physically never
+# held anything after the cutoff. Unset (the default) reads the full data
+# directory. Either way the query-time filters below still apply: the snapshot
+# removes what nobody may see, the filters decide what each tool may see.
+DATA_ROOT = Path(os.environ.get("NBA_SNAPSHOT_DIR") or REPO_ROOT / "data")
 MOCK_DIR = REPO_ROOT / "data" / "mock"
-RAW_DIR = REPO_ROOT / "data" / "raw"
-SAMPLE_DIR = REPO_ROOT / "data" / "samples"
+RAW_DIR = DATA_ROOT / "raw"
+SAMPLE_DIR = DATA_ROOT / "samples"
 
 INJURY_CSV = RAW_DIR / "injury_data_2016_2025" / "injury_data.csv"
 # The Kaggle set stops at 2025-01-12, which left the 2025-26 replay window with
