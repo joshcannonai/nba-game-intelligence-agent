@@ -1,124 +1,181 @@
-# Session handoff — 2026-07-21
+# Session handoff — 2026-08-01
 
-State of the agent lane at the end of the day, for whoever picks this up next
-(future Josh, a teammate, or an agent joining cold).
+State of the agent lane, for whoever picks this up next (a teammate, the
+advisor, or an agent joining cold).
 
-Semester ends **~2026-08-11**. Three weeks. The advisor asked for a working v1
-within two.
+Semester ends **~2026-08-11**. The advisor asked for a working v1; this is it.
 
 ---
+
+## The one-paragraph version
+
+The system predicts NBA games without ever seeing the future, and that claim is
+now checkable three separate ways. There is a real model (66.5% on a season it
+never trained on, against 55.5% for always picking the home team and 69.0% for
+Vegas), a real agent calling seven date-gated tools, and a harness that scores
+them against each other. The agent lost its betting-line tool along the way,
+because it was caught quoting the market back at us as its own reasoning.
 
 ## Where things stand
 
 | | state |
 |---|---|
-| `main` | `1618a72` — green, 24 tests |
-| open work | PR **#13** (draft) — `josh/week5-eval-harness`, 27 tests |
-| unmerged, older | PR **#6** (draft, stale since 07-14) — the betting-line join |
-| tools | 10 written and callable · 3 return real data · 1 placeholder logic · 6 awaiting input |
+| tests | **62 passing** |
+| tools | **7** written and callable · 5 return real data · 2 awaiting input |
+| model | logistic regression, trained 2023-24 + 2024-25, tested on 2025-26 |
+| gating | two independent gates — query-time filters *and* an on-disk snapshot |
 
 ### What runs today
 
 ```bash
+python -m models.train                                # fit the model, ~7s
+python -m eval.three_arms                             # arm A + baselines, ~3s
+python -m eval.three_arms --arms abc --sample 40      # all three arms, ~50min
 python -m agent.run --status --source real            # tool inventory, instant
 python -m agent.run --dry-run --source real \
     --matchup LAL-BOS-2024-12-25 --as-of 2024-12-24   # report, no LLM, instant
-python -m agent.run --model ollama --source real ...  # the real agent loop, ~30s
-python -m eval.replay --playoffs                      # the experiment
-streamlit run ui/app.py                               # 4-tab UI, deterministic path
+python -m agent.run --model ollama --source real ...  # the real agent loop, ~40s
+python -m scripts.gate_snapshot --as-of 2026-01-14    # materialise the gate
+streamlit run ui/app.py                               # 4-tab report UI
+streamlit run ui/chat.py                              # ask it questions
 ```
 
-`--model ollama` needs `ollama serve` up. Streamlit has no auto-reload here
-(watchdog isn't installed) — **restart the server after any code change**, or you
-get new `app.py` against cached modules and silently wrong output.
+`--model ollama` needs `ollama serve` up and `ollama pull gemma4` once.
+Streamlit has no auto-reload here — **restart the server after any code change**,
+or you get new `app.py` against cached modules and silently wrong output.
 
 ---
 
-## Shipped 2026-07-21
+## Shipped 2026-08-01
 
-- **`--status` board** — probes all ten tools, prints built / placeholder /
-  awaiting-input plus who owes each input. Deterministic, free.
-- **Honest `missing`** in every path. The agent used to report `"missing": []`
-  on real data because it only called the two tools it was required to call.
-- **Streamlit UI** (`ui/app.py`) — report, tool inventory, gating proof, build
-  status. Runs the deterministic path; no LLM anywhere in it.
-- **Eval harness** (`eval/replay.py`) — the thing the PDP calls our primary
-  contribution. Was an empty folder this morning.
-- **2025-26 test set** — 1,322 games, 85 playoff, split so the line file carries
-  no scores.
-- **Injury weighting** — `player_importance()`; win probability now moves with
-  the injury list instead of ignoring it.
-- **`conftest.py` + `pytest.ini`** — bare `pytest` (what the README says to run)
-  used to fail on a fresh clone with `ModuleNotFoundError`.
+### The model is real now
 
-### Current numbers (placeholder heuristic, not XGBoost)
+`models/` was an empty folder with a `.gitkeep`. It now holds a fitted model and,
+more importantly, **an interface** — `predict(home, away, as_of)`. Three callers
+depend on that signature and nothing else, so swapping in a different model is a
+one-file change. See `models/README.md`, written for Sarvesh.
+
+Trained on the two seasons *before* the one it is tested on. Split by season, not
+by random shuffle: a random split lets a model learn from March to predict
+January, which flatters accuracy by a few points that vanish under review.
 
 | | accuracy | log loss | Brier |
 |---|---|---|---|
-| season, stub | 59.5% | 0.676 | 0.240 |
-| season, always-home | 55.5% | 0.687 | 0.247 |
-| season, Vegas | **69.0%** | **0.578** | **0.198** |
-| playoffs, stub | 58.8% | 0.725 | 0.260 |
-| playoffs, Vegas | 58.8% | **0.656** | **0.234** |
+| always pick home | 55.5% | 0.6871 | 0.2470 |
+| **model (arm A)** | **66.5%** | **0.6118** | **0.2116** |
+| Vegas closing line | 69.0% | 0.5782 | 0.1977 |
 
-The playoff accuracy tie with Vegas is **small-sample noise on 85 games** — don't
-quote it as a result. The calibration gap (log loss) is the real signal.
+Train/test gap is **+0.3%** — not overfit. All 1,322 games of 2025-26.
+
+Features come from `models/features.py`, which reuses the same gated accessors
+the agent's tools use, so the model provably cannot see anything the agent
+cannot. A test asserts the two implementations agree game for game.
+
+### Ten tools became seven
+
+| cut | why |
+|---|---|
+| `retrieve_news` | No source was ever found. Highest effort, least measurable payoff. |
+| `predict_best_player` | Depended on `predict_stat_line`, which never started. A placeholder behind a placeholder. |
+| `retrieve_betting_line` | **A leak, not a scope cut.** See below. |
+
+Running the live agent on 2026-01-14 it wrote *"The closing betting line favors
+the home team, ORL (-5.5 spread)"* straight into its key factors. The closing
+line is the benchmark we grade ourselves **against**. An agent that reads the
+market and repeats it scores well and has predicted nothing.
+
+Telling the model not to peek is a request. Taking the tool away is a guarantee.
+`agent.sources.closing_line` still exists and `eval/` still calls it directly, so
+the Vegas baseline is untouched. `tests/test_date_gating.py` now asserts the tool
+cannot come back.
+
+### The three-arm experiment exists
+
+`eval/three_arms.py`. Arms differ by **exactly one tool**, which a test enforces:
+
+- **A** — model only, no LLM
+- **B** — agent only, reasons from the retrieval tools
+- **C** — agent + the model's number
+
+Arm A and both baselines run over all 1,322 games in about three seconds. Arms B
+and C call a language model once per game (~38s), so they run on a fixed random
+sample, and the harness refuses a full-season LLM run rather than quietly
+starting a 30-hour job. Every arm is scored on the *same* games — a paired
+comparison on 40 beats an unpaired one on 1,322.
+
+The harness prints one standard error next to the headline gap, because at n=40
+that band is roughly ±8% and wider than the effect we are looking for.
+
+### Leakage is mutation-tested
+
+Tests that cannot fail prove nothing, so each rule was broken on purpose:
+
+| mutation | tests that caught it |
+|---|---|
+| accumulators advanced before the feature row was emitted | 3 |
+| form window drifted out of sync with the agent's accessor | 1 |
+| test season added to the training seasons | 3 |
+
+### Also
+
+- Fixed `scripts/gate_snapshot.py --out` crashing for any path outside the repo.
+- `ui/chat.py` answers market questions by explaining *why* it cannot see the
+  line, instead of "nothing matched".
 
 ---
 
 ## Next, in order
 
-1. **Rework the UI flow to the advisor's architecture.** He wants "go" to first
-   run Kirtan's gating script to materialise a local gated snapshot directory,
-   then point the agent at *only* that directory. Today gating happens at query
-   time inside `sources.py`. His version is provably airtight — the agent can't
-   see ungated data because it isn't on disk. This is the biggest open item.
-2. **Pull the newer injury data.** The log ends **2025-01-12**, so injury
-   weighting contributes exactly nothing on the 2025-26 test set. Patrick pushed
-   newer injury/betting data; wire it in.
-3. **Land PR #13**, then **PR #6** (or close #6 — its odds join is partly
-   superseded by `scripts/build_2026_testset.py`).
-4. **Agent-arm evaluation.** `eval/replay.py` currently scores the *tool*
-   directly, which is the classifier arm. The agentic arm needs a subset run
-   through `run_matchup` (~30s/game, so sample ~30 games, not 1,322).
-5. **Sit with Sarvesh.** XGBoost drops into `predict_win_probability`'s existing
-   signature; the harness picks it up with no other change.
+1. **Finish the three-arm run and write up the result**, whichever way it lands.
+   If C does not beat A, that is a real finding and the report is stronger for
+   saying so plainly than for burying it.
+2. **Sarvesh: beat 66.5%.** `models/README.md` lists four concrete weaknesses.
+   Opponent-adjusted strength of schedule is probably the biggest single win.
+3. **Patrick: commit `season_schedule_2026.csv`.** Last thing blocking
+   `retrieve_schedule`; `data/raw/` stopped being gitignored on 7/21.
+4. **Kirtan: `eval/crosscheck_odds.py` confirmed the odds file is the closing
+   line** (9 of 10 games closer to closing). That was an open assumption the
+   entire Vegas baseline rested on — it belongs in the report.
+5. **Land PR #16**, then close or rebase the stale #6 and #13.
 
 ---
 
 ## Traps
 
 - **The odds file keeps `score_away`/`score_home` in the same row as the line.**
-  This is the single most likely way this project leaks. `odds_only.csv` is built
-  without score columns and tests assert it — keep it that way. There used to be a
-  second 2025-26-only extract (`odds_2026.csv`); it was retired so the two could
-  not drift apart.
-- **Betting line is evaluation-only** (advisor, 07-21). It must not feed the
-  prediction or the system reads the answer off the market.
+  The single most likely way this project leaks. `odds_only.csv` is built without
+  score columns and tests assert it — keep it that way.
+- **Betting line is evaluation-only** (advisor, 07-21). The agent no longer has a
+  tool for it, and a test keeps it that way. Do not re-add one.
 - **Model-knowledge gate only holds for 2025-26.** Gemma 4's cutoff is ~Jan 2025,
-  verified behaviourally (knows the 2024 Finals, not 2025 or 2026). Every game in
-  `game_logs_2024/2025.csv` predates that cutoff, so **those seasons are demos of
-  the mechanism, not valid evaluation games.**
+  verified behaviourally. Every game in `game_logs_2024/2025.csv` predates that
+  cutoff, so **those seasons are demos of the mechanism, not valid evaluation
+  games for the LLM arms.** They are fine for training the model, which has no
+  world knowledge to leak.
 - **`importance` is `None`, not `0.0`**, for players with no prior season. Sorting
   or summing it needs `or 0.0` — a rookie is unknown, not worthless.
-- **The UI is not agentic.** It runs `dry_run`. Don't describe it as the agent.
-- **The win probability is not a model.** It's `net_rating_diff + 2.5 + injury
-  cost`. Don't call it ML until XGBoost lands.
+- **The UI report tab is not agentic.** It runs `dry_run`. `ui/chat.py` can be
+  agentic if you switch the backend in the sidebar.
+- **Feature order in `win_probability.json` is positional.** Reordering
+  `FEATURE_NAMES` silently remaps every weight. Append only; a test checks it.
+- **`langchain` must be 1.x.** The repo uses `create_agent`, which does not exist
+  in 0.3. A 0.3 install with a 1.x `langchain-core` fails to import at all.
 
 ---
 
 ## Open decisions
 
-- Exact regular-season/playoff boundary. The team said **April 14**; the odds data
-  shows the first 2026 playoff game on **2026-04-18**. Pin it before Kirtan filters.
-- Whether `retrieve_news` and `predict_best_player` survive the scope cut. Both
-  are proposed for removal; neither is started.
-- Whether the agent arm runs on all 85 playoff games or a sample.
+- Exact regular-season/playoff boundary. The team said **April 14**; the odds
+  data shows the first 2026 playoff game on **2026-04-18**.
+- Sample size for arms B and C. 40 games is ±8% — enough to see a large effect,
+  not a small one. More games is hours, not minutes.
+- Whether `predict_stat_line` survives to the end of the semester or joins the
+  cut list. Nothing has started behind it.
 
 ## Source material
 
 - Advisor meeting 2026-07-21 —
   `~/Cortex/Primary_Projects/WitnessAI/engine/audio/transcripts/2026-07-21_142201_manual-1422.summary.md`
-- Group sync 2026-07-21 — Gemini notes in Drive (WitnessAI's capture of this one
-  was empty audio)
+- Group sync 2026-07-28 —
+  `~/Cortex/Primary_Projects/WitnessAI/engine/audio/transcripts/2026-07-28_144513_manual-1445.summary.md`
 - PDP — `CECS 499 PDP - NBA Game Intelligence Agent.pdf`

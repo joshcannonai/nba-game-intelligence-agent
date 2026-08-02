@@ -210,7 +210,10 @@ def main() -> None:
     out = build_snapshot(as_of, Path(args.out) if args.out else None)
 
     manifest = json.loads((out / "_manifest.json").read_text())
-    print(f"Snapshot as of {as_of} -> {out.relative_to(REPO_ROOT)}\n")
+    # --out may point anywhere -- a tmp dir in the test suite, a scratch disk.
+    # relative_to raises rather than falling back, so ask before shortening.
+    shown = out.relative_to(REPO_ROOT) if out.is_relative_to(REPO_ROOT) else out
+    print(f"Snapshot as of {as_of} -> {shown}\n")
     for f in manifest["files"]:
         dropped = f["rows_in"] - f["rows_out"]
         detail = f"{f['rows_out']:>7,} kept"
