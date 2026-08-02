@@ -67,30 +67,49 @@ morning before tip-off, asks `predict_win_probability` using only what was knowa
 then, and scores the answer three ways — accuracy, log loss, and Brier — against two
 baselines.
 
-Current numbers, from the placeholder heuristic (**not** the XGBoost model yet):
+### The three arms
+
+`eval/three_arms.py` scores three ways of answering the same question, differing by
+**exactly one tool** (a test enforces that — the difference *is* the measurement):
+
+- **A** — the model alone, no language model involved
+- **B** — the agent alone, reasoning from the retrieval tools
+- **C** — the agent plus the model's number
+
+```bash
+python -m models.train                            # fit the model, ~7s
+python -m eval.three_arms                         # arm A + baselines, ~3s
+python -m eval.three_arms --arms abc --sample 40  # all three arms
+```
+
+Arm A on **all 1,322 games of 2025-26**, a season the model never trained on:
 
 | | accuracy | log loss | Brier |
 |---|---|---|---|
-| **2025-26 season** (1,322 games) | | | |
-| stub_net_rating_v2 | 66.3% | 0.617 | 0.222 |
-| always-pick-home | 55.5% | 0.687 | 0.247 |
-| Vegas closing line | **69.0%** | **0.578** | **0.198** |
-| **2026 playoffs** (85 games, held out) | | | |
-| stub_net_rating_v2 | 63.5% | 0.637 | 0.226 |
-| always-pick-home | 55.3% | 0.688 | 0.247 |
-| Vegas closing line | 58.8% | 0.656 | 0.234 |
+| always-pick-home | 55.5% | 0.6871 | 0.2470 |
+| **arm A — logistic regression** | **66.5%** | **0.6118** | **0.2116** |
+| Vegas closing line | 69.0% | 0.5782 | 0.1977 |
 
-`v2` uses **current-season rolling form** (`retrieve_team_form`, built from the game
-logs) as the team-strength signal, instead of last season's end-of-season ratings. That
-one change took the full-season heuristic from 59.5% → 66.3% and closed the gap to the
-market from ~9.5 points to ~2.6. Prior-season ratings are stale by December; current
-form is the fix, and the game logs to compute it were already in the repo.
+Trained on 2023-24 and 2024-25. Train/test accuracy gap is **+0.3%**, so it is not
+overfit. Split by **season**, not by random shuffle — a random split lets a model learn
+from March to predict January, which flatters accuracy by a few points that vanish the
+moment anyone checks.
 
-Two honest caveats before anyone quotes these. On the full season the heuristic still
-sits below the market, which is the expected shape. On the **playoffs it appears to beat
-Vegas** (63.5% vs 58.8%) — but that is **85 games**, and playoff outcomes are noisy;
-treat it as encouraging, not as "we beat the market." The full-season number is the one
-to trust.
+**Honest note on what the model bought us.** The hand-tuned heuristic it replaced
+already scored 66.3%, so on raw accuracy the fitted model gains almost nothing. It wins
+on calibration (log loss 0.612 vs 0.617, Brier 0.212 vs 0.222) and, more importantly,
+on being *checkable*: its split is enforced by tests, its weights are readable, and it
+generalises measurably rather than being tuned by hand against the same season it is
+scored on. Do not quote it as a big accuracy jump. It is not one.
+
+Arms B and C call a language model once per game (~38s), so the full season in all
+three arms is roughly 30 hours. They run on a fixed random sample instead, and every
+arm is scored on **the same** games — a paired comparison on 40 beats an unpaired one
+on 1,322. The harness prints one standard error next to the headline gap, because at
+n=40 that band is about ±8% and wider than the effect we are looking for.
+
+`eval/replay.py` (the older single-arm harness) still exists and still scores
+`predict_win_probability` against Vegas across the season.
 
 ### Why the betting line lives in its own file
 
@@ -103,11 +122,17 @@ other:
   the eval harness, *after* a prediction is made. No tool can reach it.
 - `data/samples/odds_only.csv` — the market's price, every season 2008-2026.
   **No score columns, ever** (built by `scripts/odds_only.py` from an allowlist).
-  This is what `retrieve_betting_line` and the eval harness both read.
+  The eval harnesses read this. The agent no longer can.
 
 Per the advisor (2026-07-21), the line is an **evaluation baseline, not a model
 input** — otherwise the system reads the answer off the market instead of predicting.
-`tests/test_date_gating.py` asserts both the file-level and tool-level guarantees.
+
+That turned out to need more than a rule. Running the live agent on 2026-01-14, it
+wrote *"The closing betting line favors the home team, ORL (-5.5 spread)"* straight
+into its own key factors — quoting the benchmark back as its reasoning. So
+`retrieve_betting_line` was **removed from the agent** in week 6.
+`agent.sources.closing_line` remains for scoring, and `tests/test_date_gating.py` now
+asserts the tool cannot come back.
 
 Build mode uses Anthropic (personal credits) for fast iteration. Replay / production runs use `--model ollama` -- a local Gemma 4 model (`ollama pull gemma4`) with a known knowledge cutoff so we do not leak future results; Claude's cutoff isn't something we can pin to a date the same way.
 
