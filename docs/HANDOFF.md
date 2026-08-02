@@ -16,11 +16,17 @@ Vegas), a real agent calling seven date-gated tools, and a harness that scores
 them against each other. The agent lost its betting-line tool along the way,
 because it was caught quoting the market back at us as its own reasoning.
 
+**The headline finding is a negative one, and it is the good kind.** We expected
+the agent-plus-model arm to win. It lost badly: when the agent overruled the
+model it was handed, it was wrong 10 times out of 12 (p ≈ 0.02). The explanation
+layer is currently costing us accuracy, and that is a far more interesting thing
+to write up than a confirmed hypothesis would have been.
+
 ## Where things stand
 
 | | state |
 |---|---|
-| tests | **62 passing** |
+| tests | **64 passing** |
 | tools | **7** written and callable · 5 return real data · 2 awaiting input |
 | model | logistic regression, trained 2023-24 + 2024-25, tested on 2025-26 |
 | gating | two independent gates — query-time filters *and* an on-disk snapshot |
@@ -106,6 +112,51 @@ comparison on 40 beats an unpaired one on 1,322.
 The harness prints one standard error next to the headline gap, because at n=40
 that band is roughly ±8% and wider than the effect we are looking for.
 
+### The result: the hypothesis was wrong
+
+We predicted **C > A** — that an agent given the model's number would beat the
+model alone. The opposite happened. Forty paired games, every arm scored on the
+same games:
+
+| arm | accuracy | log loss | Brier |
+|---|---|---|---|
+| **A — model only** | **75.0%** | **0.5782** | **0.1965** |
+| B — agent only | 57.5% | 0.6577 | 0.2323 |
+| C — agent + model | 55.0% | 0.6754 | 0.2409 |
+| Vegas | 57.5% | 0.6488 | 0.2278 |
+| always-home | 50.0% | 0.6982 | 0.2525 |
+
+**C is 20 points worse than A**, outside one standard error. Handing the agent
+the model's answer made it *worse* than the answer it was handed.
+
+The headline accuracies are not the trustworthy part — arm A scores 75% on this
+sample against 66.5% across the full season, so these 40 games happen to suit it.
+The robust finding is paired, and immune to that:
+
+```
+agreed on          28
+overruled on       12
+  model was right  10
+  agent was right   2
+overruling helped 2/12 times -- p = 0.019
+```
+
+**When the agent overruled the model, it was wrong 10 times out of 12.** Sign
+test, p ≈ 0.02. And it was not overruling at the margins — the two biggest
+reversals took a confident correct call and inverted it:
+
+| game | model | agent | actual |
+|---|---|---|---|
+| CHI-ORL-2025-12-01 | 0.815 | 0.249 | home won |
+| IND-PHI-2026-01-19 | 0.741 | 0.242 | home won |
+
+This is the project's most interesting result and it should lead the report. The
+agent is not adding noise around a good estimate; it is systematically talking
+itself out of the model's confident correct calls, most likely by over-weighting
+the injury list it can see in `retrieve_injuries`.
+
+**Do not quote arm A's 75% as our accuracy.** The season-long number is 66.5%.
+
 ### Leakage is mutation-tested
 
 Tests that cannot fail prove nothing, so each rule was broken on purpose:
@@ -126,17 +177,22 @@ Tests that cannot fail prove nothing, so each rule was broken on purpose:
 
 ## Next, in order
 
-1. **Finish the three-arm run and write up the result**, whichever way it lands.
-   If C does not beat A, that is a real finding and the report is stronger for
-   saying so plainly than for burying it.
-2. **Sarvesh: beat 66.5%.** `models/README.md` lists four concrete weaknesses.
+1. **Chase down *why* the agent overrules the model.** This is now the most
+   valuable open question in the project. The per-game reasoning is in the arm C
+   output — read the `key_factors` on CHI-ORL-2025-12-01 and IND-PHI-2026-01-19
+   and find out what made it abandon a 0.8 prediction. Best guess: it reads the
+   injury list and over-weights it, the same failure the old heuristic had.
+2. **Re-run with a second sample seed before the result goes in the report.**
+   `--seed 1 --sample 40`. The paired override finding should hold; if it does
+   not, we learned that 12 overrides is too few to sign-test.
+3. **Sarvesh: beat 66.5%.** `models/README.md` lists four concrete weaknesses.
    Opponent-adjusted strength of schedule is probably the biggest single win.
-3. **Patrick: commit `season_schedule_2026.csv`.** Last thing blocking
+4. **Patrick: commit `season_schedule_2026.csv`.** Last thing blocking
    `retrieve_schedule`; `data/raw/` stopped being gitignored on 7/21.
-4. **Kirtan: `eval/crosscheck_odds.py` confirmed the odds file is the closing
+5. **Kirtan: `eval/crosscheck_odds.py` confirmed the odds file is the closing
    line** (9 of 10 games closer to closing). That was an open assumption the
    entire Vegas baseline rested on — it belongs in the report.
-5. **Land PR #16**, then close or rebase the stale #6 and #13.
+6. **Land PR #17**, then close or rebase the stale #6 and #13.
 
 ---
 

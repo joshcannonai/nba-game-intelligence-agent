@@ -161,6 +161,59 @@ def run_agent_arm(rows, *, include_model: bool, backend: str, label: str) -> tup
     return preds, per_game, failures
 
 
+def _sign_test(successes: int, trials: int) -> float:
+    """One-sided binomial p under 'the override is a coin flip'."""
+    if trials == 0:
+        return 1.0
+    return sum(math.comb(trials, k) for k in range(successes, trials + 1)) / 2**trials
+
+
+def _override_analysis(rows, per_game_probs) -> None:
+    """When arm C disagrees with the model it was handed, who was right?
+
+    This is the measurement that actually survives a small sample. Comparing
+    headline accuracies asks whether these 40 games flattered one arm; this asks
+    a paired question -- on the games where the agent overruled the model, how
+    often did overruling help? Every game contributes only when the two differ,
+    so a sample that happens to be easy or hard for both cancels out.
+    """
+    a_probs, c_probs = per_game_probs.get("A"), per_game_probs.get("C")
+    if not a_probs or not c_probs:
+        return
+
+    agree = overrides = agent_right = model_right = 0
+    worst = []
+    for r in rows:
+        a, c = a_probs.get(r.game_id), c_probs.get(r.game_id)
+        if a is None or c is None:
+            continue
+        if (a >= 0.5) == (c >= 0.5):
+            agree += 1
+            continue
+        overrides += 1
+        agent_right += (c >= 0.5) == bool(r.home_won)
+        model_right += (a >= 0.5) == bool(r.home_won)
+        worst.append((abs(a - c), r.game_id, a, c, r.home_won))
+
+    print(f"\n{'-' * 66}\nwhen the agent overruled the model")
+    print(f"  agreed on          {agree}")
+    print(f"  overruled on       {overrides}")
+    if not overrides:
+        return
+    print(f"    model was right  {model_right}")
+    print(f"    agent was right  {agent_right}")
+    p = _sign_test(max(agent_right, model_right), overrides)
+    verdict = "not distinguishable from chance" if p > 0.05 else f"p = {p:.3f}"
+    print(f"  overruling helped {agent_right}/{overrides} times -- {verdict}")
+
+    worst.sort(reverse=True)
+    if worst:
+        print("  biggest reversals (model -> agent, actual):")
+        for _, game_id, a, c, y in worst[:3]:
+            who = "home won" if y else "home lost"
+            print(f"    {game_id:<24} {a:.3f} -> {c:.3f}   {who}")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Three-arm comparison")
     ap.add_argument(
@@ -258,6 +311,8 @@ def main() -> None:
         print(
             f"C vs B (does the model help the agent): {c['accuracy'] - b['accuracy']:+.1%}"
         )
+
+    _override_analysis(rows, per_game_probs)
 
     if args.out:
         p = Path(args.out)

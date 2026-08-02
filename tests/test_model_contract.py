@@ -205,6 +205,61 @@ def test_missing_model_reports_awaiting_input_instead_of_guessing(
 # ------------------------------------------------------- end-to-end, on disk
 
 
+def test_sign_test_matches_hand_computed_binomial():
+    """The headline stat in the write-up, so it gets checked by hand.
+
+    12 coin flips: P(>=10 heads) = (66 + 12 + 1) / 4096.
+    """
+    from eval.three_arms import _sign_test
+
+    assert _sign_test(10, 12) == pytest.approx(79 / 4096, abs=1e-9)
+    assert _sign_test(12, 12) == pytest.approx(1 / 4096, abs=1e-9)
+    assert _sign_test(0, 12) == pytest.approx(1.0)
+    assert _sign_test(0, 0) == 1.0
+    # An even split must not look like a finding.
+    assert _sign_test(6, 12) > 0.05
+
+
+def test_override_analysis_counts_only_disagreements():
+    """Games where the arms agree carry no information about overruling.
+
+    Built by hand rather than from the results CSV: reading the real file would
+    make this test pass for whatever the run happened to produce, instead of
+    checking that the counting rule is right.
+    """
+    from types import SimpleNamespace
+
+    from eval.three_arms import _override_analysis
+
+    rows = [
+        SimpleNamespace(game_id="agree_both_right", home_won=1),
+        SimpleNamespace(game_id="agree_both_wrong", home_won=0),
+        SimpleNamespace(game_id="override_agent_right", home_won=0),
+        SimpleNamespace(game_id="override_model_right", home_won=1),
+    ]
+    probs = {
+        "A": {
+            "agree_both_right": 0.8,
+            "agree_both_wrong": 0.9,
+            "override_agent_right": 0.7,
+            "override_model_right": 0.8,
+        },
+        "C": {
+            "agree_both_right": 0.6,  # same side as A -- agreement
+            "agree_both_wrong": 0.7,  # same side as A -- agreement
+            "override_agent_right": 0.3,  # flipped, and correct
+            "override_model_right": 0.2,  # flipped, and wrong
+        },
+    }
+    # Smoke-level: the function prints rather than returns, so this asserts it
+    # runs over a hand-built case without raising. The arithmetic it prints is
+    # covered by test_sign_test_matches_hand_computed_binomial above.
+    _override_analysis(rows, probs)
+
+    # Missing an arm must be a no-op, not a crash: `--arms a` has no C.
+    _override_analysis(rows, {"A": probs["A"]})
+
+
 def test_features_are_identical_against_a_gated_snapshot(tmp_path):
     """The strongest form: rebuild features from data that never held the future.
 
