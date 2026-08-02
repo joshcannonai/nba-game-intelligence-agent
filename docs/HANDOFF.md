@@ -18,7 +18,7 @@ because it was caught quoting the market back at us as its own reasoning.
 
 **The headline finding is a negative one, and it is the good kind.** We expected
 the agent-plus-model arm to win. It lost badly: when the agent overruled the
-model it was handed, it was wrong 10 times out of 12 (p ≈ 0.02). The explanation
+model it was handed, it was wrong 15 times out of 19 (p ≈ 0.01, two samples pooled). The explanation
 layer is currently costing us accuracy, and that is a far more interesting thing
 to write up than a confirmed hypothesis would have been.
 
@@ -141,9 +141,28 @@ overruled on       12
 overruling helped 2/12 times -- p = 0.019
 ```
 
-**When the agent overruled the model, it was wrong 10 times out of 12.** Sign
-test, p ≈ 0.02. And it was not overruling at the margins — the two biggest
-reversals took a confident correct call and inverted it:
+**When the agent overruled the model, it was wrong 10 times out of 12.**
+
+Confirmed on a second sample (`--seed 1`), and the confirmation matters because
+it also tempers the claim:
+
+| sample | overrides | model right | agent right | p |
+|---|---|---|---|---|
+| seed 0 | 12 | 10 | 2 | 0.019 |
+| seed 1 | 7 | 5 | 2 | 0.227 |
+| **pooled** | **19** | **15** | **4** | **0.0096** |
+
+Seed 1 on its own is **not** significant — only seven overrides, and a 5-2 split
+is ordinary luck. The direction replicates (the agent's overrides succeed 17%
+and 29% of the time, both far below the 50% you would get from a coin), and
+pooled across 19 overrides it holds at p ≈ 0.01. Report the pooled number, and
+say out loud that one 40-game sample could not have established this alone.
+
+Seed 1 is also a good reminder of how noisy n=40 is: Vegas scored 57.5% on the
+first sample and 77.5% on the second, on the same season.
+
+It was not overruling at the margins either — the biggest reversals took a
+confident correct call and inverted it:
 
 | game | model | agent | actual |
 |---|---|---|---|
