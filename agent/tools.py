@@ -1,8 +1,26 @@
 """The tools the agent can call. This file IS the contract with the rest of the team.
 
+Seven tools, down from ten. The three that went, and why -- because a scope cut
+nobody can explain later just looks like work that was abandoned:
+
+    retrieve_news         No source was ever found. Highest effort of the ten,
+                          least measurable contribution. Cut on merit.
+    predict_best_player   Depended entirely on predict_stat_line, which has not
+                          started. A placeholder behind a placeholder.
+    retrieve_betting_line REMOVED FROM THE AGENT, kept for scoring. This one is
+                          not scope, it is a leak. Watching the live agent run
+                          on 2026-01-14, it pulled the closing line into its own
+                          reasoning -- "the closing line favors ORL (-5.5)" --
+                          and the closing line is the thing we grade ourselves
+                          AGAINST. An agent that reads the market and repeats it
+                          scores well and has predicted nothing. Telling the
+                          model not to peek is a request; taking the tool away
+                          is a guarantee. `agent.sources.closing_line` still
+                          exists and eval/ still calls it directly.
+
 Every function the agent needs in order to produce the report we described on 7/07
-(who wins · best player · a narrative · statistics · the betting line) exists here
-NOW, with a stable name and a stable signature.
+(who wins · a narrative · statistics) exists here NOW, with a stable name and a
+stable signature.
 
 EVERY tool in this file is written by the agent lane (Josh). Nobody else writes
 agent code. What varies is whether the data or model each tool reads from exists
@@ -34,6 +52,7 @@ import json
 from langchain_core.tools import tool
 
 from agent.sources import get_source
+from models.predict import model_available, predict
 
 
 def _todo(tool_name: str, needs_from: str, needs: str, **ctx) -> str:
@@ -58,8 +77,15 @@ def _todo(tool_name: str, needs_from: str, needs: str, **ctx) -> str:
     )
 
 
-def build_tools(source):
-    """Bind a data source into the tool set the agent gets."""
+def build_tools(source, include_model: bool = True):
+    """Bind a data source into the tool set the agent gets.
+
+    include_model=False withholds predict_win_probability. That is not a debug
+    switch -- it is arm B of the three-arm experiment. Arm B has to reason its
+    way to a winner from the retrieval tools alone; arm C gets the model's
+    number handed to it. The difference between the two IS the measurement, so
+    the two arms have to differ in exactly one tool and nothing else.
+    """
 
     # ---------------------------------------------------------------- WORKING
 
@@ -159,82 +185,36 @@ def build_tools(source):
         """
         return json.dumps(source.injuries(team_abbr, as_of_date), indent=2)
 
-    @tool
-    def retrieve_news(team_abbr: str, as_of_date: str, limit: int = 5) -> str:
-        """Beat-reporter news and narrative for a team, published on or before a date.
-
-        The qualitative half of the report -- the "story" of the game. This is the
-        ESPN / RotoWire source we named on 7/07 and nobody has started.
-
-        Args:
-            team_abbr: Team abbreviation.
-            as_of_date: ISO date. Nothing published after this may be returned.
-            limit: Max items.
-        """
-        return _todo(
-            "retrieve_news",
-            "Josh (scope-cut candidate)",
-            "Scraped articles/notes each carrying a PUBLICATION TIMESTAMP, so they can "
-            "be filtered to as_of_date. Not started, and proposed for the Week-4 scope "
-            "cut: highest effort, lowest measurable contribution of the ten.",
-            team_abbr=team_abbr,
-            as_of_date=as_of_date,
-        )
-
-    @tool
-    def retrieve_betting_line(matchup_id: str, as_of_date: str) -> str:
-        """The market's closing price on this game: spread, total, moneyline.
-
-        CONTEXT ONLY -- do NOT let this drive the win probability. The advisor's
-        call on 2026-07-21: the line is an evaluation baseline, not a model input,
-        or the system just reads the answer off the market instead of predicting.
-
-        Reads data/samples/odds_only.csv, which is built from an allowlist of safe
-        columns (scripts/odds_only.py), so this tool structurally cannot leak the
-        result even if it wanted to.
-
-        It is the CLOSING line, so it is not knowable until tip-off. Report it and
-        compare against it; do not treat it as something we knew on as_of_date, and
-        do not let it stand in for a prediction of our own.
-
-        spread is an unsigned magnitude; favorite, spread_home and spread_away say
-        who is laying the points. A query dated after tip-off is refused outright.
-
-        Args:
-            matchup_id: AWAY-HOME-YYYY-MM-DD
-            as_of_date: ISO date. Must be on or before tip-off.
-        """
-        payload = source.betting_line(matchup_id, as_of_date)
-        return json.dumps(
-            {
-                "matchup_id": matchup_id,
-                "as_of_date": as_of_date,
-                "usage": "Evaluation baseline and narrative context only. Do not "
-                "use this to set the win probability.",
-                **payload,
-            }
-        )
-
-    # ---------------------------------------------------- MODELS (Sarvesh) TODO
+    # ---------------------------------------------------------------- MODELS
 
     @tool
     def predict_win_probability(home_abbr: str, away_abbr: str, as_of_date: str) -> str:
-        """Probability the home team wins. PLACEHOLDER: form, rest and injuries.
+        """Probability the home team wins, from a model fitted on prior seasons.
 
-        Sarvesh's XGBoost replaces the body of this. Known weakness of the placeholder:
-        the injury term weights players by their PRIOR season's minutes and treats
-        every listed player as fully out, so it over-penalises. Measured across all
-        1,322 games of 2025-26 it costs accuracy rather than adding it -- 63.4% with
-        injuries against 66.3% without.
+        Backed by models/predict.py -- a logistic regression trained on 2023-24 and
+        2024-25 and never on the season being replayed. It reads form, rest,
+        back-to-backs and injury load, all as of the morning of the game. Holdout
+        accuracy on all 1,322 games of 2025-26 is 66.5%, against 55.5% for simply
+        always picking the home team.
+
+        Falls back to a hand-tuned heuristic if models/win_probability.json is
+        missing, and says which one it used in the `model` field -- so a stale
+        checkout degrades loudly rather than silently changing what is being
+        measured.
 
         Args:
             home_abbr: Home team abbreviation.
             away_abbr: Away team abbreviation.
             as_of_date: ISO date for the prediction.
         """
-        return json.dumps(
-            _stub_win_probability(source, home_abbr, away_abbr, as_of_date), indent=2
+        if model_available():
+            return json.dumps(predict(home_abbr, away_abbr, as_of_date), indent=2)
+        payload = _stub_win_probability(source, home_abbr, away_abbr, as_of_date)
+        payload["warning"] = (
+            "models/win_probability.json is missing, so this is the fallback "
+            "heuristic, not the fitted model. Run `python -m models.train`."
         )
+        return json.dumps(payload, indent=2)
 
     @tool
     def predict_stat_line(player_name: str, matchup_id: str, as_of_date: str) -> str:
@@ -256,37 +236,17 @@ def build_tools(source):
             as_of_date=as_of_date,
         )
 
-    @tool
-    def predict_best_player(matchup_id: str, as_of_date: str) -> str:
-        """Who is likely to be the best player in this game.
-
-        Explicitly part of the output we described to Sadovnik on 7/07
-        ("who wins, best player, a narrative, statistics, a betting line").
-
-        Args:
-            matchup_id: AWAY-HOME-YYYY-MM-DD
-            as_of_date: ISO date.
-        """
-        return _todo(
-            "predict_best_player",
-            "Sarvesh (models)",
-            "Ranks likely top performers. Depends on predict_stat_line. Not started.",
-            matchup_id=matchup_id,
-            as_of_date=as_of_date,
-        )
-
-    return [
+    tools = [
         retrieve_matchup_context,
         retrieve_player_splits,
         retrieve_schedule,
         retrieve_team_form,
         retrieve_injuries,
-        retrieve_news,
-        retrieve_betting_line,
-        predict_win_probability,
         predict_stat_line,
-        predict_best_player,
     ]
+    if include_model:
+        tools.append(predict_win_probability)
+    return tools
 
 
 def _stub_win_probability(

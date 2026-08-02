@@ -20,6 +20,7 @@ from agent.sources import (
     INJURY_CSVS,
     _injury_rows,
     _odds_rows,
+    closing_line,
     parse_date,
     get_source,
     injuries_as_of,
@@ -55,12 +56,17 @@ SCORE_COLUMNS = {
 
 
 def _line(matchup_id: str, as_of_date: str) -> dict:
-    tools = {t.name: t for t in build_tools(get_source("real"))}
-    return json.loads(
-        tools["retrieve_betting_line"].invoke(
-            {"matchup_id": matchup_id, "as_of_date": as_of_date}
-        )
-    )
+    """The closing line, read the way eval/ reads it.
+
+    Was a tool call until week 6, when retrieve_betting_line was taken away
+    from the agent for leaking the benchmark into its own reasoning. The
+    guarantees below did not stop mattering when the tool went -- eval/replay.py
+    and eval/three_arms.py still call closing_line to score every arm, so a
+    score column appearing in this payload would poison the scoreboard itself.
+    Same assertions, aimed one layer down at the function that survived.
+    """
+    away, home, game_date = parse_matchup_id(matchup_id)
+    return closing_line(away, home, game_date, parse_date(as_of_date))
 
 
 def test_season_end_year_splits_on_august():
@@ -233,11 +239,18 @@ EXPECTED_TOOLS = {
     "retrieve_schedule",
     "retrieve_team_form",
     "retrieve_injuries",
-    "retrieve_news",
-    "retrieve_betting_line",
     "predict_win_probability",
     "predict_stat_line",
+}
+
+# Cut in week 6. Named here rather than simply deleted, because "the agent must
+# not have a betting-line tool" is a live safety property, not a historical
+# note -- re-adding retrieve_betting_line would re-open the leak that made us
+# cut it. See the module docstring in agent/tools.py.
+FORBIDDEN_TOOLS = {
+    "retrieve_news",
     "predict_best_player",
+    "retrieve_betting_line",
 }
 
 
@@ -246,6 +259,28 @@ def test_every_agreed_tool_exists(kind):
     """The whole surface is present NOW, so the data layer can drop in behind it."""
     names = {t.name for t in build_tools(get_source(kind))}
     assert EXPECTED_TOOLS <= names, f"missing: {EXPECTED_TOOLS - names}"
+
+
+@pytest.mark.parametrize("kind", ["mock", "real"])
+def test_the_agent_cannot_see_the_market(kind):
+    """The closing line is what we grade against, so the agent must not hold it.
+
+    Watching the live agent on 2026-01-14 it wrote "the closing line favors ORL
+    (-5.5)" straight into its key factors. Scoring a prediction that quoted the
+    benchmark measures nothing. The fix was structural -- take the tool away --
+    and this test is what keeps it taken away.
+    """
+    names = {t.name for t in build_tools(get_source(kind))}
+    assert not (FORBIDDEN_TOOLS & names), f"cut tool is back: {FORBIDDEN_TOOLS & names}"
+
+
+def test_arm_b_differs_from_arm_c_by_exactly_one_tool():
+    """The three-arm comparison is only meaningful if the arms differ in one thing."""
+    source = get_source("real")
+    with_model = {t.name for t in build_tools(source, include_model=True)}
+    without = {t.name for t in build_tools(source, include_model=False)}
+    assert with_model - without == {"predict_win_probability"}
+    assert not without - with_model
 
 
 @pytest.mark.parametrize("kind", ["mock", "real"])
@@ -334,10 +369,7 @@ def test_betting_line_emits_valid_json_when_the_moneyline_is_missing():
     serialises to the token `NaN`, which is not valid JSON. Python's json.loads
     accepts it, so a round-trip test cannot see the bug -- parse strictly.
     """
-    tools = {t.name: t for t in build_tools(get_source("real"))}
-    raw = tools["retrieve_betting_line"].invoke(
-        {"matchup_id": "DET-LAL-2024-12-23", "as_of_date": "2024-12-22"}
-    )
+    raw = json.dumps(_line("DET-LAL-2024-12-23", "2024-12-22"))
 
     def reject(token: str):
         raise AssertionError(f"payload is not valid JSON: contains {token}")
@@ -449,13 +481,13 @@ def test_odds_file_carries_no_scores():
         )
 
 
-def test_betting_line_tool_never_returns_a_result():
-    """Even wired up, the line tool must not hand back who won or the score."""
-    tools = {t.name: t for t in build_tools(get_source("real"))}
-    out = tools["retrieve_betting_line"].invoke(
-        {"matchup_id": "NYK-SAS-2026-06-13", "as_of_date": "2026-06-12"}
-    )
-    payload = json.loads(out)
+def test_betting_line_never_returns_a_result_for_a_finals_game():
+    """The last game of the season is the sharpest case: the result is famous.
+
+    NYK-SAS on 2026-06-13 is in the playoff test set, so a leak here would flow
+    straight into the Vegas baseline every arm is scored against.
+    """
+    payload = _line("NYK-SAS-2026-06-13", "2026-06-12")
     for banned in ("score_home", "score_away", "winner", "home_pts", "away_pts"):
         assert banned not in payload, f"betting line leaked {banned}"
 

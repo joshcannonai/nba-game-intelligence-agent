@@ -2,7 +2,7 @@
 
     streamlit run ui/chat.py
 
-Same ten tools and the same as-of gate as ui/app.py -- this is the
+Same seven tools and the same as-of gate as ui/app.py -- this is the
 conversational view of them. It runs free and key-less by default:
 "deterministic" mode routes your question to one tool and shows you exactly
 what that tool returned, with no LLM in the loop. Switch the backend in the
@@ -81,23 +81,33 @@ def parse_iso(s: str) -> date:
 # Keyword -> tool. The point of the deterministic mode is that you can see the
 # routing: there is no hidden model deciding what to call.
 ROUTES: list[tuple[tuple[str, ...], str]] = [
-    (
-        ("line", "spread", "odds", "vegas", "moneyline", "total", "favor"),
-        "retrieve_betting_line",
-    ),
     (("injur", "out", "hurt", "available"), "retrieve_injuries"),
     (("form", "streak", "last 10", "recent"), "retrieve_team_form"),
     (("rest", "back-to-back", "b2b", "schedule"), "retrieve_schedule"),
-    (("news",), "retrieve_news"),
     (
         ("win", "probability", "odds of winning", "who wins", "predict"),
         "predict_win_probability",
     ),
-    (("best player", "mvp", "star"), "predict_best_player"),
     (("stat line", "points", "rebounds", "assists"), "predict_stat_line"),
     (("split",), "retrieve_player_splits"),
     (("context", "matchup", "overview"), "retrieve_matchup_context"),
 ]
+
+# Asked about the market. Not a routing miss -- a deliberate refusal, and the
+# most interesting thing this UI can say about the design, so it gets a real
+# answer instead of "nothing matched".
+MARKET_WORDS = ("line", "spread", "vegas", "moneyline", "total", "favor", "odds")
+
+MARKET_REPLY = (
+    "<b>I can't see the betting line, on purpose.</b>"
+    "<div class='caveat'>The closing line is what we grade this system "
+    "<i>against</i>. When the agent could read it, it started quoting it back as "
+    "its own reasoning — on 2026-01-14 it wrote <i>“the closing line favors ORL "
+    "(-5.5)”</i> into its key factors. An agent that repeats the market scores "
+    "well and has predicted nothing, so the tool was removed in week 6 rather "
+    "than the model being asked nicely not to look. "
+    "<code>eval/three_arms.py</code> still reads the line to score us.</div>"
+)
 
 
 def route(question: str) -> str | None:
@@ -106,31 +116,6 @@ def route(question: str) -> str | None:
         if any(k in q for k in keywords):
             return name
     return None
-
-
-def render_betting_line(p: dict) -> str:
-    """The one tool whose honest answer needs more than a JSON dump."""
-    if p.get("status") == "gated":
-        return (
-            "<b>No line.</b> " + p["reason"] + "<div class='caveat'>This refusal is "
-            "the date gate working. The closing line sits one column from the "
-            "final score in the source data.</div>"
-        )
-    if p.get("status") != "ok":
-        return "<b>No line found.</b> " + p.get("reason", "")
-
-    fav, total = p["favorite"], p["total"]
-    body = (
-        f"<b>{fav}</b> is favoured. "
-        f"Home {p['spread_home']:+g}, away {p['spread_away']:+g}"
-        + (f", total {total:g}." if total is not None else ", total unavailable.")
-    )
-    if p.get("moneyline_home") is not None:
-        body += f" Moneyline {p['moneyline_away']:+g} / {p['moneyline_home']:+g}."
-    for note in p.get("unavailable", []):
-        body += f"<div class='caveat'>{note}</div>"
-    body += f"<div class='caveat'>{p['caveat']}</div>"
-    return body
 
 
 def render_injuries(p: dict) -> str:
@@ -166,6 +151,24 @@ def render_win_prob(p: dict) -> str:
         f"<div style='opacity:.75;font-size:.86rem;margin-top:.3rem'>"
         f"{p.get('basis', '')}</div>"
     )
+    # The fitted model reports its provenance instead of an injury breakdown:
+    # what it is, what it never saw, and how it did on the season it never saw.
+    # A probability with no track record next to it is just a number.
+    if p.get("holdout_accuracy") is not None:
+        seasons = ", ".join(str(s) for s in (p.get("trained_on_seasons") or []))
+        body += (
+            f"<div class='caveat'><b>{p.get('model')}</b>, trained on {seasons} "
+            f"and never on {p.get('as_of_date', '')[:4]}. "
+            f"Holdout accuracy {p['holdout_accuracy']:.1%} across all 1,322 games "
+            "of 2025-26, against 55.5% for always picking the home team.</div>"
+        )
+        feats = p.get("features") or {}
+        if feats:
+            shown = ", ".join(
+                f"{k.replace('_', ' ')} {v:+g}" for k, v in list(feats.items())[:3]
+            )
+            body += f"<div class='caveat'>Inputs: {shown}</div>"
+
     imp = p.get("injury_impact") or {}
     if imp:
 
@@ -191,11 +194,13 @@ def render_win_prob(p: dict) -> str:
 def answer_deterministically(question: str, matchup_id: str, as_of: str, source) -> str:
     name = route(question)
     if name is None:
+        if any(w in question.lower() for w in MARKET_WORDS):
+            return MARKET_REPLY
         return (
-            "<b>I route questions to one of ten tools</b>, and nothing in that "
-            "matched. Try asking about the line, injuries, team form, rest, news, "
-            "win probability, or a player's stat line — or switch the backend to "
-            "Claude in the sidebar and ask freely."
+            "<b>I route questions to one of seven tools</b>, and nothing in that "
+            "matched. Try asking about injuries, team form, rest, win probability, "
+            "a player's splits, or a stat line — or switch the backend to Claude "
+            "in the sidebar and ask freely."
         )
 
     tools = {t.name: t for t in build_tools(source)}
@@ -208,7 +213,6 @@ def answer_deterministically(question: str, matchup_id: str, as_of: str, source)
     head = f"<div class='tool'>{name}</div>"
 
     renderers = {
-        "retrieve_betting_line": render_betting_line,
         "retrieve_injuries": render_injuries,
         "predict_win_probability": render_win_prob,
     }
@@ -325,7 +329,7 @@ if question := st.chat_input("Who's favoured? Who's out? What's the line?"):
 
 with st.expander("What this can answer"):
     st.markdown(
-        "The agent's whole world is ten functions, each taking an as-of date. "
+        "The agent's whole world is seven functions, each taking an as-of date. "
         "In deterministic mode your question is keyword-routed to one of them:"
     )
     st.code("\n".join(f"{name:<28} {', '.join(k)}" for k, name in ROUTES), "text")
