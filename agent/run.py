@@ -34,6 +34,7 @@ from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from agent.sources import get_source  # noqa: E402
+from agent.skills import skills_block  # noqa: E402
 from agent.tools import build_tools  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -115,11 +116,14 @@ def build_agent(source, model_backend: str = "anthropic", include_model: bool = 
     else:
         raise ValueError(f"unknown model backend: {model_backend!r}")
 
-    return create_agent(
-        model,
-        build_tools(source, include_model=include_model),
-        system_prompt=SYSTEM if include_model else SYSTEM_NO_MODEL,
-    )
+    tools = build_tools(source, include_model=include_model)
+    base = SYSTEM if include_model else SYSTEM_NO_MODEL
+
+    # Skills are appended for exactly the tools this agent was given, so arm B
+    # never receives instructions for a tool it does not have. See agent/skills.py.
+    prompt = base + skills_block([t.name for t in tools])
+
+    return create_agent(model, tools, system_prompt=prompt)
 
 
 def run_matchup(

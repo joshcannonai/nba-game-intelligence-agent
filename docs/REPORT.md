@@ -58,6 +58,13 @@ agent overruled the number it was given, it was wrong 15 times out of 19 (two po
 40-game samples, two-sided sign test p ≈ 0.019). The explanation layer costs accuracy
 instead of adding it. That result is the main finding of the project.
 
+We then acted on it. Each tool was given a written rule set — including an explicit
+instruction not to re-price injuries on top of the model — and re-scored on the same 40
+games. The agent overruled less often (12 → 8) and its accuracy rose from 55.0% to 65.0%,
+recovering about half the gap to the model alone. One sample at n = 40, so directional
+rather than established, but it moves in the direction and by the mechanism the original
+finding predicted.
+
 ---
 
 ## 2. Problem
@@ -254,7 +261,7 @@ One further test spawns a real subprocess with `NBA_SNAPSHOT_DIR` set and assert
 resolves its data directory to the snapshot, so the in-process tests cannot pass for the
 wrong reason.
 
-The suite is 64 tests, run from a clean checkout on 2026-08-03.
+The suite is 73 tests, run from a clean checkout on 2026-08-03.
 
 ---
 
@@ -325,6 +332,52 @@ no score columns.
 The Vegas comparison also rests on an assumption: that our odds are closing lines rather
 than opening lines. `eval/crosscheck_odds.py` tests it against the archive in §4, which
 labels the two explicitly. Nine of ten sampled games are closer to closing.
+
+### 6.5 Skills: where the agent's rules live
+
+Each tool has a *skill* — a Markdown file in `skills/` saying when to call that tool and
+what to do with the answer. The agent loads them into its system prompt at startup, so
+editing one changes agent behaviour with no code change.
+
+We considered the alternative, which was to put everything in a database and let the
+agent query it freely. We rejected that for the same reason the betting-line tool had to
+go: a free-form query surface is how an agent reaches data nobody intended it to see, and
+the date gate only works because every read passes through `agent/sources.py`. Seven
+named tools with written rules is a smaller surface and a checkable one.
+
+The block is assembled from the tools the agent was actually given, never from whatever
+is on disk. Arms B and C differ by one tool, and the whole result in §9.6 depends on that
+being the only difference — if arm B received the win-probability rules it has no tool
+for, the arms would differ by a tool *and* a page of instructions.
+`tests/test_skills.py` asserts the two blocks differ by exactly one section.
+
+**The rule we could not write.** On 2026-08-03 the team agreed to encode something like
+"a player averaging over 20 ppg is out, so drop the win probability by N%". We could not
+find an N the data supports, and the way that failed is worth recording.
+
+| Comparison | Result | Verdict |
+|---|---|---|
+| Every game, split on whether either star was out | Home wins *less* when the **away** star is out | Backwards |
+| Restricted to teams that have a >20 ppg player | Teams win **+5.6%** *more* without him (z = +2.6) | Backwards, and significant |
+| Each team against **itself**, with and without | **+0.0%** (se 3.3%, n = 21 teams) | The question actually answered |
+
+The first two are confounded the same way: having a 20 ppg scorer is a property of good
+teams, and a good team is still good on the night its star sits, so the split compares
+strong rosters to weak ones rather than healthy lineups to depleted ones. Only the
+within-team comparison controls for that, and it finds nothing — with a spread across
+teams running from −32% to +36%.
+
+So `skills/retrieve_injuries.md` tells the agent to report the injury list and let the
+fitted model price it, rather than applying a penalty of its own. That is the opposite of
+what we set out to write, and it agrees with §9.6: over-weighting injuries is our leading
+explanation for why the agent's overrides lost. Reproduce with
+`python -m eval.injury_impact`.
+
+One caveat limits all three numbers. Star-to-team mapping comes from the prior completed
+season, so a player who changed teams over the summer still counts against his old club.
+Some "without star" samples are therefore roster changes rather than absences — Boston
+shows 67 of 89 games "without", which is a departure. Fixing this needs a current-season
+roster as an as-of source, which we do not have.
 
 ---
 
@@ -507,6 +560,41 @@ it:
 | CHI-ORL-2025-12-01 | 0.815 | 0.249 | home won |
 | IND-PHI-2026-01-19 | 0.741 | 0.242 | home won |
 
+### 9.7 Acting on the finding: the skills layer
+
+§9.6 said the agent was losing accuracy by overruling the model, and §6.5 describes what
+we did about it — written rules per tool, including an explicit instruction not to
+re-price injuries on top of the model's number.
+
+We then re-ran arm C on **the same 40 games** (seed 0), changing nothing but the prompt:
+
+| | arm A | arm C before | arm C after |
+|---|---|---|---|
+| accuracy | 75.0% | 55.0% | **65.0%** |
+| log loss | 0.578 | 0.675 | **0.596** |
+| Brier | 0.197 | 0.241 | **0.205** |
+| overrides | — | 12 | **8** |
+| of which the model was right | — | 10 | 6 |
+
+Arm C closed about half the gap to the model it was given. The mechanism is the one we
+predicted: it overrules less often (12 → 8). It is not simply parroting the model either
+— arm C matched arm A exactly on only 1 of 40 games, so it is still adjusting, just less
+destructively.
+
+Three caveats, because this is one sample:
+
+1. **n = 40.** The ±8% band applies here as much as anywhere. A 10-point move is
+   suggestive, not established.
+2. **The override test is now under-powered, not passed.** Eight overrides with 2
+   successes gives p ≈ 0.29. Overruling still looks bad; there is simply less of it to
+   measure. Do not report this as "the problem is fixed".
+3. **Same seed, same games.** It is a paired before/after on one sample, which is the
+   right design for detecting the change, and not a replication.
+
+The honest summary: constraining the agent with written rules recovered a large part of
+what the explanation layer was costing, in the direction and by the mechanism the
+original finding predicted. Confirming it needs a second seed.
+
 ---
 
 ## 10. Discussion
@@ -524,8 +612,9 @@ This is a hypothesis, not a finding. We have not yet read the per-game reasoning
 overrides and categorised it. That is the top item on our open list.
 
 The result points at a specific redesign rather than a vague conclusion: the agent should
-probably annotate the model's number rather than replace it, moving it from predictor to
-explainer with the model keeping the final say on the probability.
+annotate the model's number rather than replace it, moving it from predictor to explainer
+with the model keeping the final say on the probability. We built that (§6.5) and
+re-measured it (§9.7); on one 40-game sample it recovered about half the gap.
 
 We are careful about scope. We have shown that this agent, with these seven tools, on these
 79 paired games, degrades a good estimate. We have not shown that LLM agents cannot improve
@@ -566,6 +655,10 @@ ambiguous.
    uses a residual sigma fitted on the same 1,322 games, which makes the baseline slightly
    stronger than it deserves. A conservative bar, but not a neutral one.
 10. **Two data sources have no recorded upstream** (§4).
+11. **Star-to-team mapping is a season stale** (§6.5). It comes from the prior completed
+    season, so the top-scorer measurement cannot fully separate "injured" from "left the
+    team over the summer". This weakens that measurement and probably also weakens the
+    model's `injury_weight_diff` feature.
 
 ---
 
@@ -575,7 +668,7 @@ ambiguous.
 
 | Member | Lane | Delivered |
 |---|---|---|
-| **Josh Cannon** | Agent | The seven-tool interface, the agent loop, date-gated sources, the snapshot gate, the win-probability model, the replay and three-arm harnesses, 64 tests, both Streamlit interfaces. |
+| **Josh Cannon** | Agent | The seven-tool interface, the agent loop, date-gated sources, the snapshot gate, the win-probability model, the replay and three-arm harnesses, the skills layer, 73 tests, both Streamlit interfaces. |
 | **Patrick Haley** | Data | *(to complete — collection pipeline, cleaning, rolling-5/10 engineered features; PRs #12, #14, #15)* |
 | **Sarvesh Vinod Kumar** | Models | *(to complete — linear regression and XGBoost for stat lines, XGBoost win classifier, accuracy evaluation)* |
 | **Kirtan Patel** | Data / gating | *(to complete — date-gating function, candidate dataset survey, odds cross-check)* |
@@ -610,12 +703,22 @@ From a clean clone, Python 3.11+:
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-pytest                                  # 64 tests (§5.5)
+pytest                                  # the full suite (§5.5)
 python -m models.train                  # §7.1 weights, §7.3 accuracy
 python -m eval.three_arms               # §9.4
+python -m eval.injury_impact            # §6.5 the top-scorer measurement
 python eval/crosscheck_odds.py          # §6.4
 python -m scripts.gate_snapshot --as-of 2026-01-14   # §5.2
 python -m agent.run --status --source real           # §6.1
+python scripts/skills_doc.py                         # §6.5 regenerate docs/SKILLS.md
+```
+
+The local agent, end to end, with no API key (needs `ollama serve` and
+`ollama pull gemma4`):
+
+```bash
+python -m agent.run --model ollama --source real \
+    --matchup CHI-ORL-2025-12-01 --as-of 2025-11-30      # about 40s
 ```
 
 §9.5 and §9.6 come from `eval/results_three_arms_sample40.csv` and `..._seed1.csv`. To
