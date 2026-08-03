@@ -415,6 +415,22 @@ This is our weakest gate and I would rather name it than have it found. The log 
 
 > **Weak spot:** Genuinely unresolved. The honest answer is "it is a residual leak, probably small, and we did not measure it."
 
+**Q: Your tests run in the same process as your code. How do you know a real run actually reads the snapshot and not the repo?**
+
+That was the concern, so one test spawns an actual subprocess with `NBA_SNAPSHOT_DIR` set and asserts the child process resolves its data directory to the snapshot — `test_subprocess_actually_reads_the_snapshot`. Its docstring says what it is for: it guards the test below it from passing for the wrong reason. The test below then runs the same matchup twice, once against the snapshot and once against the full data, and asserts the reports are identical. The snapshot physically cannot leak, so if the query-time filter were leaking, those two would disagree.
+
+**Q: What happens if I ask about a date past the end of your injury data? Does it just say nobody is hurt?**
+
+No, and that case has its own test — `test_injuries_past_the_end_of_the_log_warn_rather_than_report_nobody_hurt`. Past the end of the log the payload carries a warning containing "UNKNOWN". An empty injury list and an unknown injury list are different facts, and reporting the second as the first is the exact failure the whole "null is never zero" rule exists to prevent.
+
+**Q: Your injury data is two files stitched together. What happens at the join?**
+
+They are kept as separate files so provenance survives, but they have to behave as one continuous log. A test asserts both sides of the seam are present — 2025-01-12 from the first file and 2025-01-13 from the second — and that the two files share no dates at all, since an overlap would double-count a transaction. Worth knowing: the older file contains one genuine duplicate of its own, so the test checks the files are disjoint *in time* rather than that every row is unique.
+
+**Q: You gate everything else. Why isn't rest gated?**
+
+Because rest is not knowledge about the future, it is knowledge about the calendar. The NBA publishes its full schedule in August, so "BOS plays the 23rd and the 25th" is knowable on any as-of date in that season — gating it would cripple a legitimate feature to defend against nothing. The *outcome* of the game on the 23rd is a different matter and is gated. `test_rest_is_schedule_based_not_as_of_gated` and `test_h2h_results_are_gated_even_though_rest_is_not` pin both halves of that distinction.
+
 ### The model
 
 **Q: Walk me through one model. What's the input and what's the output?**
@@ -436,6 +452,10 @@ Against 55.5% for simply always picking the home team, and 69.0% for the Vegas c
 **Q: How do you know it isn't overfit?**
 
 Train accuracy is 66.8%, test accuracy 66.5% — a generalisation gap of +0.3%. If it were memorising the training seasons that gap would be much larger.
+
+**Q: If I swap home and away, what should your model do?**
+
+It should *not* return mirrored probabilities, and there is a test for that. Home advantage is real, so p(BOS home vs ORL) + p(ORL home vs BOS) has to come out above 1.0. If those two summed to exactly 1.0 the model would have lost its home term entirely — and home court is worth roughly the whole always-pick-home baseline, about 55%. It is a cheap sanity check that catches a whole class of feature-construction bug.
 
 **Q: Two of your features are `home_games_played` and `away_games_played`, and they carry real weight. What are they actually measuring?**
 
