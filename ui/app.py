@@ -250,13 +250,37 @@ with report_tab:
     )
     c3.metric("As of", as_of_str)
 
-    st.warning(
-        "Win probability is `stub_net_rating_v2` -- net rating, rest and an "
-        "injury penalty weighted by minutes. It is **not** the XGBoost model, and "
-        "measured over all 1,322 games of 2025-26 the injury term currently makes "
-        "it *worse* (63.4% vs 66.3% without it), so treat it as a placeholder with "
-        "a known flaw. Sarvesh's model drops into this same tool signature."
-    )
+    # Report whatever actually produced the number. This banner used to hard-code
+    # "stub_net_rating_v2 -- not a real model", and stayed that way after the fitted
+    # model landed, so the demo talked the project down.
+    model_info = report.get("model") or {}
+    model_name = model_info.get("name") or "unknown"
+
+    if model_info.get("warning") or str(model_name).startswith("stub_"):
+        st.warning(
+            f"Win probability is `{model_name}` — a hand-tuned net-rating heuristic, "
+            "**not** a fitted model. "
+            + (model_info.get("warning") or "Run `python -m models.train` to fit one.")
+        )
+    else:
+        seasons = model_info.get("trained_on_seasons") or []
+        acc = model_info.get("holdout_accuracy")
+        st.info(
+            f"Win probability is `{model_name}`"
+            + (
+                f", trained by {model_info['trained_by']}"
+                if model_info.get("trained_by")
+                else ""
+            )
+            + (f" on {', '.join(str(s) for s in seasons)}" if seasons else "")
+            + (
+                f". Holdout accuracy on all 1,322 games of 2025-26 — a season it never "
+                f"trained on — is **{acc:.1%}**, against 55.5% for always picking the "
+                "home team and 69.0% for the Vegas closing line."
+                if acc is not None
+                else "."
+            )
+        )
 
     st.subheader("What drove it")
     st.markdown(

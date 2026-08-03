@@ -1,0 +1,266 @@
+/* NBA Game Intelligence Agent — document theme.
+   Matches the Streamlit app: dark slate, orange accent. Light mode supported. */
+
+:root {
+  --bg:        #0E1117;
+  --surface:   #151C25;
+  --surface-2: #1B2430;
+  --border:    #232C38;
+  --text:      #E6EAF0;
+  --muted:     #94A3B8;
+  --accent:    #F97316;
+  --accent-2:  #FDBA74;
+  --green:     #22C55E;
+  --amber:     #F59E0B;
+  --slate:     #64748B;
+  --code-bg:   #10161F;
+  --max:       900px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg:        #FBFBFC;
+    --surface:   #FFFFFF;
+    --surface-2: #F4F6F8;
+    --border:    #E2E6EB;
+    --text:      #16202B;
+    --muted:     #5A6674;
+    --accent:    #D9600B;
+    --accent-2:  #B4500A;
+    --code-bg:   #F4F6F8;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+html { background: var(--bg); }
+
+/* Centre the column on the body itself. Doing it per-child does not survive the
+   `margin:` shorthands on headings and paragraphs, which reset the auto margins. */
+body {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 1.5rem 8rem;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.68 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- headings */
+
+h1, h2, h3, h4 {
+  line-height: 1.25;
+  letter-spacing: -0.021em;
+  font-weight: 700;
+  margin: 2.4em 0 0.65em;
+  scroll-margin-top: 1.5rem;
+}
+
+h1 {
+  font-size: 2.05rem;
+  margin-top: 2.2rem;
+  padding-bottom: 0.5rem;
+  position: relative;
+}
+/* Accent rule sized to the text, without inline-block (which would break the
+   auto-margin centring that lays out the column). */
+h1::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 3.5rem;
+  height: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+h2 {
+  font-size: 1.42rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--border);
+}
+
+h3 { font-size: 1.09rem; color: var(--accent-2); }
+h4 { font-size: 0.97rem; color: var(--muted); text-transform: uppercase;
+     letter-spacing: 0.06em; }
+
+h1 + p, h2 + p { margin-top: 0; }
+
+/* ---------------------------------------------------------------- text */
+
+p, li { color: var(--text); }
+p { margin: 0 0 1.05em; }
+
+strong { color: var(--text); font-weight: 680; }
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
+a:hover { border-bottom-color: var(--accent); }
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2.6rem 0;
+}
+
+blockquote {
+  margin: 1.4em 0;
+  padding: 0.85rem 1.15rem;
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  color: var(--muted);
+  font-style: italic;
+}
+blockquote p:last-child { margin-bottom: 0; }
+blockquote strong { color: var(--accent-2); font-style: normal; }
+
+ul, ol { padding-left: 1.35rem; margin: 0 0 1.15em; }
+li { margin-bottom: 0.42em; }
+li::marker { color: var(--accent); }
+
+/* ---------------------------------------------------------------- code */
+
+code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.855em;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.11em 0.4em;
+  color: var(--accent-2);
+}
+
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  margin: 0 0 1.4em;
+  line-height: 1.5;
+}
+
+pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--text);
+  font-size: 0.83rem;
+}
+
+/* ---------------------------------------------------------------- tables */
+
+.table-wrap, table { display: block; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 1.6em;
+  font-size: 0.905rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+thead { background: var(--surface-2); }
+
+th, td {
+  padding: 0.6rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+th {
+  font-weight: 660;
+  font-size: 0.79rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: var(--surface); }
+td strong { color: var(--accent-2); }
+
+/* ---------------------------------------------------------------- details */
+
+details {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 0.85rem 1.15rem;
+  margin: 0 0 1.5em;
+}
+
+details[open] { padding-bottom: 0.4rem; }
+
+summary {
+  cursor: pointer;
+  font-weight: 640;
+  color: var(--accent-2);
+  list-style: none;
+  padding-left: 1.3rem;
+  position: relative;
+}
+summary::-webkit-details-marker { display: none; }
+summary::before {
+  content: "▸";
+  position: absolute;
+  left: 0.15rem;
+  color: var(--accent);
+  transition: transform 0.15s ease;
+  display: inline-block;
+}
+details[open] summary::before { transform: rotate(90deg); }
+details > *:not(summary) { margin-top: 1rem; }
+
+/* ---------------------------------------------------------------- TOC */
+
+nav#TOC {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.15rem 1.4rem;
+  margin: 2rem auto 2.6rem;
+  font-size: 0.92rem;
+}
+nav#TOC > ul { margin-bottom: 0; }
+nav#TOC ul ul { margin-bottom: 0; }
+nav#TOC a { color: var(--text); }
+nav#TOC a:hover { color: var(--accent); }
+nav#TOC li::marker { color: var(--slate); }
+
+/* ---------------------------------------------------------------- title block */
+
+/* The markdown files carry their own H1 and byline, so pandoc's generated title
+   block is a duplicate. The --metadata title is still what names the browser tab. */
+header#title-block-header { display: none; }
+
+/* ---------------------------------------------------------------- print */
+
+@media print {
+  :root {
+    --bg: #fff; --surface: #fff; --surface-2: #f6f6f6; --border: #ccc;
+    --text: #111; --muted: #555; --accent: #C2410C; --accent-2: #9A3412;
+    --code-bg: #f6f6f6;
+  }
+  body { padding: 0; font-size: 11pt; }
+  h2 { page-break-after: avoid; }
+  pre, table, details { page-break-inside: avoid; }
+  details { border: 1px solid #ccc; }
+  details > *:not(summary) { display: block !important; }
+}
+
+@media (max-width: 640px) {
+  body { padding: 0 0.9rem 5rem; font-size: 15px; }
+  h1, header#title-block-header .title { font-size: 1.6rem; }
+  h2 { font-size: 1.22rem; }
+}

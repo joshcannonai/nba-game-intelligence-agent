@@ -320,12 +320,30 @@ def dry_run(matchup_id: str, as_of_date: str, source) -> str:
         key_factors.append(f"WARNING: {w}")
 
     prob = pred.get("home_win_prob")
+
+    # Name the model that actually produced the number rather than hard-coding one.
+    # This line used to say "the net-rating stub (not XGBoost yet)" while the fitted
+    # logistic regression was doing the work -- a report that understates itself is
+    # as wrong as one that overstates itself.
+    def _provenance() -> str:
+        name = pred.get("model", "unknown")
+        if str(name).startswith("stub_"):
+            return "a hand-tuned net-rating heuristic, not a fitted model"
+        acc = pred.get("holdout_accuracy")
+        seasons = pred.get("trained_on_seasons")
+        parts = [name]
+        if seasons:
+            parts.append(f"trained on {', '.join(str(s) for s in seasons)}")
+        if acc is not None:
+            parts.append(f"{acc:.1%} holdout accuracy")
+        return "; ".join(parts)
+
     narrative = (
         f"{away['abbr']} at {home['abbr']} on {ctx['game_date']}, as of {as_of_date}. "
         + (
-            f"Home win probability {prob:.1%} from the net-rating stub (not XGBoost yet). "
+            f"Home win probability {prob:.1%} from {_provenance()}. "
             if prob is not None
-            else "No win probability: the stub could not find ratings for both teams. "
+            else "No win probability: the model could not build features for both teams. "
         )
         + f"Injury list is date-gated: {len(injuries)} player(s) known out that morning. "
         + (
@@ -362,6 +380,16 @@ def dry_run(matchup_id: str, as_of_date: str, source) -> str:
             "missing": missing,
             "narrative": narrative,
             "mode": "dry_run_no_llm",
+            # Provenance travels with the number so every surface that displays it
+            # can say what produced it. The UI used to hard-code "this is a stub",
+            # which stayed on screen after the fitted model landed.
+            "model": {
+                "name": pred.get("model"),
+                "trained_by": pred.get("trained_by"),
+                "trained_on_seasons": pred.get("trained_on_seasons"),
+                "holdout_accuracy": pred.get("holdout_accuracy"),
+                "warning": pred.get("warning"),
+            },
         },
         indent=2,
     )

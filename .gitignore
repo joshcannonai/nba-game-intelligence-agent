@@ -35,3 +35,6 @@ data/snapshots/
 # Models
 *.joblib
 *.pkl
+
+# Rendered docs -- regenerate with ./scripts/render_docs.sh
+docs/html/
