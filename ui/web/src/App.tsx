@@ -90,17 +90,114 @@ function Row({ term, children }: { term: string; children: React.ReactNode }) {
 	);
 }
 
+
+function pctOf(n: unknown) {
+	return typeof n === "number" ? Math.round(n * 100) : null;
+}
+
+/** Parse the agent's answer. It is asked for JSON and usually fences it. */
+function parseReport(raw: string): Record<string, unknown> | null {
+	const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+	const body = (fenced ? fenced[1] : raw).trim();
+	const start = body.indexOf("{");
+	const end = body.lastIndexOf("}");
+	if (start < 0 || end <= start) return null;
+	try {
+		return JSON.parse(body.slice(start, end + 1));
+	} catch {
+		return null;
+	}
+}
+
+function Tldr({ raw, game }: { raw: string; game: Game }) {
+	const r = parseReport(raw);
+	if (!r) return null;
+	const home = pctOf(r.home_win_prob);
+	const away = pctOf(r.away_win_prob);
+	if (home === null || away === null) return null;
+	const favHome = home >= away;
+	const favAbbr = favHome ? game.h : game.a;
+	const favName = NAMES[favAbbr] ?? favAbbr;
+	const favPct = favHome ? home : away;
+	const factors = Array.isArray(r.key_factors) ? (r.key_factors as string[]) : [];
+	const missing = Array.isArray(r.missing) ? (r.missing as string[]) : [];
+	const confidence = favPct >= 70 ? "a clear favourite" : favPct >= 58 ? "a moderate edge" : "close to a coin flip";
+
+	return (
+		<>
+			<h2 className="sec">In short</h2>
+			<div className="tldr">
+				<p className="verdict">
+					<strong>{favName}</strong> to win, {favPct}%. The model calls that{" "}
+					{confidence}.
+				</p>
+
+				<div className="odds" role="img" aria-label={`${NAMES[game.a] ?? game.a} ${away}%, ${NAMES[game.h] ?? game.h} ${home}%`}>
+					<div className="bar">
+						<span className="away" style={{ width: away + "%" }} />
+						<span className="home" style={{ width: home + "%" }} />
+					</div>
+					<div className="ends">
+						<span>
+							{NAMES[game.a] ?? game.a} <b>{away}%</b>
+						</span>
+						<span>
+							<b>{home}%</b> {NAMES[game.h] ?? game.h}
+						</span>
+					</div>
+				</div>
+
+				{typeof r.narrative === "string" && r.narrative && (
+					<p className="narrative">{r.narrative}</p>
+				)}
+
+				{factors.length > 0 && (
+					<div className="reasons">
+						<h3>Why</h3>
+						<ul>
+							{factors.map((f, i) => (
+								<li key={i}>{f}</li>
+							))}
+						</ul>
+					</div>
+				)}
+
+				<div className="reasons">
+					<h3>What it could not find</h3>
+					{missing.length === 0 ? (
+						<p className="none">
+							Nothing. Every tool it called returned data.
+						</p>
+					) : (
+						<ul>
+							{missing.map((m, i) => (
+								<li key={i}>{m}</li>
+							))}
+						</ul>
+					)}
+				</div>
+			</div>
+		</>
+	);
+}
+
 function AgentTab({ health }: { health: Health | null }) {
-	const [matchup, setMatchup] = useState<Game>(GAMES.find((g) => g.id === "CHI-ORL-2025-12-01") ?? GAMES[0]);
+	const [query, setQuery] = useState("");
+	const [matchup, setMatchup] = useState<Game>(
+		GAMES.find((g) => g.id === "CHI-ORL-2025-12-01") ?? GAMES[0],
+	);
+	const hits = GAMES.filter((g) => matches(g, query));
 	const [steps, setSteps] = useState<Step[]>([]);
 	const [final, setFinal] = useState("");
 	const [running, setRunning] = useState(false);
 	const [elapsed, setElapsed] = useState(0);
-	const endRef = useRef<HTMLDivElement>(null);
+	const logRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		if (steps.length)
-			endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+		// Scroll the log box, never the page: yanking the whole window while the
+		// presenter is talking over it is worse than a list that fills quietly.
+		const box = logRef.current;
+		if (box) box.scrollTop = box.scrollHeight;
 	}, [steps.length]);
 
 	async function run() {
@@ -198,19 +295,39 @@ function AgentTab({ health }: { health: Health | null }) {
 
 			<div className="slab console">
 				<div className="controls">
-					<label className="field">
-						<span>Game to predict</span>
+					<label className="field grow">
+						<span>Search {GAMES.length.toLocaleString()} games</span>
+						<input
+							type="search"
+							value={query}
+							placeholder="lakers, or BOS, or 2026-01"
+							onChange={(e) => {
+								const q = e.target.value;
+								setQuery(q);
+								const next = GAMES.filter((g) => matches(g, q));
+								if (next.length && !next.some((g) => g.id === matchup.id))
+									setMatchup(next[0]);
+							}}
+						/>
+					</label>
+					<label className="field grow">
+						<span>
+							{hits.length === GAMES.length
+								? "Game to predict"
+								: hits.length === 0
+									? "No game matches that"
+									: `${hits.length} match${hits.length === 1 ? "" : "es"}`}
+						</span>
 						<select
 							value={matchup.id}
+							disabled={hits.length === 0}
 							onChange={(e) =>
-								setMatchup(
-									GAMES.find((m) => m.id === e.target.value) ?? GAMES[0],
-								)
+								setMatchup(GAMES.find((g) => g.id === e.target.value) ?? matchup)
 							}
 						>
-							{GAMES.map((m) => (
-								<option key={m.id} value={m.id}>
-									{labelFor(m)}
+							{hits.slice(0, 400).map((g) => (
+								<option key={g.id} value={g.id}>
+									{labelFor(g)}
 								</option>
 							))}
 						</select>
@@ -237,9 +354,9 @@ function AgentTab({ health }: { health: Health | null }) {
 					<h2 className="sec">What it did</h2>
 					<p className="note">
 						Each line is a real function call, in the order the model chose to
-						make it.
+						make it. {steps.length} so far.
 					</p>
-					<div className="log">
+					<div className="log" ref={logRef}>
 						{steps.map((s, i) => (
 							<div key={i} className={"entry " + s.kind}>
 								<div className="t">{s.t.toFixed(1)}s</div>
@@ -262,7 +379,6 @@ function AgentTab({ health }: { health: Health | null }) {
 								</div>
 							</div>
 						))}
-						<div ref={endRef} />
 					</div>
 				</>
 			)}
@@ -275,6 +391,7 @@ function AgentTab({ health }: { health: Health | null }) {
 						find.
 					</p>
 					<pre className="out">{final}</pre>
+					<Tldr raw={final} game={matchup} />
 				</>
 			)}
 		</div>

@@ -366,3 +366,78 @@ td { color: var(--ink-2); }
 td.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
 td.win { color: var(--live); }
 tbody tr:last-child td { border-bottom: none; }
+
+/* ---------- searchable picker ---------- */
+.field.grow { flex: 1 1 260px; }
+input[type="search"] {
+  font-family: var(--sans);
+  font-size: 14px;
+  background: var(--raised);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 7px;
+  padding: 10px 12px;
+  width: 100%;
+  min-width: 0;
+}
+input[type="search"]::placeholder { color: var(--ink-3); }
+input[type="search"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+select:disabled { opacity: 0.5; }
+.field.grow select { width: 100%; min-width: 0; }
+
+/* ---------- the run log, boxed and scrollable ---------- */
+/* Ten rows then it scrolls. A run makes ~14 entries and an unbounded list pushes
+   the conclusion off the bottom of the screen mid-presentation. */
+.log {
+  max-height: 27rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--rule);
+  border-radius: var(--r);
+  background: var(--surface);
+  padding: 2px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+.log::-webkit-scrollbar { width: 10px; }
+.log::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 99px; border: 3px solid var(--surface); }
+
+/* ---------- tl;dr ---------- */
+.tldr { display: flex; flex-direction: column; gap: 22px; }
+.verdict { margin: 0; font-size: 20px; line-height: 1.45; letter-spacing: -0.015em; }
+.verdict strong { color: var(--accent); font-weight: 600; }
+
+.odds { display: flex; flex-direction: column; gap: 8px; }
+.bar { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: var(--raised); }
+.bar span { display: block; }
+.bar .away { background: var(--ink-3); }
+.bar .home { background: var(--accent); }
+.ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.ends b { color: var(--ink); font-family: var(--mono); font-weight: 500; }
+
+.narrative {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.72;
+  color: var(--ink-2);
+  max-width: 70ch;
+  border-left: 1px solid var(--rule);
+  padding-left: 18px;
+}
+
+.reasons h3 {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+  margin: 0 0 8px;
+}
+.reasons ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 7px; }
+.reasons li { font-size: 14.5px; color: var(--ink-2); line-height: 1.6; }
+.reasons li::marker { color: var(--accent); }
+.reasons .none { margin: 0; font-size: 14.5px; color: var(--ink-3); }
