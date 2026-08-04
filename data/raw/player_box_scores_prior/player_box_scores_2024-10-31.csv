@@ -1,0 +1,91 @@
+slug,name,team,location,opponent,outcome,seconds_played,made_field_goals,attempted_field_goals,made_three_point_field_goals,attempted_three_point_field_goals,made_free_throws,attempted_free_throws,offensive_rebounds,defensive_rebounds,assists,steals,blocks,turnovers,personal_fouls,plus_minus,game_score,game_date
+bookede01,Devin Booker,Team.PHOENIX_SUNS,Location.AWAY,Team.LOS_ANGELES_CLIPPERS,Outcome.WIN,2266,11,18,5,9,13,15,1,4,8,3,0,2,1,20.0,39.1,2024-10-31
+antetgi01,Giannis Antetokounmpo,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,2011,17,22,0,0,3,8,1,10,4,1,1,1,4,0.0,32.0,2024-10-31
+moranja01,Ja Morant,Team.MEMPHIS_GRIZZLIES,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,1734,9,16,2,5,6,7,1,9,14,1,0,3,0,29.0,29.2,2024-10-31
+wembavi01,Victor Wembanyama,Team.SAN_ANTONIO_SPURS,Location.AWAY,Team.UTAH_JAZZ,Outcome.WIN,2013,9,20,4,13,3,3,2,7,7,5,5,3,3,43.0,27.3,2024-10-31
+hardeja01,James Harden,Team.LOS_ANGELES_CLIPPERS,Location.HOME,Team.PHOENIX_SUNS,Outcome.LOSS,2141,8,19,3,10,6,7,0,10,13,2,2,6,2,-2.0,23.2,2024-10-31
+irvinky01,Kyrie Irving,Team.DALLAS_MAVERICKS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,2570,10,20,5,6,3,3,4,4,7,0,0,3,2,-3.0,23.1,2024-10-31
+zubaciv01,Ivica Zubac,Team.LOS_ANGELES_CLIPPERS,Location.HOME,Team.PHOENIX_SUNS,Outcome.LOSS,2132,9,10,0,0,4,5,5,7,1,1,0,2,1,-11.0,23.1,2024-10-31
+paulch01,Chris Paul,Team.SAN_ANTONIO_SPURS,Location.AWAY,Team.UTAH_JAZZ,Outcome.WIN,1942,8,13,3,7,0,0,0,7,10,2,0,1,2,37.0,22.4,2024-10-31
+onealro01,Royce O'Neale,Team.PHOENIX_SUNS,Location.AWAY,Team.LOS_ANGELES_CLIPPERS,Outcome.WIN,1717,7,8,5,6,2,2,1,6,1,1,1,0,3,-7.0,21.9,2024-10-31
+doncilu01,Luka Dončić,Team.DALLAS_MAVERICKS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,2251,12,25,3,7,2,4,0,5,2,1,0,1,5,-2.0,16.4,2024-10-31
+aldamsa01,Santi Aldama,Team.MEMPHIS_GRIZZLIES,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,1986,7,14,1,4,4,4,2,7,2,1,0,3,1,9.0,14.5,2024-10-31
+sengual01,Alperen Şengün,Team.HOUSTON_ROCKETS,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.WIN,2087,5,16,0,1,7,9,6,6,4,0,1,1,3,10.0,14.3,2024-10-31
+easonta01,Tari Eason,Team.HOUSTON_ROCKETS,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.WIN,1122,6,10,1,2,2,3,2,2,2,0,1,0,1,12.0,13.7,2024-10-31
+duranke01,Kevin Durant,Team.PHOENIX_SUNS,Location.AWAY,Team.LOS_ANGELES_CLIPPERS,Outcome.WIN,2321,7,13,2,4,2,3,0,5,4,1,2,4,1,-2.0,13.6,2024-10-31
+wellsja01,Jaylen Wells,Team.MEMPHIS_GRIZZLIES,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,2137,5,9,3,6,3,3,1,6,1,0,0,1,2,7.0,13.1,2024-10-31
+greenja05,Jalen Green,Team.HOUSTON_ROCKETS,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.WIN,2179,9,21,3,8,2,3,0,12,4,1,1,5,4,12.0,13.0,2024-10-31
+collijo01,John Collins,Team.UTAH_JAZZ,Location.HOME,Team.SAN_ANTONIO_SPURS,Outcome.LOSS,1673,6,13,0,1,2,2,4,7,3,1,1,2,3,-6.0,12.8,2024-10-31
+sextoco01,Collin Sexton,Team.UTAH_JAZZ,Location.HOME,Team.SAN_ANTONIO_SPURS,Outcome.LOSS,1483,5,11,0,0,6,6,0,3,3,2,0,1,5,-1.0,12.3,2024-10-31
+laravja01,Jake LaRavia,Team.MEMPHIS_GRIZZLIES,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,1963,3,6,1,3,4,6,1,9,3,2,0,1,4,30.0,12.1,2024-10-31
+powelno01,Norman Powell,Team.LOS_ANGELES_CLIPPERS,Location.HOME,Team.PHOENIX_SUNS,Outcome.LOSS,1838,9,21,4,11,1,2,0,2,2,1,0,2,1,4.0,12.1,2024-10-31
+brookdi01,Dillon Brooks,Team.HOUSTON_ROCKETS,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.WIN,2454,6,15,2,9,3,4,1,3,2,0,1,0,1,7.0,11.8,2024-10-31
+smithja05,Jabari Smith Jr.,Team.HOUSTON_ROCKETS,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.WIN,1758,5,10,1,5,3,4,3,3,0,1,0,0,3,-6.0,11.4,2024-10-31
+pippesc02,Scotty Pippen Jr.,Team.MEMPHIS_GRIZZLIES,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,1614,5,8,1,3,5,5,0,3,1,1,0,3,2,9.0,11.2,2024-10-31
+dunnry01,Ryan Dunn,Team.PHOENIX_SUNS,Location.AWAY,Team.LOS_ANGELES_CLIPPERS,Outcome.WIN,2058,6,12,4,9,0,0,1,3,0,1,0,0,5,11.0,10.6,2024-10-31
+thompam01,Amen Thompson,Team.HOUSTON_ROCKETS,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.WIN,1078,4,5,0,0,2,2,2,2,1,1,0,1,2,7.0,10.0,2024-10-31
+champju02,Julian Champagnie,Team.SAN_ANTONIO_SPURS,Location.AWAY,Team.UTAH_JAZZ,Outcome.WIN,1510,3,7,0,1,0,0,2,4,2,3,0,0,0,27.0,9.3,2024-10-31
+jonesde02,Derrick Jones Jr.,Team.LOS_ANGELES_CLIPPERS,Location.HOME,Team.PHOENIX_SUNS,Outcome.LOSS,1459,4,10,1,3,2,2,1,2,2,3,0,0,5,-6.0,9.3,2024-10-31
+porteke02,Kevin Porter Jr.,Team.LOS_ANGELES_CLIPPERS,Location.HOME,Team.PHOENIX_SUNS,Outcome.LOSS,1042,6,12,0,3,2,2,1,4,2,0,1,2,2,-10.0,9.2,2024-10-31
+jonesty01,Tyus Jones,Team.PHOENIX_SUNS,Location.AWAY,Team.LOS_ANGELES_CLIPPERS,Outcome.WIN,1990,3,8,1,4,0,0,0,3,11,0,0,1,3,12.0,9.0,2024-10-31
+washipj01,P.J. Washington,Team.DALLAS_MAVERICKS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,2245,3,6,0,2,0,2,1,8,1,3,3,1,3,-3.0,8.9,2024-10-31
+edeyza01,Zach Edey,Team.MEMPHIS_GRIZZLIES,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,1423,5,9,0,0,0,0,2,6,0,1,1,1,3,5.0,8.4,2024-10-31
+mamuksa01,Sandro Mamukelashvili,Team.SAN_ANTONIO_SPURS,Location.AWAY,Team.UTAH_JAZZ,Outcome.WIN,639,4,5,1,2,1,1,0,1,0,0,0,0,0,3.0,8.4,2024-10-31
+sochaje01,Jeremy Sochan,Team.SAN_ANTONIO_SPURS,Location.AWAY,Team.UTAH_JAZZ,Outcome.WIN,1866,5,13,1,4,0,2,2,3,3,2,1,1,2,4.0,8.4,2024-10-31
+wrighde01,Delon Wright,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,1242,3,4,2,2,0,0,0,1,2,0,1,0,2,10.0,8.0,2024-10-31
+filipky01,Kyle Filipowski,Team.UTAH_JAZZ,Location.HOME,Team.SAN_ANTONIO_SPURS,Outcome.LOSS,1207,5,8,2,4,0,0,1,4,1,0,0,2,3,-12.0,7.8,2024-10-31
+clarkbr01,Brandon Clarke,Team.MEMPHIS_GRIZZLIES,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,701,3,3,0,0,1,1,0,2,2,0,0,0,1,18.0,7.7,2024-10-31
+lopezbr01,Brook Lopez,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,1415,4,8,3,6,1,2,0,3,1,0,0,0,4,-35.0,7.6,2024-10-31
+mannte01,Terance Mann,Team.LOS_ANGELES_CLIPPERS,Location.HOME,Team.PHOENIX_SUNS,Outcome.LOSS,1871,4,8,0,2,0,0,3,1,2,1,0,0,3,0.0,7.6,2024-10-31
+kesslwa01,Walker Kessler,Team.UTAH_JAZZ,Location.HOME,Team.SAN_ANTONIO_SPURS,Outcome.LOSS,1654,3,9,0,0,0,0,4,7,1,0,3,1,1,-14.0,7.2,2024-10-31
+johnske04,Keldon Johnson,Team.SAN_ANTONIO_SPURS,Location.AWAY,Team.UTAH_JAZZ,Outcome.WIN,1663,3,10,1,6,6,7,2,2,0,1,0,2,2,6.0,7.0,2024-10-31
+nurkiju01,Jusuf Nurkić,Team.PHOENIX_SUNS,Location.AWAY,Team.LOS_ANGELES_CLIPPERS,Outcome.WIN,1385,3,6,1,2,4,4,0,3,2,0,0,3,2,11.0,6.5,2024-10-31
+portibo01,Bobby Portis,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,1496,5,14,1,5,0,0,5,2,0,1,0,1,2,-17.0,6.5,2024-10-31
+thompkl01,Klay Thompson,Team.DALLAS_MAVERICKS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,1829,5,13,2,9,0,0,0,1,1,1,0,0,1,-9.0,6.5,2024-10-31
+plumlma01,Mason Plumlee,Team.PHOENIX_SUNS,Location.AWAY,Team.LOS_ANGELES_CLIPPERS,Outcome.WIN,1043,3,7,0,0,2,4,4,2,0,2,1,2,3,0.0,6.4,2024-10-31
+barneha02,Harrison Barnes,Team.SAN_ANTONIO_SPURS,Location.AWAY,Team.UTAH_JAZZ,Outcome.WIN,1462,2,6,0,3,4,4,0,2,0,0,1,0,0,13.0,5.9,2024-10-31
+dunnkr01,Kris Dunn,Team.LOS_ANGELES_CLIPPERS,Location.HOME,Team.PHOENIX_SUNS,Outcome.LOSS,1412,2,5,2,2,0,0,3,1,2,0,0,0,3,1.0,5.9,2024-10-31
+batumni01,Nicolas Batum,Team.LOS_ANGELES_CLIPPERS,Location.HOME,Team.PHOENIX_SUNS,Outcome.LOSS,1290,1,4,1,3,0,0,1,4,3,0,4,1,2,-4.0,5.6,2024-10-31
+branhma01,Malaki Branham,Team.SAN_ANTONIO_SPURS,Location.AWAY,Team.UTAH_JAZZ,Outcome.WIN,996,1,5,1,2,3,4,0,2,1,3,0,1,1,-13.0,5.4,2024-10-31
+castlst01,Stephon Castle,Team.SAN_ANTONIO_SPURS,Location.AWAY,Team.UTAH_JAZZ,Outcome.WIN,1255,3,8,1,2,1,2,2,2,1,1,0,0,4,3.0,5.3,2024-10-31
+gaffoda01,Daniel Gafford,Team.DALLAS_MAVERICKS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,905,3,4,0,0,0,0,1,2,1,0,2,1,4,-15.0,5.2,2024-10-31
+princta02,Taurean Prince,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,1644,2,8,1,6,0,0,0,2,3,4,0,1,2,-22.0,5.1,2024-10-31
+eubandr01,Drew Eubanks,Team.UTAH_JAZZ,Location.HOME,Team.SAN_ANTONIO_SPURS,Outcome.LOSS,1226,2,3,0,0,2,2,3,2,1,0,2,3,4,-4.0,4.9,2024-10-31
+jacksja02,Jaren Jackson Jr.,Team.MEMPHIS_GRIZZLIES,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,1569,5,12,0,4,3,3,0,5,2,0,0,3,4,4.0,4.9,2024-10-31
+millspa02,Patty Mills,Team.UTAH_JAZZ,Location.HOME,Team.SAN_ANTONIO_SPURS,Outcome.LOSS,982,3,7,3,6,0,0,1,0,1,1,0,3,0,-2.0,4.7,2024-10-31
+georgke01,Keyonte George,Team.UTAH_JAZZ,Location.HOME,Team.SAN_ANTONIO_SPURS,Outcome.LOSS,1821,5,14,1,9,4,5,1,3,5,0,0,7,1,-10.0,4.5,2024-10-31
+coffeam01,Amir Coffey,Team.LOS_ANGELES_CLIPPERS,Location.HOME,Team.PHOENIX_SUNS,Outcome.LOSS,628,2,3,1,1,2,3,0,1,0,0,0,0,3,-5.0,4.4,2024-10-31
+livelde01,Dereck Lively II,Team.DALLAS_MAVERICKS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,900,2,4,0,0,2,2,1,2,2,0,1,1,5,-2.0,4.4,2024-10-31
+marshna01,Naji Marshall,Team.DALLAS_MAVERICKS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,1298,2,3,0,1,0,0,0,2,3,0,1,1,2,9.0,4.3,2024-10-31
+allengr01,Grayson Allen,Team.PHOENIX_SUNS,Location.AWAY,Team.LOS_ANGELES_CLIPPERS,Outcome.WIN,1135,1,8,0,5,0,0,0,5,3,4,0,0,1,-1.0,4.0,2024-10-31
+poweldw01,Dwight Powell,Team.DALLAS_MAVERICKS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,380,1,1,0,0,2,2,2,0,0,0,0,1,1,1.0,3.7,2024-10-31
+trentga02,Gary Trent Jr.,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,1089,4,12,0,7,1,1,0,2,0,1,0,0,1,-23.0,3.4,2024-10-31
+sensabr01,Brice Sensabaugh,Team.UTAH_JAZZ,Location.HOME,Team.SAN_ANTONIO_SPURS,Outcome.LOSS,871,2,3,1,2,0,0,0,3,1,0,0,2,0,8.0,3.3,2024-10-31
+adamsst01,Steven Adams,Team.HOUSTON_ROCKETS,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.WIN,598,0,0,0,0,0,0,1,0,3,1,0,0,2,-4.0,3.0,2024-10-31
+rolliry01,Ryan Rollins,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,284,1,2,1,2,1,2,0,0,1,0,1,1,0,-1.0,3.0,2024-10-31
+dinwisp01,Spencer Dinwiddie,Team.DALLAS_MAVERICKS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,735,0,5,0,3,4,4,0,1,3,0,0,0,0,-13.0,2.9,2024-10-31
+whitmca01,Cam Whitmore,Team.HOUSTON_ROCKETS,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.WIN,451,2,6,1,2,1,2,1,0,1,0,0,1,1,-1.0,2.2,2024-10-31
+ighodos01,Oso Ighodaro,Team.PHOENIX_SUNS,Location.AWAY,Team.LOS_ANGELES_CLIPPERS,Outcome.WIN,275,1,1,0,0,0,0,1,0,0,0,0,0,1,-3.0,2.0,2024-10-31
+sheppre01,Reed Sheppard,Team.HOUSTON_ROCKETS,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.WIN,315,1,1,0,0,0,0,0,1,0,0,0,0,0,5.0,2.0,2024-10-31
+jacksan01,Andre Jackson Jr.,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,1127,1,2,0,1,0,2,1,4,1,2,1,2,5,8.0,1.5,2024-10-31
+hardyja02,Jaden Hardy,Team.DALLAS_MAVERICKS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,676,1,3,0,1,0,0,1,1,1,1,0,1,2,10.0,1.2,2024-10-31
+huffja01,Jay Huff,Team.MEMPHIS_GRIZZLIES,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,995,1,4,0,2,2,2,0,2,1,0,1,1,4,3.0,1.0,2024-10-31
+robbili01,Liam Robbins,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,284,1,1,0,0,0,2,0,0,0,0,0,0,0,-1.0,0.9,2024-10-31
+castlco01,Colin Castleton,Team.MEMPHIS_GRIZZLIES,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,103,0,0,0,0,0,0,0,0,0,0,1,0,0,-1.0,0.7,2024-10-31
+beaucma01,MarJon Beauchamp,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,284,1,3,0,1,0,0,1,1,0,0,0,1,0,-1.0,0.3,2024-10-31
+cissosi01,Sidy Cissoko,Team.SAN_ANTONIO_SPURS,Location.AWAY,Team.UTAH_JAZZ,Outcome.WIN,26,0,0,0,0,0,0,0,0,1,0,0,0,1,1.0,0.3,2024-10-31
+willico04,Cody Williams,Team.UTAH_JAZZ,Location.HOME,Team.SAN_ANTONIO_SPURS,Outcome.LOSS,1417,0,6,0,5,2,2,1,4,2,0,0,1,0,-13.0,0.1,2024-10-31
+bassech01,Charles Bassey,Team.SAN_ANTONIO_SPURS,Location.AWAY,Team.UTAH_JAZZ,Outcome.WIN,26,0,0,0,0,0,0,0,0,0,0,0,0,0,1.0,0.0,2024-10-31
+joneska01,Kai Jones,Team.LOS_ANGELES_CLIPPERS,Location.HOME,Team.PHOENIX_SUNS,Outcome.LOSS,586,0,1,0,0,0,0,1,1,0,0,1,1,0,3.0,0.0,2024-10-31
+lillada01,Damian Lillard,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,2001,1,12,0,6,2,2,1,1,6,1,0,1,3,-29.0,0.0,2024-10-31
+vanvlfr01,Fred VanVleet,Team.HOUSTON_ROCKETS,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.WIN,2358,2,13,0,7,0,0,2,3,4,0,0,0,3,-12.0,-0.4,2024-10-31
+greenaj01,A.J. Green,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,284,0,1,0,1,0,0,0,0,0,0,0,0,0,-1.0,-0.7,2024-10-31
+kawamyu01,Yuki Kawamura,Team.MEMPHIS_GRIZZLIES,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,175,0,1,0,1,0,0,0,0,0,0,0,0,0,2.0,-0.7,2024-10-31
+morrimo01,Monte Morris,Team.PHOENIX_SUNS,Location.AWAY,Team.LOS_ANGELES_CLIPPERS,Outcome.WIN,207,0,1,0,0,0,0,0,0,0,0,0,0,0,-11.0,-0.7,2024-10-31
+clarkjo01,Jordan Clarkson,Team.UTAH_JAZZ,Location.HOME,Team.SAN_ANTONIO_SPURS,Outcome.LOSS,1267,1,6,0,4,1,2,0,3,1,2,0,3,1,-21.0,-1.0,2024-10-31
+connapa01,Pat Connaughton,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,955,1,7,1,5,0,0,0,3,2,0,0,1,2,-2.0,-1.0,2024-10-31
+grimequ01,Quentin Grimes,Team.DALLAS_MAVERICKS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,611,0,1,0,1,1,3,0,1,0,0,0,0,2,-3.0,-1.0,2024-10-31
+smithty02,Tyler Smith,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,284,0,0,0,0,0,0,0,0,0,0,0,1,2,-1.0,-1.8,2024-10-31
+juzanjo01,Johnny Juzang,Team.UTAH_JAZZ,Location.HOME,Team.SAN_ANTONIO_SPURS,Outcome.LOSS,799,0,2,0,1,0,0,0,2,0,0,0,1,1,-15.0,-2.2,2024-10-31
+colliza01,Zach Collins,Team.SAN_ANTONIO_SPURS,Location.AWAY,Team.UTAH_JAZZ,Outcome.WIN,670,0,3,0,1,0,0,1,1,0,0,0,1,1,-21.0,-2.5,2024-10-31
+weslebl01,Blake Wesley,Team.SAN_ANTONIO_SPURS,Location.AWAY,Team.UTAH_JAZZ,Outcome.WIN,327,0,2,0,2,0,0,0,0,0,0,0,2,1,-14.0,-3.8,2024-10-31

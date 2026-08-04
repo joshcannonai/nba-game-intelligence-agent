@@ -119,6 +119,22 @@
 </section>
 
 <section class="slide">
+  <div class="kicker">The setup</div>
+  <h2>We predicted NBA games <em>three different ways</em></h2>
+  <p>Same games. Same data. The only thing that changed was who did the predicting.</p>
+  <div class="grid" style="margin-top:.6rem">
+    <div class="card"><h3>A · The predictor</h3><p>A small statistical model. Feed it eight
+      numbers about a matchup, it returns a percentage. No AI involved.</p></div>
+    <div class="card" style="border-left-color:#64748B"><h3>B · The agent</h3><p>An AI chatbot
+      given seven functions it can call to look things up. It reasons to an answer on its own.</p></div>
+    <div class="card g"><h3>C · Both together</h3><p>The same AI, but it also sees the
+      predictor's number before deciding.</p></div>
+  </div>
+  <p style="margin-top:1.4rem"><strong>We expected C to win</strong> — it knows the most.
+  Hold that thought.</p>
+</section>
+
+<section class="slide">
   <div class="kicker">The problem</div>
   <h2>Anyone can predict games badly.<br>Knowing you did it <em>well</em> is the hard part.</h2>
   <p>Hold out a season and test on it — routine for a classical model.</p>
@@ -131,7 +147,7 @@
 
 <section class="slide">
   <div class="kicker">Framing</div>
-  <h2>Three different leaks,<br>three different defences</h2>
+  <h2>Three ways it could <em>cheat</em></h2>
   <table>
     <tr><th>Leak</th><th>What it looks like</th><th>Defence</th></tr>
     <tr><td class="big">Data</td><td>A tool returns an injury filed <em>after</em> the game</td><td>Date gating</td></tr>
@@ -144,7 +160,7 @@
 
 <section class="slide">
   <div class="kicker">Architecture</div>
-  <h2>Every query carries an <em>as-of date</em></h2>
+  <h2>How we stop it seeing <em>the future</em></h2>
   <div class="pipe">
     <div class="step"><b>1</b><div><span class="mono">gate_snapshot.py</span> → <span class="mono">data/snapshots/D/</span>
       <small>Plain Python. No AI. The future is not filtered — it is <strong>absent from disk</strong>.</small></div></div>
@@ -177,7 +193,7 @@
 
 <section class="slide">
   <div class="kicker">The agent</div>
-  <h2>Seven tools. That is its <em>entire</em> world.</h2>
+  <h2>The AI can do exactly <em>seven things</em></h2>
   <table>
     <tr><th>Tool</th><th>Returns</th><th>State</th></tr>
     <tr><td class="mono">retrieve_matchup_context</td><td>Ratings, rest, injuries, H2H as of a date</td><td class="win">working</td></tr>
@@ -208,7 +224,7 @@
 
 <section class="slide">
   <div class="kicker">The model</div>
-  <h2>Logistic regression — <em>chosen</em>, not defaulted to</h2>
+  <h2>The predictor: a <em>deliberately simple</em> model</h2>
   <p>σ(w·x + b) over eight standardised features. Fitted on 2023-24 and 2024-25, tested on
   2025-26.</p>
   <div class="grid" style="margin-top:.4rem">

@@ -1,0 +1,44 @@
+slug,name,team,location,opponent,outcome,seconds_played,made_field_goals,attempted_field_goals,made_three_point_field_goals,attempted_three_point_field_goals,made_free_throws,attempted_free_throws,offensive_rebounds,defensive_rebounds,assists,steals,blocks,turnovers,personal_fouls,plus_minus,game_score,game_date
+gilgesh01,Shai Gilgeous-Alexander,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,2271,15,23,5,9,4,4,0,8,5,3,1,2,3,22.0,35.3,2024-12-10
+antetgi01,Giannis Antetokounmpo,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,2136,15,24,0,2,7,12,1,6,1,2,4,6,1,5.0,25.8,2024-12-10
+portibo01,Bobby Portis,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,1909,9,11,2,3,2,3,2,8,4,1,1,0,1,11.0,25.4,2024-12-10
+lillada01,Damian Lillard,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,2324,8,15,2,5,10,10,1,1,9,1,0,4,4,2.0,23.4,2024-12-10
+suggsja01,Jalen Suggs,Team.ORLANDO_MAGIC,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,2261,12,26,3,11,5,6,3,6,1,4,1,4,2,2.0,22.7,2024-12-10
+marshna01,Naji Marshall,Team.DALLAS_MAVERICKS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,1741,7,11,2,4,3,4,0,4,2,1,0,2,1,-14.0,14.9,2024-12-10
+bitadgo01,Goga Bitadze,Team.ORLANDO_MAGIC,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,2281,6,13,0,2,0,0,5,9,4,1,1,0,5,-4.0,14.0,2024-12-10
+blackan01,Anthony Black,Team.ORLANDO_MAGIC,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,1935,6,12,0,0,5,8,2,4,3,3,1,3,3,-14.0,14.0,2024-12-10
+wallaca01,Cason Wallace,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,1849,4,10,3,9,0,0,4,4,4,2,1,1,2,15.0,13.3,2024-12-10
+irvinky01,Kyrie Irving,Team.DALLAS_MAVERICKS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,2420,7,14,3,5,0,0,0,2,5,1,1,2,2,0.0,13.0,2024-12-10
+thompkl01,Klay Thompson,Team.DALLAS_MAVERICKS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,1655,7,14,5,10,0,0,1,3,0,0,0,0,2,-17.0,12.8,2024-12-10
+wagnemo01,Moritz Wagner,Team.ORLANDO_MAGIC,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,1151,6,6,1,1,0,0,1,2,1,1,0,1,1,-14.0,12.8,2024-12-10
+willike04,Kenrich Williams,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,1038,3,5,3,4,0,0,1,1,2,3,0,0,1,17.0,11.7,2024-12-10
+doncilu01,Luka Dončić,Team.DALLAS_MAVERICKS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,2410,5,15,2,8,4,5,1,10,5,4,0,6,3,-14.0,11.1,2024-12-10
+cartewe01,Wendell Carter Jr.,Team.ORLANDO_MAGIC,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,2040,2,5,0,2,4,4,3,8,5,1,1,2,6,14.0,10.6,2024-12-10
+dortlu01,Luguentz Dort,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,1899,4,10,3,7,0,0,3,3,2,1,1,0,3,0.0,10.5,2024-12-10
+livelde01,Dereck Lively II,Team.DALLAS_MAVERICKS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,1860,2,4,0,0,1,2,4,9,5,0,1,2,1,-12.0,9.9,2024-12-10
+harteis01,Isaiah Hartenstein,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,1818,5,11,0,1,0,1,5,8,3,1,1,3,2,-6.0,9.8,2024-12-10
+gaffoda01,Daniel Gafford,Team.DALLAS_MAVERICKS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,965,4,4,0,0,1,3,0,2,1,0,0,0,0,0.0,8.3,2024-12-10
+willija06,Jalen Williams,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,1936,8,21,0,3,2,2,2,5,4,0,1,4,2,5.0,8.1,2024-12-10
+carusal01,Alex Caruso,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,1345,2,7,2,6,0,0,1,3,4,2,0,1,0,2.0,7.3,2024-12-10
+joeis01,Isaiah Joe,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,1016,3,8,3,8,0,0,0,3,3,0,0,0,1,11.0,7.2,2024-12-10
+dinwisp01,Spencer Dinwiddie,Team.DALLAS_MAVERICKS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,1362,3,9,1,4,2,3,0,3,4,3,0,3,1,-1.0,6.8,2024-12-10
+howarje01,Jett Howard,Team.ORLANDO_MAGIC,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,750,3,7,2,5,2,3,0,0,1,0,0,0,1,-1.0,6.2,2024-12-10
+middlkh01,Khris Middleton,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,1187,0,2,0,1,0,0,0,4,8,3,0,2,2,4.0,5.6,2024-12-10
+prospol01,Olivier-Maxence Prosper,Team.DALLAS_MAVERICKS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,732,2,4,2,2,0,0,0,2,1,0,0,0,0,4.0,5.3,2024-12-10
+trentga02,Gary Trent Jr.,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,1467,2,4,2,4,0,0,0,0,2,1,0,0,3,11.0,5.2,2024-12-10
+greenaj01,A.J. Green,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,1954,3,9,3,8,0,0,0,4,2,0,1,2,2,13.0,4.4,2024-12-10
+caldwke01,Kentavious Caldwell-Pope,Team.ORLANDO_MAGIC,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,1879,3,7,0,2,1,2,0,1,1,1,0,0,2,-1.0,4.1,2024-12-10
+jacksan01,Andre Jackson Jr.,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,489,2,4,1,3,0,0,1,1,0,0,0,0,2,-9.0,3.2,2024-12-10
+lopezbr01,Brook Lopez,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,1705,3,7,1,3,0,0,0,6,0,0,0,2,2,-8.0,2.3,2024-12-10
+mitchaj01,Ajay Mitchell,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,583,1,3,0,0,0,0,1,0,2,1,0,1,2,-8.0,1.6,2024-12-10
+princta02,Taurean Prince,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,1226,0,1,0,1,0,0,0,2,1,1,0,0,0,-4.0,1.6,2024-12-10
+wiggiaa01,Aaron Wiggins,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,535,1,2,1,2,0,0,0,0,0,1,0,1,1,8.0,1.6,2024-12-10
+grimequ01,Quentin Grimes,Team.DALLAS_MAVERICKS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,1090,1,5,0,3,2,2,1,2,2,1,0,3,2,-10.0,0.8,2024-12-10
+houstca01,Caleb Houstan,Team.ORLANDO_MAGIC,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,269,0,0,0,0,0,0,0,0,1,0,0,0,0,-2.0,0.7,2024-12-10
+dasiltr01,Tristan Da Silva,Team.ORLANDO_MAGIC,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,952,1,5,0,1,4,4,1,1,0,0,0,3,1,7.0,0.5,2024-12-10
+carlsbr01,Branden Carlson,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,55,0,0,0,0,0,0,0,0,0,0,0,0,0,2.0,0.0,2024-12-10
+edwarke02,Kessler Edwards,Team.DALLAS_MAVERICKS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,55,0,0,0,0,0,0,0,0,0,0,0,0,0,-2.0,0.0,2024-12-10
+gortmja01,Jazian Gortman,Team.DALLAS_MAVERICKS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,55,0,0,0,0,0,0,0,0,0,0,0,0,0,-2.0,0.0,2024-12-10
+poweldw01,Dwight Powell,Team.DALLAS_MAVERICKS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,55,0,0,0,0,0,0,0,0,0,0,0,0,0,-2.0,0.0,2024-12-10
+jonesdi01,Dillon Jones,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,55,0,1,0,1,0,0,0,0,0,0,0,0,0,2.0,-0.7,2024-12-10
+anthoco01,Cole Anthony,Team.ORLANDO_MAGIC,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,879,2,12,0,3,0,0,0,0,2,0,0,0,0,-12.0,-2.2,2024-12-10

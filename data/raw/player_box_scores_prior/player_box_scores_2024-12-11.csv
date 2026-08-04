@@ -1,0 +1,38 @@
+slug,name,team,location,opponent,outcome,seconds_played,made_field_goals,attempted_field_goals,made_three_point_field_goals,attempted_three_point_field_goals,made_free_throws,attempted_free_throws,offensive_rebounds,defensive_rebounds,assists,steals,blocks,turnovers,personal_fouls,plus_minus,game_score,game_date
+sengual01,Alperen Şengün,Team.HOUSTON_ROCKETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,1898,10,18,0,1,6,7,3,8,5,3,0,4,0,-4.0,24.0,2024-12-11
+hartjo01,Josh Hart,Team.NEW_YORK_KNICKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,2068,8,12,3,5,2,2,2,6,6,1,0,1,4,-2.0,21.6,2024-12-11
+johnsja05,Jalen Johnson,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.WIN,2471,8,20,1,5,4,6,4,11,7,2,2,3,1,16.0,20.4,2024-12-11
+townska01,Karl-Anthony Towns,Team.NEW_YORK_KNICKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,2196,7,15,2,6,3,6,4,15,5,3,3,4,6,-11.0,19.6,2024-12-11
+youngtr01,Trae Young,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.WIN,2184,8,22,2,8,4,4,0,5,11,1,0,3,1,6.0,16.6,2024-12-11
+curryst01,Stephen Curry,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.HOUSTON_ROCKETS,Outcome.LOSS,2020,8,17,3,9,0,1,1,2,5,2,1,1,0,4.0,16.4,2024-12-11
+huntede01,De'Andre Hunter,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.WIN,1732,8,15,4,5,4,6,1,0,0,0,0,0,2,10.0,15.8,2024-12-11
+thompam01,Amen Thompson,Team.HOUSTON_ROCKETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,1752,5,7,0,0,0,0,2,4,3,1,2,1,1,6.0,12.8,2024-12-11
+capelca01,Clint Capela,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.WIN,1489,5,8,0,0,1,2,4,9,1,0,0,0,2,6.0,12.4,2024-12-11
+okongon01,Onyeka Okongwu,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.WIN,1391,6,10,0,0,0,2,5,6,0,1,1,0,3,2.0,12.4,2024-12-11
+hieldbu01,Buddy Hield,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.HOUSTON_ROCKETS,Outcome.LOSS,2102,6,12,3,9,0,0,0,4,0,2,3,1,3,9.0,12.1,2024-12-11
+bridgmi01,Mikal Bridges,Team.NEW_YORK_KNICKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,2261,9,17,1,5,0,0,2,2,2,0,1,2,2,-17.0,12.0,2024-12-11
+brunsja01,Jalen Brunson,Team.NEW_YORK_KNICKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,2131,5,15,2,6,2,3,1,3,8,1,1,2,0,0.0,12.0,2024-12-11
+kuminjo01,Jonathan Kuminga,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.HOUSTON_ROCKETS,Outcome.LOSS,2170,8,20,2,6,2,6,5,2,1,0,1,1,2,2.0,11.3,2024-12-11
+smithja05,Jabari Smith Jr.,Team.HOUSTON_ROCKETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,2276,6,11,3,8,0,0,0,1,1,0,2,1,1,-1.0,10.7,2024-12-11
+daniedy01,Dyson Daniels,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.WIN,2157,4,10,1,1,0,0,5,2,3,0,2,2,2,-2.0,8.4,2024-12-11
+easonta01,Tari Eason,Team.HOUSTON_ROCKETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,1468,4,7,1,1,0,0,1,6,1,0,0,0,3,4.0,7.7,2024-12-11
+podzibr01,Brandin Podziemski,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.HOUSTON_ROCKETS,Outcome.LOSS,1830,3,9,2,5,0,0,1,1,4,2,0,1,0,4.0,7.7,2024-12-11
+brookdi01,Dillon Brooks,Team.HOUSTON_ROCKETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,2276,4,8,0,2,1,1,1,3,1,2,1,1,4,-1.0,7.4,2024-12-11
+anunoog01,OG Anunoby,Team.NEW_YORK_KNICKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,2346,5,17,1,9,2,4,2,4,1,1,3,1,1,-2.0,7.3,2024-12-11
+paytoga02,Gary Payton II,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.HOUSTON_ROCKETS,Outcome.LOSS,1080,2,4,0,2,0,0,3,4,2,2,0,2,1,-14.0,6.3,2024-12-11
+jackstr02,Trayce Jackson-Davis,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.HOUSTON_ROCKETS,Outcome.LOSS,907,1,1,0,0,2,2,0,1,1,0,2,0,0,3.0,6.1,2024-12-11
+achiupr01,Precious Achiuwa,Team.NEW_YORK_KNICKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,1115,1,2,0,1,0,0,1,4,1,2,2,1,0,-4.0,6.0,2024-12-11
+waterli01,Lindy Waters III,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.HOUSTON_ROCKETS,Outcome.LOSS,1378,3,6,2,4,0,0,0,5,2,1,0,3,0,-3.0,5.9,2024-12-11
+payneca01,Cameron Payne,Team.NEW_YORK_KNICKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,987,3,7,1,4,0,0,0,1,1,0,1,0,0,-5.0,5.0,2024-12-11
+bogdabo01,Bogdan Bogdanović,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.WIN,1438,3,9,1,7,0,0,1,1,2,1,1,1,1,-1.0,4.6,2024-12-11
+greenja05,Jalen Green,Team.HOUSTON_ROCKETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,1864,5,15,0,4,2,2,0,4,3,3,0,5,1,3.0,4.4,2024-12-11
+spencpa01,Pat Spencer,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.HOUSTON_ROCKETS,Outcome.LOSS,201,1,2,0,1,0,0,0,0,2,2,0,0,0,1.0,4.4,2024-12-11
+greendr01,Draymond Green,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.HOUSTON_ROCKETS,Outcome.LOSS,1797,4,9,0,2,0,0,0,3,4,2,1,5,4,-2.0,3.1,2024-12-11
+looneke01,Kevon Looney,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.HOUSTON_ROCKETS,Outcome.LOSS,680,1,3,0,0,0,0,1,6,1,0,0,0,1,-4.0,3.1,2024-12-11
+holidaa01,Aaron Holiday,Team.HOUSTON_ROCKETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,701,1,4,0,2,0,0,0,1,2,1,0,0,1,3.0,1.9,2024-12-11
+mcbrimi01,Miles McBride,Team.NEW_YORK_KNICKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,1193,2,8,1,6,0,0,0,2,3,0,0,1,1,0.0,1.5,2024-12-11
+krejcvi01,Vít Krejčí,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.WIN,493,0,2,0,1,0,0,2,1,1,0,0,0,1,4.0,0.6,2024-12-11
+vanvlfr01,Fred VanVleet,Team.HOUSTON_ROCKETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,2165,3,13,2,9,0,0,0,2,7,0,0,4,3,-5.0,0.4,2024-12-11
+simsje01,Jericho Sims,Team.NEW_YORK_KNICKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,103,0,0,0,0,0,0,0,0,0,0,0,0,0,1.0,0.0,2024-12-11
+anderky01,Kyle Anderson,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.HOUSTON_ROCKETS,Outcome.LOSS,235,0,1,0,0,0,0,0,0,0,0,0,1,0,-5.0,-1.7,2024-12-11
+risacza01,Zaccharie Risacher,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.WIN,1045,1,8,0,4,0,0,0,1,2,0,1,1,0,-1.0,-1.8,2024-12-11

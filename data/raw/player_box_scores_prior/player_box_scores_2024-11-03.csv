@@ -1,0 +1,72 @@
+slug,name,team,location,opponent,outcome,seconds_played,made_field_goals,attempted_field_goals,made_three_point_field_goals,attempted_three_point_field_goals,made_free_throws,attempted_free_throws,offensive_rebounds,defensive_rebounds,assists,steals,blocks,turnovers,personal_fouls,plus_minus,game_score,game_date
+johnsja05,Jalen Johnson,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,2274,12,20,0,4,5,6,2,7,8,2,2,4,2,32.0,27.1,2024-11-03
+youngtr01,Trae Young,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1881,8,15,5,10,2,2,1,3,12,1,0,2,1,29.0,24.3,2024-11-03
+doncilu01,Luka Dončić,Team.DALLAS_MAVERICKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,1903,11,22,5,13,5,7,1,8,7,0,0,4,3,21.0,23.0,2024-11-03
+ingrabr01,Brandon Ingram,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,1770,12,19,4,8,4,5,1,6,2,1,1,6,4,-21.0,21.1,2024-11-03
+johnsca02,Cameron Johnson,Team.BROOKLYN_NETS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,1804,9,19,3,12,5,6,0,1,3,1,1,0,3,-5.0,18.8,2024-11-03
+durenja01,Jalen Duren,Team.DETROIT_PISTONS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,1995,5,5,0,0,3,4,3,14,4,1,3,4,3,6.0,18.1,2024-11-03
+harrito02,Tobias Harris,Team.DETROIT_PISTONS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,2078,8,13,1,4,1,1,3,2,6,0,0,1,1,12.0,17.6,2024-11-03
+daniedy01,Dyson Daniels,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1489,7,10,2,5,0,0,2,3,3,1,0,2,3,21.0,14.0,2024-11-03
+irvinky01,Kyrie Irving,Team.DALLAS_MAVERICKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,1706,5,11,1,2,6,7,0,2,3,2,0,1,2,17.0,13.8,2024-11-03
+nancela02,Larry Nance Jr.,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1498,6,8,2,3,0,0,2,4,0,1,0,1,0,-4.0,13.4,2024-11-03
+gaffoda01,Daniel Gafford,Team.DALLAS_MAVERICKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,1207,9,13,0,0,0,1,3,5,0,1,0,3,3,4.0,12.5,2024-11-03
+cainja01,Jamal Cain,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,1072,4,7,3,5,3,4,2,1,0,0,0,0,1,9.0,11.6,2024-11-03
+beaslma01,Malik Beasley,Team.DETROIT_PISTONS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,1759,6,15,4,11,2,3,0,1,1,2,0,0,3,18.0,11.3,2024-11-03
+bostobr01,Brandon Boston Jr.,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,1809,4,10,1,3,5,6,3,2,4,0,0,2,2,-2.0,10.9,2024-11-03
+cunnica01,Cade Cunningham,Team.DETROIT_PISTONS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,2126,8,13,1,4,2,3,1,5,5,0,0,7,3,11.0,10.2,2024-11-03
+wagnefr01,Franz Wagner,Team.ORLANDO_MAGIC,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.LOSS,1511,6,15,1,2,0,0,1,5,6,2,0,2,3,-13.0,10.1,2024-11-03
+livelde01,Dereck Lively II,Team.DALLAS_MAVERICKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,1205,5,7,0,0,1,3,4,7,1,0,0,2,3,25.0,9.7,2024-11-03
+hardati02,Tim Hardaway Jr.,Team.DETROIT_PISTONS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,1351,5,9,3,6,1,1,0,0,2,0,0,0,4,-2.0,9.5,2024-11-03
+roddyda01,David Roddy,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1551,3,3,2,2,0,0,1,2,3,0,0,1,1,-8.0,9.1,2024-11-03
+thompkl01,Klay Thompson,Team.DALLAS_MAVERICKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,1716,4,10,1,5,0,0,1,4,4,0,2,1,0,19.0,8.7,2024-11-03
+hawkijo01,Jordan Hawkins,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,1877,7,18,3,8,2,2,1,2,3,0,1,4,2,-21.0,8.5,2024-11-03
+washipj01,P.J. Washington,Team.DALLAS_MAVERICKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,1706,3,4,1,2,0,0,1,3,2,1,0,1,1,16.0,8.0,2024-11-03
+finnedo01,Dorian Finney-Smith,Team.BROOKLYN_NETS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,1703,3,5,2,3,1,1,2,1,0,2,1,2,3,-8.0,7.9,2024-11-03
+capelca01,Clint Capela,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1239,4,5,0,0,0,0,0,4,0,0,1,0,1,27.0,7.6,2024-11-03
+iveyja01,Jaden Ivey,Team.DETROIT_PISTONS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,2106,4,15,1,7,6,7,0,5,5,1,1,4,2,10.0,7.6,2024-11-03
+anthoco01,Cole Anthony,Team.ORLANDO_MAGIC,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.LOSS,862,3,6,1,2,2,4,0,3,3,1,0,1,2,2.0,7.4,2024-11-03
+schrode01,Dennis Schröder,Team.BROOKLYN_NETS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,2001,3,7,1,3,0,0,0,5,4,3,0,2,3,-11.0,7.4,2024-11-03
+wilsoja03,Jalen Wilson,Team.BROOKLYN_NETS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,1309,3,6,1,1,1,2,1,2,2,0,0,0,0,4.0,7.3,2024-11-03
+alvarjo01,Jose Alvarado,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,1714,3,12,1,7,2,2,1,2,7,1,0,1,2,-19.0,7.2,2024-11-03
+cartewe01,Wendell Carter Jr.,Team.ORLANDO_MAGIC,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.LOSS,532,2,5,0,2,2,2,1,0,2,2,0,0,1,1.0,7.0,2024-11-03
+dasiltr01,Tristan Da Silva,Team.ORLANDO_MAGIC,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.LOSS,1867,2,7,1,4,2,2,1,4,2,0,1,0,0,-4.0,6.9,2024-11-03
+marshna01,Naji Marshall,Team.DALLAS_MAVERICKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,1276,2,5,0,2,0,0,0,5,5,2,0,1,1,9.0,6.9,2024-11-03
+robinje02,Jeremiah Robinson-Earl,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,1495,2,8,2,3,0,0,6,1,2,1,0,1,1,4.0,6.7,2024-11-03
+suggsja01,Jalen Suggs,Team.ORLANDO_MAGIC,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.LOSS,1719,4,13,1,5,1,2,1,3,2,1,2,0,2,-26.0,6.7,2024-11-03
+thomaca02,Cam Thomas,Team.BROOKLYN_NETS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,1868,6,17,1,7,4,4,0,2,2,0,0,3,0,-19.0,6.5,2024-11-03
+missiyv01,Yves Missi,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,1555,2,6,0,0,0,0,3,3,3,1,1,1,0,-18.0,6.4,2024-11-03
+fontesi01,Simone Fontecchio,Team.DETROIT_PISTONS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,1435,1,6,1,4,4,5,2,6,1,0,0,0,1,10.0,6.3,2024-11-03
+risacza01,Zaccharie Risacher,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1792,4,13,1,5,2,2,1,4,1,3,0,2,3,-3.0,5.9,2024-11-03
+mathega01,Garrison Mathews,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1216,3,7,3,6,2,2,0,3,1,0,0,2,4,-8.0,5.3,2024-11-03
+simmobe01,Ben Simmons,Team.BROOKLYN_NETS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,1468,2,4,0,0,0,0,0,6,6,1,0,3,2,-3.0,5.2,2024-11-03
+johnske07,Keon Johnson,Team.BROOKLYN_NETS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,775,1,1,0,0,3,4,0,1,0,1,1,0,3,1.0,5.1,2024-11-03
+theisda01,Daniel Theis,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,1058,3,4,1,1,0,0,0,3,0,1,0,2,2,3.0,4.5,2024-11-03
+caldwke01,Kentavious Caldwell-Pope,Team.ORLANDO_MAGIC,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.LOSS,1560,2,6,2,6,1,1,1,2,1,0,0,0,3,-8.0,4.4,2024-11-03
+grimequ01,Quentin Grimes,Team.DALLAS_MAVERICKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,1047,2,4,1,2,0,0,0,3,0,2,0,1,2,11.0,4.1,2024-11-03
+howarje01,Jett Howard,Team.ORLANDO_MAGIC,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.LOSS,1328,4,12,2,8,2,2,0,1,0,1,0,2,1,4.0,4.1,2024-11-03
+greenja02,Javonte Green,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,1411,1,2,0,1,1,1,0,2,1,1,0,0,2,-22.0,3.5,2024-11-03
+wagnemo01,Moritz Wagner,Team.ORLANDO_MAGIC,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.LOSS,1230,3,10,0,4,4,4,0,6,0,0,0,1,4,-23.0,3.4,2024-11-03
+wallake01,Keaton Wallace,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1317,3,7,0,1,0,0,1,1,1,2,0,2,2,-3.0,3.2,2024-11-03
+clownno01,Noah Clowney,Team.BROOKLYN_NETS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,1003,1,3,1,2,1,2,1,1,1,0,0,0,2,-4.0,2.8,2024-11-03
+claxtni01,Nic Claxton,Team.BROOKLYN_NETS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,1316,2,4,0,0,4,12,0,1,5,1,0,3,5,-11.0,2.6,2024-11-03
+isaacjo01,Jonathan Isaac,Team.ORLANDO_MAGIC,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.LOSS,956,1,6,0,4,1,2,2,3,1,1,1,0,3,-16.0,2.3,2024-11-03
+reevean01,Antonio Reeves,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,213,1,2,1,2,0,0,0,1,0,0,0,0,0,4.0,2.3,2024-11-03
+stewais01,Isaiah Stewart,Team.DETROIT_PISTONS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,822,0,0,0,0,2,2,0,5,0,0,2,1,6,8.0,1.5,2024-11-03
+dinwisp01,Spencer Dinwiddie,Team.DALLAS_MAVERICKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,949,0,1,0,1,0,0,0,0,2,0,1,0,1,11.0,1.0,2024-11-03
+houstca01,Caleb Houstan,Team.ORLANDO_MAGIC,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.LOSS,419,1,3,0,0,0,0,1,1,0,0,0,0,1,3.0,0.9,2024-11-03
+willizi02,Ziaire Williams,Team.BROOKLYN_NETS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,961,2,5,0,3,0,0,0,2,0,0,0,0,3,-14.0,0.7,2024-11-03
+harriga01,Gary Harris,Team.ORLANDO_MAGIC,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.LOSS,859,2,6,0,3,0,0,1,0,0,0,0,1,0,-14.0,0.3,2024-11-03
+martity01,Tyrese Martin,Team.BROOKLYN_NETS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,96,0,0,0,0,0,0,0,1,0,0,0,0,0,0.0,0.3,2024-11-03
+willibr03,Brandon Williams,Team.DALLAS_MAVERICKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,346,0,3,0,2,2,3,0,1,1,0,0,0,1,-2.0,0.1,2024-11-03
+barlodo01,Dominick Barlow,Team.ATLANTA_HAWKS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,143,0,0,0,0,0,0,0,0,0,0,0,0,0,-8.0,0.0,2024-11-03
+miltosh01,Shake Milton,Team.BROOKLYN_NETS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,96,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,0.0,2024-11-03
+moorewe01,Wendell Moore Jr.,Team.DETROIT_PISTONS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,54,0,0,0,0,0,0,0,0,0,0,0,0,0,2.0,0.0,2024-11-03
+sassema01,Marcus Sasser,Team.DETROIT_PISTONS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,54,0,0,0,0,0,0,0,0,0,0,0,0,0,2.0,0.0,2024-11-03
+jemistr01,Trey Jemison,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,213,0,2,0,0,0,0,1,2,0,0,0,0,0,4.0,-0.1,2024-11-03
+prospol01,Olivier-Maxence Prosper,Team.DALLAS_MAVERICKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,357,0,2,0,1,0,0,2,0,0,0,0,0,1,-2.0,-0.4,2024-11-03
+hollaro01,Ron Holland,Team.DETROIT_PISTONS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,620,0,1,0,0,0,0,0,0,1,0,0,0,2,-7.0,-0.8,2024-11-03
+josepco01,Cory Joseph,Team.ORLANDO_MAGIC,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.LOSS,314,0,2,0,1,0,0,2,0,0,0,0,1,0,4.0,-1.0,2024-11-03
+nowelja01,Jaylen Nowell,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.LOSS,213,0,0,0,0,0,0,0,0,0,0,0,1,0,4.0,-1.0,2024-11-03
+poweldw01,Dwight Powell,Team.DALLAS_MAVERICKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,468,0,0,0,0,0,2,0,2,0,0,2,1,3,-6.0,-1.0,2024-11-03
+hardyja02,Jaden Hardy,Team.DALLAS_MAVERICKS,Location.HOME,Team.ORLANDO_MAGIC,Outcome.WIN,514,1,3,1,2,0,0,0,1,0,0,0,3,1,-8.0,-1.8,2024-11-03
+blackan01,Anthony Black,Team.ORLANDO_MAGIC,Location.AWAY,Team.DALLAS_MAVERICKS,Outcome.LOSS,1243,1,2,0,0,0,0,2,2,2,0,0,6,2,-25.0,-2.4,2024-11-03

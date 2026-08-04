@@ -317,6 +317,59 @@ def build(path: Path) -> Path:
         spacing=1.5,
     )
 
+    # 2 — what we built (plain-language setup, before any jargon) -----------
+    s = new("The setup")
+    headline(
+        s, Inches(1.2),
+        [("We predicted NBA games ", {}), ("three different ways", {"colour": ACCENT})],
+        size=36,
+    )
+    text(
+        s, ML, Inches(2.1), Inches(11), Inches(0.4),
+        "Same games. Same data. The only thing that changed was who did the predicting.",
+        size=15, colour=MUTED,
+    )
+
+    ways = [
+        ("A", "The predictor", "A small statistical model. Feed it eight numbers about "
+         "a matchup, it returns a percentage. No AI involved.", ACCENT),
+        ("B", "The agent", "An AI chatbot, given seven functions it can call to look "
+         "things up. It reasons its way to an answer on its own.", SLATE),
+        ("C", "Both together", "The same AI, but it also gets to see the predictor's "
+         "number before deciding.", GOOD),
+    ]
+    cw3 = Inches(3.6)
+    for i, (letter, name, desc, col) in enumerate(ways):
+        cx = ML + i * (cw3 + Inches(0.42))
+        box = s.shapes.add_shape(
+            MSO_SHAPE.ROUNDED_RECTANGLE, cx, Inches(2.8), cw3, Inches(2.6)
+        )
+        box.fill.solid()
+        box.fill.fore_color.rgb = RGBColor(0xFA, 0xFA, 0xF9)
+        box.line.color.rgb = FAINT
+        box.shadow.inherit = False
+        box.adjustments[0] = 0.04
+        badge = s.shapes.add_shape(
+            MSO_SHAPE.OVAL, cx + Inches(0.32), Inches(3.1), Inches(0.44), Inches(0.44)
+        )
+        badge.fill.solid()
+        badge.fill.fore_color.rgb = col
+        badge.line.fill.background()
+        badge.shadow.inherit = False
+        text(s, cx + Inches(0.32), Inches(3.18), Inches(0.44), Inches(0.3), letter,
+             size=15, colour=PAPER, bold=True, align=PP_ALIGN.CENTER)
+        text(s, cx + Inches(0.32), Inches(3.72), cw3 - Inches(0.64), Inches(0.35), name,
+             size=17, colour=INK, bold=True)
+        text(s, cx + Inches(0.32), Inches(4.18), cw3 - Inches(0.64), Inches(1.1), desc,
+             size=12, colour=MUTED, spacing=1.3)
+
+    text(
+        s, ML, Inches(5.75), Inches(11.4), Inches(0.9),
+        [("We expected C to win", {"colour": INK, "bold": True, "size": 18}),
+         (" — it knows the most. Keep that in mind for slide 12.", {"size": 18})],
+        size=18, colour=MUTED,
+    )
+
     # 2 — statement -------------------------------------------------------
     s = new()
     headline(
@@ -354,11 +407,11 @@ def build(path: Path) -> Path:
 
     # 3 — three leaks -----------------------------------------------------
     s = new("Framing")
-    headline(s, Inches(1.35), "Three different leaks", size=38)
+    headline(s, Inches(1.35), "Three ways it could cheat", size=38)
     body(
         s,
         Inches(2.15),
-        "They collapse into one word. They need different defences.",
+        "\"Leakage\" means the system saw something it should not have. Three kinds, three fixes.",
         size=16,
     )
 
@@ -437,7 +490,7 @@ def build(path: Path) -> Path:
     headline(
         s,
         Inches(1.3),
-        [("Every query carries an ", {}), ("as-of date", {"colour": ACCENT})],
+        [("How we stop it seeing ", {}), ("the future", {"colour": ACCENT})],
         size=36,
     )
 
@@ -583,9 +636,9 @@ def build(path: Path) -> Path:
         s,
         Inches(1.25),
         [
-            ("Seven tools. That is its ", {}),
-            ("entire", {"colour": ACCENT, "italic": True}),
-            (" world.", {}),
+            ("The AI can do exactly ", {}),
+            ("seven things", {"colour": ACCENT}),
+            ("", {}),
         ],
         size=34,
     )
@@ -709,9 +762,9 @@ def build(path: Path) -> Path:
         s,
         Inches(1.25),
         [
-            ("Logistic regression — ", {}),
-            ("chosen", {"colour": ACCENT, "italic": True}),
-            (", not defaulted to", {}),
+            ("The predictor: a ", {}),
+            ("deliberately simple", {"colour": ACCENT}),
+            (" model", {}),
         ],
         size=32,
     )

@@ -58,6 +58,11 @@ INJURY_CSVS = (
 TEAM_SUMMARY_CSV = RAW_DIR / "nba_stats_1947_present" / "Team Summaries.csv"
 PLAYER_PER_GAME_CSV = RAW_DIR / "nba_stats_1947_present" / "Player Per Game.csv"
 ODDS_CSV = SAMPLE_DIR / "odds_only.csv"
+# Features only -- no points, rebounds, assists or outcome. Built by
+# `python -m models.stat_line_features` from Patrick's engineered export, which
+# keeps the box-score result in the same row as the features. Same hazard as the
+# odds file keeping score_home beside the line, handled the same way.
+PLAYER_FEATURES_CSV = SAMPLE_DIR / "player_features_2026.csv"
 
 
 def parse_date(value: str) -> date:
@@ -555,6 +560,107 @@ def closing_line(away: str, home: str, game_date: date, as_of: date) -> dict:
     }
 
 
+@lru_cache(maxsize=1)
+def _player_feature_rows() -> tuple[dict, ...]:
+    if not PLAYER_FEATURES_CSV.exists():
+        return ()
+    with PLAYER_FEATURES_CSV.open() as f:
+        return tuple(csv.DictReader(f))
+
+
+def player_features_as_of(player_name: str, game_date: date, as_of: date) -> dict:
+    """One player's as-of form for a specific game, gated at as_of.
+
+    THE GATE, precisely. The row for a game on date D carries rolling averages
+    computed with `shift(1)` -- over that player's games strictly BEFORE D. So the
+    row for the game being predicted is exactly "what was knowable going in", and
+    it is the only row that is safe to serve. We therefore take the player's first
+    game after as_of and require it to be the game we were asked about. If the
+    player's next appearance is later than the tip-off, they did not play, and the
+    honest answer is that there is no line to project -- not a projection built
+    from someone else's row.
+    """
+    if as_of >= game_date:
+        raise ValueError(
+            f"as_of_date {as_of.isoformat()} is not before tip-off "
+            f"{game_date.isoformat()}: the trailing averages for that game would "
+            "then include games played after as_of."
+        )
+
+    wanted = player_name.strip().casefold()
+    played = [
+        r
+        for r in _player_feature_rows()
+        if r.get("name", "").strip().casefold() == wanted
+    ]
+    if not played:
+        return {
+            "available": False,
+            "reason": f"No 2025-26 game rows for {player_name!r}.",
+        }
+
+    upcoming = sorted(
+        (r for r in played if parse_date(r["game_date"]) > as_of),
+        key=lambda r: r["game_date"],
+    )
+    if not upcoming:
+        return {
+            "available": False,
+            "reason": (
+                f"{player_name} has no game after {as_of.isoformat()} in the data."
+            ),
+        }
+
+    row = upcoming[0]
+    if parse_date(row["game_date"]) != game_date:
+        return {
+            "available": False,
+            "reason": (
+                f"{player_name} has no box score for {game_date.isoformat()} -- their "
+                f"next appearance is {row['game_date']}. They did not play; there is "
+                "no stat line to project."
+            ),
+        }
+
+    def num(key: str) -> float | None:
+        raw = row.get(key, "")
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            return None
+
+    return {
+        "available": True,
+        "player": row.get("name"),
+        "team": row.get("team"),
+        "opponent": row.get("opponent"),
+        "game_date": row["game_date"],
+        "features": {k: num(k) for k in STAT_LINE_FEATURE_KEYS},
+    }
+
+
+# Kept here rather than imported from models/ so the data layer does not depend on
+# the model layer; models/train_stat_line.py asserts the two lists agree.
+STAT_LINE_FEATURE_KEYS = (
+    "rolling_pts_5",
+    "rolling_reb_5",
+    "rolling_ast_5",
+    "rolling_min_5",
+    "rolling_pts_10",
+    "rolling_reb_10",
+    "rolling_ast_10",
+    "rolling_min_10",
+    "rolling_fg_pct_5",
+    "rolling_3p_pct_5",
+    "home_away_pts_avg",
+    "home_away_reb_avg",
+    "home_away_ast_avg",
+    "rest_days",
+    "is_back_to_back",
+    "is_home",
+)
+
+
 # --------------------------------------------------------------------------
 # Sources
 # --------------------------------------------------------------------------
@@ -620,6 +726,24 @@ class MockSource:
                     )
                 return out
         return {"error": f"player not found: {player_name}"}
+
+    def player_features(
+        self, player_name: str, matchup_id: str, as_of_date: str
+    ) -> dict:
+        # The fixture has no game-by-game history, so there are no trailing
+        # averages to serve. Gate first anyway, so mock and real refuse an
+        # after-tip query identically.
+        _, _, game_date = parse_matchup_id(matchup_id)
+        as_of = parse_date(as_of_date)
+        if as_of >= game_date:
+            raise ValueError(
+                f"as_of_date {as_of_date} is not before tip-off "
+                f"{game_date.isoformat()}."
+            )
+        return {
+            "available": False,
+            "reason": "MockSource carries no game logs; run with --source real.",
+        }
 
     def betting_line(self, matchup_id: str, as_of_date: str) -> dict:
         # The fixture carries no odds. Gate first anyway, so mock and real
@@ -735,6 +859,19 @@ class CsvSource:
             "source": self.name,
             "error": f"player not found in nba_stats: {player_name}",
         }
+
+    def player_features(
+        self, player_name: str, matchup_id: str, as_of_date: str
+    ) -> dict:
+        """Trailing form for one player going into one game. See player_features_as_of.
+
+        Note this is per-GAME, unlike `player_splits`, which serves prior-season
+        averages. The two answer different questions and read different files.
+        """
+        _, _, game_date = parse_matchup_id(matchup_id)
+        payload = player_features_as_of(player_name, game_date, parse_date(as_of_date))
+        payload["source"] = self.name
+        return payload
 
     def betting_line(self, matchup_id: str, as_of_date: str) -> dict:
         # The week-5 branch had a second betting_line with no as-of gate, reading

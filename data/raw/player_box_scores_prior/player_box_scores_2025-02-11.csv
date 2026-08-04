@@ -1,0 +1,92 @@
+slug,name,team,location,opponent,outcome,seconds_played,made_field_goals,attempted_field_goals,made_three_point_field_goals,attempted_three_point_field_goals,made_free_throws,attempted_free_throws,offensive_rebounds,defensive_rebounds,assists,steals,blocks,turnovers,personal_fouls,plus_minus,game_score,game_date
+townska01,Karl-Anthony Towns,Team.NEW_YORK_KNICKS,Location.AWAY,Team.INDIANA_PACERS,Outcome.WIN,2296,14,23,3,8,9,9,4,8,5,3,0,2,5,14.0,37.2,2025-02-11
+duranke01,Kevin Durant,Team.PHOENIX_SUNS,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,2568,12,18,3,4,7,10,0,3,3,1,5,1,3,2.0,30.3,2025-02-11
+barnesc01,Scottie Barnes,Team.TORONTO_RAPTORS,Location.AWAY,Team.PHILADELPHIA_76ERS,Outcome.WIN,2230,10,16,1,2,12,15,1,9,3,1,2,3,1,10.0,29.1,2025-02-11
+hartjo01,Josh Hart,Team.NEW_YORK_KNICKS,Location.AWAY,Team.INDIANA_PACERS,Outcome.WIN,2399,12,16,1,3,5,7,2,8,5,2,0,3,4,15.0,27.5,2025-02-11
+embiijo01,Joel Embiid,Team.PHILADELPHIA_76ERS,Location.HOME,Team.TORONTO_RAPTORS,Outcome.LOSS,2281,8,19,1,5,10,13,5,7,4,1,1,4,1,1.0,21.4,2025-02-11
+cunnica01,Cade Cunningham,Team.DETROIT_PISTONS,Location.AWAY,Team.CHICAGO_BULLS,Outcome.WIN,1640,9,14,1,2,1,1,0,6,7,0,1,0,0,34.0,21.2,2025-02-11
+moranja01,Ja Morant,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,1998,8,19,0,5,10,12,1,6,6,1,0,2,1,14.0,20.4,2025-02-11
+beaslma01,Malik Beasley,Team.DETROIT_PISTONS,Location.AWAY,Team.CHICAGO_BULLS,Outcome.WIN,932,8,12,7,10,1,1,0,2,0,1,0,0,3,22.0,19.2,2025-02-11
+quickim01,Immanuel Quickley,Team.TORONTO_RAPTORS,Location.AWAY,Team.PHILADELPHIA_76ERS,Outcome.WIN,2026,7,11,4,8,5,5,1,2,5,0,0,3,2,13.0,19.1,2025-02-11
+siakapa01,Pascal Siakam,Team.INDIANA_PACERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.LOSS,2044,9,18,3,6,3,3,1,4,1,2,1,1,2,-13.0,18.5,2025-02-11
+thompau01,Ausar Thompson,Team.DETROIT_PISTONS,Location.AWAY,Team.CHICAGO_BULLS,Outcome.WIN,1336,7,8,0,0,2,2,0,3,4,4,2,2,5,21.0,18.3,2025-02-11
+bryanth01,Thomas Bryant,Team.INDIANA_PACERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.LOSS,1929,8,12,1,3,1,1,3,6,4,0,1,1,4,-10.0,17.6,2025-02-11
+bolbo01,Bol Bol,Team.PHOENIX_SUNS,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,1825,7,16,3,10,1,2,1,13,2,2,4,2,2,2.0,17.2,2025-02-11
+mathube01,Bennedict Mathurin,Team.INDIANA_PACERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.LOSS,1872,4,10,1,5,9,11,0,3,4,0,1,0,0,-9.0,16.2,2025-02-11
+harrito02,Tobias Harris,Team.DETROIT_PISTONS,Location.AWAY,Team.CHICAGO_BULLS,Outcome.WIN,1504,8,13,2,6,0,0,0,3,0,3,1,1,0,21.0,15.7,2025-02-11
+butleja02,Jared Butler,Team.PHILADELPHIA_76ERS,Location.HOME,Team.TORONTO_RAPTORS,Outcome.LOSS,941,6,10,1,3,2,2,1,3,4,1,0,0,1,8.0,15.4,2025-02-11
+clarkbr01,Brandon Clarke,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,1128,7,11,0,0,0,0,5,2,2,1,0,0,1,-1.0,15.2,2025-02-11
+banede01,Desmond Bane,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,2108,6,13,2,5,6,7,0,8,4,1,0,3,4,13.0,14.5,2025-02-11
+grimequ01,Quentin Grimes,Team.PHILADELPHIA_76ERS,Location.HOME,Team.TORONTO_RAPTORS,Outcome.LOSS,2131,5,12,1,6,2,3,3,4,4,2,0,0,1,8.0,13.9,2025-02-11
+bookede01,Devin Booker,Team.PHOENIX_SUNS,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,2387,6,13,0,3,5,5,0,2,9,0,0,2,4,-8.0,13.6,2025-02-11
+jonesty01,Tyus Jones,Team.PHOENIX_SUNS,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,1939,4,11,2,7,1,1,2,1,9,2,0,2,1,-15.0,12.5,2025-02-11
+dickgr01,Gradey Dick,Team.TORONTO_RAPTORS,Location.AWAY,Team.PHILADELPHIA_76ERS,Outcome.WIN,1953,6,13,3,8,2,3,0,4,0,3,1,2,1,5.0,12.4,2025-02-11
+stewais01,Isaiah Stewart,Team.DETROIT_PISTONS,Location.AWAY,Team.CHICAGO_BULLS,Outcome.WIN,921,6,8,2,2,0,0,3,3,3,0,0,3,2,24.0,12.1,2025-02-11
+aldamsa01,Santi Aldama,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,1391,5,10,4,6,0,0,3,2,1,1,0,1,1,4.0,12.0,2025-02-11
+mcbrimi01,Miles McBride,Team.NEW_YORK_KNICKS,Location.AWAY,Team.INDIANA_PACERS,Outcome.WIN,1519,4,7,4,4,3,3,0,3,1,0,0,1,2,25.0,11.5,2025-02-11
+halibty01,Tyrese Haliburton,Team.INDIANA_PACERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.LOSS,1955,7,15,2,6,0,0,1,4,8,0,0,4,2,-11.0,11.0,2025-02-11
+achiupr01,Precious Achiuwa,Team.NEW_YORK_KNICKS,Location.AWAY,Team.INDIANA_PACERS,Outcome.WIN,1997,3,8,0,1,3,4,5,7,2,0,1,1,0,-2.0,10.9,2025-02-11
+giddejo01,Josh Giddey,Team.CHICAGO_BULLS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,1361,5,10,1,4,0,0,2,4,4,1,1,2,1,-29.0,10.7,2025-02-11
+sassema01,Marcus Sasser,Team.DETROIT_PISTONS,Location.AWAY,Team.CHICAGO_BULLS,Outcome.WIN,686,5,5,4,4,0,0,0,0,0,0,0,1,2,-7.0,10.7,2025-02-11
+sheppbe01,Ben Sheppard,Team.INDIANA_PACERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.LOSS,814,4,5,2,3,2,2,0,0,0,1,0,0,1,4.0,10.7,2025-02-11
+oubreke01,Kelly Oubre Jr.,Team.PHILADELPHIA_76ERS,Location.HOME,Team.TORONTO_RAPTORS,Outcome.LOSS,2335,6,12,0,2,0,0,1,6,3,2,1,2,3,-3.0,10.1,2025-02-11
+durenja01,Jalen Duren,Team.DETROIT_PISTONS,Location.AWAY,Team.CHICAGO_BULLS,Outcome.WIN,1374,2,5,0,0,0,0,3,8,5,0,1,0,0,19.0,10.0,2025-02-11
+payneca01,Cameron Payne,Team.NEW_YORK_KNICKS,Location.AWAY,Team.INDIANA_PACERS,Outcome.WIN,1422,4,8,1,4,0,0,0,1,8,1,1,2,2,9.0,9.8,2025-02-11
+shamela01,Landry Shamet,Team.NEW_YORK_KNICKS,Location.AWAY,Team.INDIANA_PACERS,Outcome.WIN,1151,5,9,1,4,0,0,0,1,4,0,0,0,2,9.0,9.0,2025-02-11
+buzelma01,Matas Buzelis,Team.CHICAGO_BULLS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,1144,5,7,2,2,0,0,0,1,1,0,0,1,2,-17.0,8.3,2025-02-11
+georgpa01,Paul George,Team.PHILADELPHIA_76ERS,Location.HOME,Team.TORONTO_RAPTORS,Outcome.LOSS,2142,5,12,2,6,2,2,0,3,2,2,0,2,4,-10.0,8.3,2025-02-11
+jacksja02,Jaren Jackson Jr.,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,2042,6,17,0,5,5,8,3,3,1,2,1,4,1,8.0,8.3,2025-02-11
+jonestr01,Tre Jones,Team.CHICAGO_BULLS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,932,3,6,0,1,2,2,1,1,1,2,0,0,1,-23.0,8.3,2025-02-11
+allengr01,Grayson Allen,Team.PHOENIX_SUNS,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,1178,3,7,1,4,2,2,0,0,3,2,0,1,1,-2.0,8.0,2025-02-11
+onealro01,Royce O'Neale,Team.PHOENIX_SUNS,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,2013,4,12,3,10,0,0,0,6,4,1,0,1,3,2.0,7.6,2025-02-11
+mccontj01,T.J. McConnell,Team.INDIANA_PACERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.LOSS,1017,3,5,0,1,1,4,0,1,6,0,0,1,0,-11.0,7.0,2025-02-11
+bridgmi01,Mikal Bridges,Team.NEW_YORK_KNICKS,Location.AWAY,Team.INDIANA_PACERS,Outcome.WIN,1733,3,7,0,1,0,0,1,4,5,0,0,0,2,4.0,6.9,2025-02-11
+toppiob01,Obi Toppin,Team.INDIANA_PACERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.LOSS,1236,4,8,0,3,1,2,0,3,1,1,0,0,1,-1.0,6.8,2025-02-11
+edeyza01,Zach Edey,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,1180,2,6,0,1,0,0,3,6,0,1,2,0,1,6.0,6.5,2025-02-11
+nembhan01,Andrew Nembhard,Team.INDIANA_PACERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.LOSS,1772,3,8,0,2,2,2,0,1,2,3,0,1,2,-13.0,6.5,2025-02-11
+dosunay01,Ayo Dosunmu,Team.CHICAGO_BULLS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,1211,3,6,1,3,1,2,0,1,2,3,0,3,0,-28.0,6.3,2025-02-11
+fontesi01,Simone Fontecchio,Team.DETROIT_PISTONS,Location.AWAY,Team.CHICAGO_BULLS,Outcome.WIN,1544,2,8,1,3,3,3,1,9,1,1,1,2,2,19.0,6.2,2025-02-11
+pippesc02,Scotty Pippen Jr.,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,708,2,3,2,3,0,0,0,1,2,1,0,0,3,-6.0,6.2,2025-02-11
+yabusgu01,Guerschon Yabusele,Team.PHILADELPHIA_76ERS,Location.HOME,Team.TORONTO_RAPTORS,Outcome.LOSS,1332,2,9,2,6,2,2,3,3,2,1,0,1,2,6.0,6.1,2025-02-11
+edwarju01,Justin Edwards,Team.PHILADELPHIA_76ERS,Location.HOME,Team.TORONTO_RAPTORS,Outcome.LOSS,974,4,7,1,2,0,0,1,1,0,1,0,1,2,-7.0,5.9,2025-02-11
+colliza01,Zach Collins,Team.CHICAGO_BULLS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,733,1,2,1,2,2,2,1,4,0,0,0,0,1,-5.0,5.5,2025-02-11
+reedpa01,Paul Reed,Team.DETROIT_PISTONS,Location.AWAY,Team.CHICAGO_BULLS,Outcome.WIN,585,2,4,0,2,1,2,1,5,1,0,2,1,1,-3.0,5.5,2025-02-11
+richani01,Nick Richards,Team.PHOENIX_SUNS,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,978,2,4,0,0,2,2,1,3,1,0,0,0,2,-8.0,5.5,2025-02-11
+mogbojo01,Jonathan Mogbo,Team.TORONTO_RAPTORS,Location.AWAY,Team.PHILADELPHIA_76ERS,Outcome.WIN,1286,2,4,0,1,0,0,1,4,5,2,0,2,5,11.0,5.4,2025-02-11
+wellsja01,Jaylen Wells,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,1155,3,8,2,5,0,0,3,1,1,0,0,0,4,2.0,5.1,2025-02-11
+smithja04,Jalen Smith,Team.CHICAGO_BULLS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,632,2,6,1,5,0,0,1,2,3,0,0,0,0,-2.0,5.0,2025-02-11
+phillju01,Julian Phillips,Team.CHICAGO_BULLS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,765,2,4,1,3,2,3,0,1,0,0,0,0,0,-4.0,4.9,2025-02-11
+robinor01,Orlando Robinson,Team.TORONTO_RAPTORS,Location.AWAY,Team.PHILADELPHIA_76ERS,Outcome.WIN,874,2,4,0,0,0,0,0,4,2,1,0,0,2,4.0,4.8,2025-02-11
+sheadja01,Jamal Shead,Team.TORONTO_RAPTORS,Location.AWAY,Team.PHILADELPHIA_76ERS,Outcome.WIN,1024,3,5,0,1,0,0,0,3,5,0,0,3,1,-10.0,4.7,2025-02-11
+terryda01,Dalen Terry,Team.CHICAGO_BULLS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,828,2,6,1,3,1,2,1,2,0,1,0,0,1,5.0,4.1,2025-02-11
+plumlma01,Mason Plumlee,Team.PHOENIX_SUNS,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,441,2,3,0,0,0,0,2,4,1,0,0,2,0,-4.0,4.0,2025-02-11
+agbajoc01,Ochai Agbaji,Team.TORONTO_RAPTORS,Location.AWAY,Team.PHILADELPHIA_76ERS,Outcome.WIN,1635,5,10,1,3,0,0,0,4,1,0,0,2,5,8.0,3.9,2025-02-11
+walteja01,Ja'Kobe Walter,Team.TORONTO_RAPTORS,Location.AWAY,Team.PHILADELPHIA_76ERS,Outcome.WIN,1199,2,8,1,4,0,0,3,2,1,1,0,1,0,-6.0,3.6,2025-02-11
+willivi01,Vince Williams Jr.,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,1011,3,9,1,6,0,0,2,7,1,0,0,1,4,8.0,3.5,2025-02-11
+huertke01,Kevin Huerter,Team.CHICAGO_BULLS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,1277,2,7,0,3,1,2,2,3,4,1,0,3,1,-20.0,3.2,2025-02-11
+brunsja01,Jalen Brunson,Team.NEW_YORK_KNICKS,Location.AWAY,Team.INDIANA_PACERS,Outcome.WIN,1364,4,11,0,1,0,0,0,2,7,0,0,3,5,10.0,2.4,2025-02-11
+furphjo01,Johnny Furphy,Team.INDIANA_PACERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.LOSS,202,0,2,0,0,0,0,4,1,1,0,0,0,0,5.0,2.4,2025-02-11
+carteje01,Jevon Carter,Team.CHICAGO_BULLS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,676,1,5,1,3,0,0,0,2,4,0,0,1,0,4.0,2.3,2025-02-11
+schrode01,Dennis Schröder,Team.DETROIT_PISTONS,Location.AWAY,Team.CHICAGO_BULLS,Outcome.WIN,894,1,6,0,1,2,2,0,2,4,0,0,1,1,19.0,2.2,2025-02-11
+vucevni01,Nikola Vučević,Team.CHICAGO_BULLS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,1515,4,15,0,5,0,1,3,4,1,0,1,2,0,-33.0,1.4,2025-02-11
+battlja01,Jamison Battle,Team.TORONTO_RAPTORS,Location.AWAY,Team.PHILADELPHIA_76ERS,Outcome.WIN,556,1,3,1,3,0,0,0,1,0,0,0,0,1,-1.0,1.2,2025-02-11
+kennalu01,Luke Kennard,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,914,0,1,0,1,0,0,0,4,3,0,0,1,1,-4.0,1.2,2025-02-11
+hortota01,Talen Horton-Tucker,Team.CHICAGO_BULLS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,469,1,5,0,2,2,3,0,2,0,0,0,0,0,5.0,1.1,2025-02-11
+willipa01,Patrick Williams,Team.CHICAGO_BULLS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,1180,2,8,1,3,0,0,2,1,0,0,0,0,2,-23.0,1.1,2025-02-11
+okafoja01,Jahlil Okafor,Team.INDIANA_PACERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.LOSS,202,0,0,0,0,0,0,0,1,1,0,0,0,0,5.0,1.0,2025-02-11
+jacksgg01,GG Jackson II,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,765,1,3,1,2,0,0,0,0,1,0,0,1,1,-9.0,0.6,2025-02-11
+walkeja02,Jarace Walker,Team.INDIANA_PACERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.LOSS,551,1,3,0,0,1,1,0,3,1,0,0,2,1,-2.0,0.5,2025-02-11
+hardati02,Tim Hardaway Jr.,Team.DETROIT_PISTONS,Location.AWAY,Team.CHICAGO_BULLS,Outcome.WIN,1083,1,6,1,6,0,0,0,3,3,0,0,2,0,13.0,0.2,2025-02-11
+washity02,TyTy Washington Jr.,Team.PHOENIX_SUNS,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,780,1,8,0,6,0,0,1,2,3,0,0,0,0,-1.0,0.2,2025-02-11
+hollaro01,Ron Holland,Team.DETROIT_PISTONS,Location.AWAY,Team.CHICAGO_BULLS,Outcome.WIN,1356,0,4,0,2,2,2,0,3,1,1,0,1,2,19.0,0.0,2025-02-11
+kolekty01,Tyler Kolek,Team.NEW_YORK_KNICKS,Location.AWAY,Team.INDIANA_PACERS,Outcome.WIN,94,0,0,0,0,0,0,0,0,0,0,0,0,0,-6.0,0.0,2025-02-11
+chomcul01,Ulrich Chomche,Team.TORONTO_RAPTORS,Location.AWAY,Team.PHILADELPHIA_76ERS,Outcome.WIN,720,0,2,0,0,0,0,1,1,0,0,1,0,1,-12.0,-0.1,2025-02-11
+dunnry01,Ryan Dunn,Team.PHOENIX_SUNS,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.LOSS,291,0,0,0,0,0,0,0,1,0,0,0,0,1,-3.0,-0.1,2025-02-11
+nesmiaa01,Aaron Nesmith,Team.INDIANA_PACERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.LOSS,806,0,3,0,2,0,0,0,0,3,1,0,0,4,-9.0,-0.6,2025-02-11
+councri01,Ricky Council IV,Team.PHILADELPHIA_76ERS,Location.HOME,Team.TORONTO_RAPTORS,Outcome.LOSS,220,0,1,0,1,0,0,0,0,0,0,0,0,0,-3.0,-0.7,2025-02-11
+ryanma01,Matt Ryan,Team.NEW_YORK_KNICKS,Location.AWAY,Team.INDIANA_PACERS,Outcome.WIN,94,0,1,0,1,0,0,0,0,0,0,0,0,0,-6.0,-0.7,2025-02-11
+bouchch01,Chris Boucher,Team.TORONTO_RAPTORS,Location.AWAY,Team.PHILADELPHIA_76ERS,Outcome.WIN,897,0,6,0,3,0,0,3,5,1,0,0,1,1,-7.0,-1.3,2025-02-11
+hukpoar01,Ariel Hukporti,Team.NEW_YORK_KNICKS,Location.AWAY,Team.INDIANA_PACERS,Outcome.WIN,331,0,1,0,0,0,0,1,1,0,0,0,2,0,-7.0,-1.7,2025-02-11
+waterli01,Lindy Waters III,Team.DETROIT_PISTONS,Location.AWAY,Team.CHICAGO_BULLS,Outcome.WIN,545,0,3,0,3,0,0,0,0,1,0,0,0,1,-1.0,-1.8,2025-02-11
+whiteco01,Coby White,Team.CHICAGO_BULLS,Location.HOME,Team.DETROIT_PISTONS,Outcome.LOSS,1677,2,13,0,8,1,2,1,2,2,1,0,2,1,-30.0,-2.4,2025-02-11
+maxeyty01,Tyrese Maxey,Team.PHILADELPHIA_76ERS,Location.HOME,Team.TORONTO_RAPTORS,Outcome.LOSS,2044,1,9,1,7,2,2,0,5,3,0,0,4,4,-15.0,-2.9,2025-02-11

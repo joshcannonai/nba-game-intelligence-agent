@@ -1,0 +1,42 @@
+slug,name,team,location,opponent,outcome,seconds_played,made_field_goals,attempted_field_goals,made_three_point_field_goals,attempted_three_point_field_goals,made_free_throws,attempted_free_throws,offensive_rebounds,defensive_rebounds,assists,steals,blocks,turnovers,personal_fouls,plus_minus,game_score,game_date
+lavinza01,Zach LaVine,Team.SACRAMENTO_KINGS,Location.AWAY,Team.DETROIT_PISTONS,Outcome.WIN,2671,16,28,8,11,3,4,0,3,4,1,0,1,4,6.0,31.5,2025-04-07
+cunnica01,Cade Cunningham,Team.DETROIT_PISTONS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,1973,13,21,1,4,8,11,1,2,5,2,0,4,2,-9.0,26.3,2025-04-07
+sabondo01,Domantas Sabonis,Team.SACRAMENTO_KINGS,Location.AWAY,Team.DETROIT_PISTONS,Outcome.WIN,2127,7,11,0,0,5,5,4,11,10,0,1,2,4,6.0,24.3,2025-04-07
+derozde01,DeMar DeRozan,Team.SACRAMENTO_KINGS,Location.AWAY,Team.DETROIT_PISTONS,Outcome.WIN,2209,14,26,1,6,8,10,1,3,2,0,1,2,3,15.0,24.1,2025-04-07
+robindu01,Duncan Robinson,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,1533,7,8,5,6,2,2,0,2,1,0,1,0,1,16.0,19.8,2025-04-07
+wareke01,Kel'el Ware,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,2075,8,16,0,2,3,4,4,13,2,1,1,0,2,11.0,19.6,2025-04-07
+grimequ01,Quentin Grimes,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,2273,11,25,4,11,3,6,1,7,6,1,0,3,3,-6.0,18.5,2025-04-07
+walkelo01,Lonnie Walker IV,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,2370,10,18,6,13,3,4,0,1,2,0,0,2,3,-8.0,18.5,2025-04-07
+thompau01,Ausar Thompson,Team.DETROIT_PISTONS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,1752,7,13,1,1,0,0,2,2,5,3,1,0,5,13.0,15.9,2025-04-07
+bonaad01,Adem Bona,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,2078,7,11,0,0,2,4,5,6,1,1,2,4,3,-8.0,13.5,2025-04-07
+larsspe01,Pelle Larsson,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,1573,4,6,2,3,2,4,0,3,2,3,0,0,1,-5.0,13.5,2025-04-07
+butleja02,Jared Butler,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,1514,3,6,0,0,2,2,0,3,4,4,1,0,1,3.0,13.0,2025-04-07
+valanjo01,Jonas Valančiūnas,Team.SACRAMENTO_KINGS,Location.AWAY,Team.DETROIT_PISTONS,Outcome.WIN,753,2,5,0,0,6,6,6,6,1,0,1,1,3,4.0,12.5,2025-04-07
+anderky01,Kyle Anderson,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,1510,4,6,0,0,0,0,1,7,6,0,2,1,1,22.0,12.4,2025-04-07
+mitchda01,Davion Mitchell,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,2129,5,12,0,1,2,2,1,3,9,1,1,1,5,27.0,12.2,2025-04-07
+durenja01,Jalen Duren,Team.DETROIT_PISTONS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,1196,2,4,0,0,2,2,3,6,6,1,1,0,5,-6.0,11.8,2025-04-07
+stewais01,Isaiah Stewart,Team.DETROIT_PISTONS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,1684,2,6,1,3,3,4,3,7,4,0,2,0,3,-4.0,11.4,2025-04-07
+hardati02,Tim Hardaway Jr.,Team.DETROIT_PISTONS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,2079,6,15,4,11,3,3,0,0,2,0,0,2,0,-17.0,10.3,2025-04-07
+herroty01,Tyler Herro,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,1960,8,14,2,4,2,3,0,5,2,1,0,7,1,5.0,9.5,2025-04-07
+castlco01,Colin Castleton,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,801,1,3,0,0,2,2,3,3,3,0,0,0,0,-4.0,7.4,2025-04-07
+sassema01,Marcus Sasser,Team.DETROIT_PISTONS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,615,3,5,1,2,1,1,1,0,3,0,0,0,3,8.0,7.3,2025-04-07
+beaslma01,Malik Beasley,Team.DETROIT_PISTONS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,1770,5,15,4,14,0,2,0,1,2,0,0,0,1,-10.0,6.0,2025-04-07
+jaqueja01,Jaime Jaquez Jr.,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,888,2,7,1,5,0,0,2,3,2,1,1,0,1,8.0,5.9,2025-04-07
+elliske01,Keon Ellis,Team.SACRAMENTO_KINGS,Location.AWAY,Team.DETROIT_PISTONS,Outcome.WIN,2211,1,2,0,1,0,0,2,4,0,3,0,0,3,9.0,5.4,2025-04-07
+hollaro01,Ron Holland,Team.DETROIT_PISTONS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,922,2,3,0,0,1,1,1,3,1,1,0,1,2,8.0,5.2,2025-04-07
+lylestr01,Trey Lyles,Team.SACRAMENTO_KINGS,Location.AWAY,Team.DETROIT_PISTONS,Outcome.WIN,2306,3,8,1,5,0,2,4,2,1,0,1,2,1,3.0,4.2,2025-04-07
+baglema02,Marcus Bagley,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,1406,2,8,0,2,2,2,2,4,0,1,1,1,1,-2.0,4.1,2025-04-07
+burksal01,Alec Burks,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,900,4,9,3,6,0,0,0,0,2,0,0,3,2,-8.0,3.9,2025-04-07
+cartede02,Devin Carter,Team.SACRAMENTO_KINGS,Location.AWAY,Team.DETROIT_PISTONS,Outcome.WIN,1299,3,8,1,3,0,0,1,1,1,1,0,1,2,15.0,3.5,2025-04-07
+highsha01,Haywood Highsmith,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,1732,3,10,3,8,0,0,2,1,0,0,0,1,2,-8.0,3.1,2025-04-07
+lowryky01,Kyle Lowry,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,1213,2,5,1,4,0,0,0,1,1,0,0,0,1,-6.0,2.9,2025-04-07
+schrode01,Dennis Schröder,Team.DETROIT_PISTONS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,1921,1,4,1,2,2,4,1,2,2,0,0,1,2,-19.0,2.7,2025-04-07
+councri01,Ricky Council IV,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,1166,1,6,0,2,3,5,3,2,2,0,0,3,0,-9.0,1.5,2025-04-07
+fontesi01,Simone Fontecchio,Team.DETROIT_PISTONS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,488,1,3,0,2,0,0,1,1,0,1,0,1,0,-14.0,1.3,2025-04-07
+reeseal01,Alex Reese,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,375,1,4,1,4,0,0,0,2,0,0,0,0,1,-12.0,0.8,2025-04-07
+jonesis01,Isaac Jones,Team.SACRAMENTO_KINGS,Location.AWAY,Team.DETROIT_PISTONS,Outcome.WIN,261,0,0,0,0,0,0,0,1,0,0,0,0,0,-3.0,0.3,2025-04-07
+mcderdo01,Doug McDermott,Team.SACRAMENTO_KINGS,Location.AWAY,Team.DETROIT_PISTONS,Outcome.WIN,179,0,0,0,0,0,0,0,1,0,0,0,0,0,-3.0,0.3,2025-04-07
+johnske10,Keshad Johnson,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,48,0,0,0,0,0,0,0,0,0,0,0,0,1,-4.0,-0.4,2025-04-07
+monkma01,Malik Monk,Team.SACRAMENTO_KINGS,Location.AWAY,Team.DETROIT_PISTONS,Outcome.WIN,383,1,3,0,1,0,0,0,0,1,0,0,1,1,-2.0,-0.4,2025-04-07
+hoodsja01,Jalen Hood-Schifino,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,1200,0,2,0,2,0,0,0,2,1,0,0,0,1,-8.0,-0.5,2025-04-07
+chrisjo01,Josh Christopher,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,48,0,1,0,1,0,0,0,0,0,0,0,0,0,-4.0,-0.7,2025-04-07

@@ -1,0 +1,67 @@
+slug,name,team,location,opponent,outcome,seconds_played,made_field_goals,attempted_field_goals,made_three_point_field_goals,attempted_three_point_field_goals,made_free_throws,attempted_free_throws,offensive_rebounds,defensive_rebounds,assists,steals,blocks,turnovers,personal_fouls,plus_minus,game_score,game_date
+sabondo01,Domantas Sabonis,Team.SACRAMENTO_KINGS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,2057,11,15,1,1,9,9,6,14,3,2,0,1,3,6.0,36.2,2024-12-12
+mccolcj01,CJ McCollum,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,2218,14,24,6,11,2,2,0,3,3,0,0,2,2,-4.0,25.0,2024-12-12
+pritcpa01,Payton Pritchard,Team.BOSTON_CELTICS,Location.HOME,Team.DETROIT_PISTONS,Outcome.WIN,1860,10,20,7,15,0,0,0,4,10,0,0,1,0,22.0,24.2,2024-12-12
+derozde01,DeMar DeRozan,Team.SACRAMENTO_KINGS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,2057,8,18,3,3,10,11,0,3,2,4,0,1,3,6.0,23.3,2024-12-12
+whitede01,Derrick White,Team.BOSTON_CELTICS,Location.HOME,Team.DETROIT_PISTONS,Outcome.WIN,1835,7,13,7,12,2,2,1,1,4,2,1,2,0,14.0,21.2,2024-12-12
+hollaro01,Ron Holland,Team.DETROIT_PISTONS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,1258,11,14,2,5,2,2,1,2,0,0,0,1,2,-4.0,20.1,2024-12-12
+adebaba01,Bam Adebayo,Team.MIAMI_HEAT,Location.HOME,Team.TORONTO_RAPTORS,Outcome.WIN,2071,8,17,1,3,4,6,3,13,5,0,1,1,2,7.0,19.9,2024-12-12
+herroty01,Tyler Herro,Team.MIAMI_HEAT,Location.HOME,Team.TORONTO_RAPTORS,Outcome.WIN,1939,9,13,4,7,1,1,0,4,4,0,0,2,1,30.0,19.1,2024-12-12
+porzikr01,Kristaps Porziņģis,Team.BOSTON_CELTICS,Location.HOME,Team.DETROIT_PISTONS,Outcome.WIN,1808,8,18,2,7,1,2,0,8,2,1,2,1,0,23.0,14.4,2024-12-12
+jovicni01,Nikola Jović,Team.MIAMI_HEAT,Location.HOME,Team.TORONTO_RAPTORS,Outcome.WIN,1444,4,5,2,2,4,7,0,4,1,1,1,0,1,25.0,14.1,2024-12-12
+murrake02,Keegan Murray,Team.SACRAMENTO_KINGS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,2036,7,14,3,7,1,1,5,4,0,0,0,0,4,1.0,14.1,2024-12-12
+holidjr01,Jrue Holiday,Team.BOSTON_CELTICS,Location.HOME,Team.DETROIT_PISTONS,Outcome.WIN,1500,4,8,2,4,2,2,2,5,6,0,0,1,1,17.0,13.7,2024-12-12
+kornelu01,Luke Kornet,Team.BOSTON_CELTICS,Location.HOME,Team.DETROIT_PISTONS,Outcome.WIN,752,5,5,0,0,2,3,2,5,1,0,0,0,1,16.0,13.3,2024-12-12
+poeltja01,Jakob Poeltl,Team.TORONTO_RAPTORS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,1626,7,12,0,1,2,3,2,2,2,1,1,1,2,-18.0,13.3,2024-12-12
+murphtr02,Trey Murphy III,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,2388,6,13,3,9,6,7,0,4,0,1,0,2,3,-1.0,12.9,2024-12-12
+dickgr01,Gradey Dick,Team.TORONTO_RAPTORS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,1838,8,19,3,11,3,4,0,4,2,0,0,0,5,-7.0,12.1,2024-12-12
+brownja02,Jaylen Brown,Team.BOSTON_CELTICS,Location.HOME,Team.DETROIT_PISTONS,Outcome.WIN,1797,6,12,1,2,1,1,1,8,6,1,0,4,1,30.0,11.9,2024-12-12
+cunnica01,Cade Cunningham,Team.DETROIT_PISTONS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,2121,9,22,0,4,0,0,1,7,8,0,1,3,1,-19.0,11.9,2024-12-12
+murrade01,Dejounte Murray,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,2110,8,19,2,7,2,2,0,7,9,1,2,8,2,-6.0,11.9,2024-12-12
+foxde01,De'Aaron Fox,Team.SACRAMENTO_KINGS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,2246,7,20,1,6,3,4,3,4,8,1,1,5,2,3.0,11.2,2024-12-12
+mitchda01,Davion Mitchell,Team.TORONTO_RAPTORS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,1236,4,6,1,1,3,3,1,1,6,0,0,1,6,-7.0,11.2,2024-12-12
+agbajoc01,Ochai Agbaji,Team.TORONTO_RAPTORS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,1806,6,8,1,3,0,0,1,2,0,1,0,0,3,1.0,10.9,2024-12-12
+sassema01,Marcus Sasser,Team.DETROIT_PISTONS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,1004,4,7,1,4,0,0,1,0,4,2,1,1,0,2.0,10.9,2024-12-12
+harrito02,Tobias Harris,Team.DETROIT_PISTONS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,1538,4,9,1,3,0,0,1,7,3,0,0,0,0,-14.0,9.2,2024-12-12
+missiyv01,Yves Missi,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,1855,3,4,0,0,1,1,5,6,1,0,1,1,5,-6.0,9.1,2024-12-12
+smithdr01,Dru Smith,Team.MIAMI_HEAT,Location.HOME,Team.TORONTO_RAPTORS,Outcome.WIN,2016,3,7,1,3,4,6,0,3,3,1,0,1,1,14.0,9.1,2024-12-12
+butleji01,Jimmy Butler,Team.MIAMI_HEAT,Location.HOME,Team.TORONTO_RAPTORS,Outcome.WIN,1766,3,8,0,0,5,8,3,2,4,0,1,3,0,16.0,8.6,2024-12-12
+battlja01,Jamison Battle,Team.TORONTO_RAPTORS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,901,3,4,2,2,0,0,1,1,1,0,0,0,0,-4.0,8.1,2024-12-12
+barrerj01,RJ Barrett,Team.TORONTO_RAPTORS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,2026,5,18,1,4,2,2,1,10,10,0,3,6,3,4.0,8.0,2024-12-12
+mogbojo01,Jonathan Mogbo,Team.TORONTO_RAPTORS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,1790,2,5,0,1,0,0,2,8,4,1,0,1,2,-9.0,7.1,2024-12-12
+walteja01,Ja'Kobe Walter,Team.TORONTO_RAPTORS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,1532,3,8,2,5,1,1,1,1,1,1,1,1,0,-7.0,7.0,2024-12-12
+bostobr01,Brandon Boston Jr.,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,1539,3,9,1,4,2,2,1,3,2,1,1,1,2,2.0,6.8,2024-12-12
+hardati02,Tim Hardaway Jr.,Team.DETROIT_PISTONS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,1150,3,6,0,3,0,0,2,4,1,2,0,1,2,-8.0,6.5,2024-12-12
+theisda01,Daniel Theis,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,864,2,3,1,1,2,2,1,1,2,1,0,1,4,5.0,6.5,2024-12-12
+roziete01,Terry Rozier,Team.MIAMI_HEAT,Location.HOME,Team.TORONTO_RAPTORS,Outcome.WIN,1486,1,6,1,6,2,2,2,6,0,2,0,1,1,-5.0,5.0,2024-12-12
+reedpa01,Paul Reed,Team.DETROIT_PISTONS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,921,2,6,0,2,0,0,0,0,3,2,1,0,2,-6.0,4.6,2024-12-12
+huertke01,Kevin Huerter,Team.SACRAMENTO_KINGS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1667,2,10,1,8,2,2,1,2,1,3,0,1,1,-3.0,4.4,2024-12-12
+iveyja01,Jaden Ivey,Team.DETROIT_PISTONS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,1605,3,14,2,9,2,2,0,3,2,1,0,0,1,-17.0,4.3,2024-12-12
+joneshe01,Herbert Jones,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,2124,3,10,1,4,0,0,1,6,4,1,0,2,3,-5.0,4.3,2024-12-12
+loveke01,Kevin Love,Team.MIAMI_HEAT,Location.HOME,Team.TORONTO_RAPTORS,Outcome.WIN,528,2,4,1,2,1,2,1,2,1,0,0,1,1,3.0,4.2,2024-12-12
+monkma01,Malik Monk,Team.SACRAMENTO_KINGS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,2057,2,11,1,5,0,0,0,3,9,1,1,2,2,6.0,4.2,2024-12-12
+peterdr01,Drew Peterson,Team.BOSTON_CELTICS,Location.HOME,Team.DETROIT_PISTONS,Outcome.WIN,1153,1,3,0,2,3,3,1,2,2,0,0,1,2,12.0,4.2,2024-12-12
+stewais01,Isaiah Stewart,Team.DETROIT_PISTONS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,1650,1,2,0,0,0,0,2,3,0,0,1,0,0,-11.0,4.0,2024-12-12
+beaslma01,Malik Beasley,Team.DETROIT_PISTONS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,971,2,7,0,3,1,2,0,4,3,0,0,0,0,-27.0,3.8,2024-12-12
+robindu01,Duncan Robinson,Team.MIAMI_HEAT,Location.HOME,Team.TORONTO_RAPTORS,Outcome.WIN,1067,4,8,0,2,0,0,0,3,3,0,0,3,1,-16.0,3.6,2024-12-12
+walshjo01,Jordan Walsh,Team.BOSTON_CELTICS,Location.HOME,Team.DETROIT_PISTONS,Outcome.WIN,809,1,3,0,2,0,0,1,2,1,1,0,0,0,-5.0,3.3,2024-12-12
+fontesi01,Simone Fontecchio,Team.DETROIT_PISTONS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,991,1,4,1,3,3,4,0,1,1,0,0,1,1,-7.0,2.8,2024-12-12
+jaqueja01,Jaime Jaquez Jr.,Team.MIAMI_HEAT,Location.HOME,Team.TORONTO_RAPTORS,Outcome.WIN,945,3,5,0,1,0,0,1,2,0,0,0,1,3,-18.0,2.8,2024-12-12
+fernabr01,Bruno Fernando,Team.TORONTO_RAPTORS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,121,1,1,0,0,0,0,0,0,0,1,0,0,0,2.0,2.7,2024-12-12
+highsha01,Haywood Highsmith,Team.MIAMI_HEAT,Location.HOME,Team.TORONTO_RAPTORS,Outcome.WIN,1138,3,10,3,6,0,0,1,2,0,0,0,2,0,-6.0,2.5,2024-12-12
+quetane01,Neemias Queta,Team.BOSTON_CELTICS,Location.HOME,Team.DETROIT_PISTONS,Outcome.WIN,1083,2,3,0,0,0,0,0,2,1,1,1,2,3,-6.0,2.5,2024-12-12
+horfoal01,Al Horford,Team.BOSTON_CELTICS,Location.HOME,Team.DETROIT_PISTONS,Outcome.WIN,1178,1,3,0,2,0,0,0,6,1,0,0,0,1,6.0,2.4,2024-12-12
+sheadja01,Jamal Shead,Team.TORONTO_RAPTORS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,827,2,5,1,1,0,0,0,0,1,1,0,1,2,-1.0,2.2,2024-12-12
+jemistr01,Trey Jemison,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,161,0,0,0,0,1,2,0,0,0,1,0,0,0,-1.0,1.6,2024-12-12
+moorewe01,Wendell Moore Jr.,Team.DETROIT_PISTONS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,392,0,1,0,0,0,0,0,1,2,1,0,0,1,6.0,1.6,2024-12-12
+elliske01,Keon Ellis,Team.SACRAMENTO_KINGS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1183,0,2,0,2,2,2,1,3,0,1,0,1,2,2.0,1.4,2024-12-12
+reevean01,Antonio Reeves,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,209,0,0,0,0,0,0,1,0,1,0,0,0,0,3.0,1.4,2024-12-12
+cainja01,Jamal Cain,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.SACRAMENTO_KINGS,Outcome.LOSS,932,0,1,0,1,1,2,1,3,0,0,0,0,1,3.0,1.1,2024-12-12
+lenal01,Alex Len,Team.SACRAMENTO_KINGS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,386,0,0,0,0,0,0,1,0,1,0,0,0,1,4.0,1.0,2024-12-12
+davisjd01,JD Davison,Team.BOSTON_CELTICS,Location.HOME,Team.DETROIT_PISTONS,Outcome.WIN,392,1,1,1,1,0,0,0,0,0,0,0,2,0,-6.0,0.7,2024-12-12
+thompau01,Ausar Thompson,Team.DETROIT_PISTONS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,799,2,6,0,1,0,0,1,2,0,0,0,1,2,-15.0,0.1,2024-12-12
+robinor01,Orlando Robinson,Team.SACRAMENTO_KINGS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,151,0,0,0,0,0,0,0,0,0,0,0,0,0,-1.0,0.0,2024-12-12
+jonesco02,Colby Jones,Team.SACRAMENTO_KINGS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,274,0,0,0,0,0,0,0,0,0,0,0,0,1,-7.0,-0.4,2024-12-12
+tillmxa01,Xavier Tillman Sr.,Team.BOSTON_CELTICS,Location.HOME,Team.DETROIT_PISTONS,Outcome.WIN,233,0,1,0,1,0,0,0,0,0,0,0,0,0,-3.0,-0.7,2024-12-12
+olynyke01,Kelly Olynyk,Team.TORONTO_RAPTORS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,697,0,6,0,3,0,2,0,4,2,2,0,0,1,-4.0,-0.8,2024-12-12
+jonesis01,Isaac Jones,Team.SACRAMENTO_KINGS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,286,0,2,0,1,0,0,0,0,0,0,0,0,0,-7.0,-1.4,2024-12-12

@@ -1,0 +1,99 @@
+slug,name,team,location,opponent,outcome,seconds_played,made_field_goals,attempted_field_goals,made_three_point_field_goals,attempted_three_point_field_goals,made_free_throws,attempted_free_throws,offensive_rebounds,defensive_rebounds,assists,steals,blocks,turnovers,personal_fouls,plus_minus,game_score,game_date
+doncilu01,Luka Dončić,Team.DALLAS_MAVERICKS,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,2611,15,25,8,16,12,12,1,5,15,4,3,4,2,16.0,52.5,2023-12-25
+davisan02,Anthony Davis,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,2330,15,26,2,4,8,10,5,8,4,0,1,2,2,-6.0,33.6,2023-12-25
+jaqueja01,Jaime Jaquez Jr.,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,2369,11,15,1,3,8,8,5,5,1,2,0,0,3,-1.0,31.4,2023-12-25
+brunsja01,Jalen Brunson,Team.NEW_YORK_KNICKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,2228,15,28,1,3,7,9,1,3,6,1,0,0,0,6.0,30.4,2023-12-25
+antetgi01,Giannis Antetokounmpo,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.LOSS,2319,13,24,1,2,5,9,5,8,6,1,2,2,4,-5.0,27.7,2023-12-25
+jokicni01,Nikola Jokić,Team.DENVER_NUGGETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,2343,4,12,0,2,18,18,4,10,8,0,0,3,2,21.0,26.8,2023-12-25
+adebaba01,Bam Adebayo,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,2174,9,15,0,0,8,12,3,12,5,0,3,4,1,0.0,24.4,2023-12-25
+porzikr01,Kristaps Porziņģis,Team.BOSTON_CELTICS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.WIN,2118,11,19,2,8,4,7,3,8,2,1,2,1,3,16.0,24.0,2023-12-25
+tatumja01,Jayson Tatum,Team.BOSTON_CELTICS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.WIN,2474,6,15,1,6,12,13,0,8,7,0,1,1,0,10.0,23.5,2023-12-25
+allengr01,Grayson Allen,Team.PHOENIX_SUNS,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.LOSS,2369,12,22,8,17,0,0,1,3,4,1,0,2,4,-5.0,23.2,2023-12-25
+lillada01,Damian Lillard,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.LOSS,2270,10,21,4,13,8,9,0,1,8,1,0,4,2,-6.0,23.0,2023-12-25
+harrito02,Tobias Harris,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,2495,10,18,4,7,3,3,1,6,6,1,0,2,3,2.0,22.9,2023-12-25
+murraja01,Jamal Murray,Team.DENVER_NUGGETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,1968,10,18,3,5,5,5,1,4,3,2,0,2,4,20.0,21.8,2023-12-25
+holidjr01,Jrue Holiday,Team.BOSTON_CELTICS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.WIN,2294,7,10,3,5,1,1,2,5,7,1,1,2,1,15.0,20.9,2023-12-25
+podzibr01,Brandin Podziemski,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.DENVER_NUGGETS,Outcome.LOSS,2064,4,7,3,4,2,2,4,5,6,5,0,2,1,1.0,20.8,2023-12-25
+metuch01,Chimezie Metu,Team.PHOENIX_SUNS,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.LOSS,2013,9,18,2,6,3,4,6,13,2,1,0,3,1,-3.0,20.7,2023-12-25
+oubreke01,Kelly Oubre Jr.,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,2377,9,16,6,9,1,3,1,6,3,1,1,1,3,10.0,20.7,2023-12-25
+whitede01,Derrick White,Team.BOSTON_CELTICS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.WIN,2118,8,13,2,4,0,0,0,2,11,2,2,2,3,16.0,20.6,2023-12-25
+bambamo01,Mo Bamba,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,1531,7,8,3,3,1,2,1,5,2,2,0,1,2,-13.0,18.6,2023-12-25
+livelde01,Dereck Lively II,Team.DALLAS_MAVERICKS,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,1894,8,9,0,0,4,9,3,7,1,0,0,1,3,18.0,17.6,2023-12-25
+wiggian01,Andrew Wiggins,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.DENVER_NUGGETS,Outcome.LOSS,1729,7,11,2,4,6,6,1,2,2,0,1,2,5,18.0,16.5,2023-12-25
+portemi01,Michael Porter Jr.,Team.DENVER_NUGGETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,2429,8,17,3,10,0,0,0,10,1,0,4,0,1,23.0,16.4,2023-12-25
+middlkh01,Khris Middleton,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.LOSS,1983,10,20,4,9,0,0,0,2,6,1,0,2,4,9.0,16.2,2023-12-25
+quickim01,Immanuel Quickley,Team.NEW_YORK_KNICKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,1349,7,10,2,4,4,4,0,0,1,1,0,1,1,14.0,16.1,2023-12-25
+bookede01,Devin Booker,Team.PHOENIX_SUNS,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.LOSS,2425,6,14,1,4,7,10,0,3,10,1,1,3,5,-18.0,16.0,2023-12-25
+caldwke01,Kentavious Caldwell-Pope,Team.DENVER_NUGGETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,2228,6,13,4,9,0,0,1,3,5,2,0,0,1,15.0,16.0,2023-12-25
+randlju01,Julius Randle,Team.NEW_YORK_KNICKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,2458,8,17,2,5,6,6,1,8,2,1,0,4,3,6.0,15.6,2023-12-25
+gordoaa01,Aaron Gordon,Team.DENVER_NUGGETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,1897,7,10,1,4,1,4,4,6,3,1,0,2,2,13.0,15.5,2023-12-25
+jonesde02,Derrick Jones Jr.,Team.DALLAS_MAVERICKS,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,2119,9,18,3,8,2,4,2,1,1,1,0,0,3,15.0,15.4,2023-12-25
+meltode01,De'Anthony Melton,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,2190,5,17,2,9,3,3,2,5,5,4,1,0,2,12.0,15.4,2023-12-25
+lopezbr01,Brook Lopez,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.LOSS,1604,5,9,2,6,2,2,2,4,1,1,2,0,2,-6.0,14.6,2023-12-25
+barrerj01,RJ Barrett,Team.NEW_YORK_KNICKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,1654,8,14,2,5,3,4,1,5,1,1,0,3,3,-6.0,13.7,2023-12-25
+harteis01,Isaiah Hartenstein,Team.NEW_YORK_KNICKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,1963,5,7,0,0,1,2,4,4,4,0,1,0,4,3.0,13.6,2023-12-25
+princta02,Taurean Prince,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,2339,6,13,5,12,0,0,0,4,3,1,0,0,4,-12.0,13.0,2023-12-25
+jamesle01,LeBron James,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,2207,5,14,1,2,5,6,0,9,8,0,0,3,1,-11.0,12.7,2023-12-25
+brownja02,Jaylen Brown,Team.BOSTON_CELTICS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.WIN,1954,7,17,1,5,4,7,3,2,2,3,0,2,3,9.0,12.6,2023-12-25
+hardati02,Tim Hardaway Jr.,Team.DALLAS_MAVERICKS,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,2287,6,14,3,9,3,3,0,7,2,1,0,1,4,10.0,12.5,2023-12-25
+hartjo01,Josh Hart,Team.NEW_YORK_KNICKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,1856,5,7,0,2,0,0,0,9,4,2,0,2,1,7.0,12.2,2023-12-25
+loveke01,Kevin Love,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,959,2,3,1,2,3,4,1,9,5,0,0,1,0,8.0,12.2,2023-12-25
+duranke01,Kevin Durant,Team.PHOENIX_SUNS,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.LOSS,2557,4,11,1,3,7,7,1,7,7,0,1,6,2,-5.0,11.5,2023-12-25
+robindu01,Duncan Robinson,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,2043,5,13,5,10,1,1,0,4,2,1,0,0,3,26.0,11.3,2023-12-25
+saricda01,Dario Šarić,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.DENVER_NUGGETS,Outcome.LOSS,1195,5,11,0,3,4,4,2,3,2,0,0,0,2,11.0,11.2,2023-12-25
+herroty01,Tyler Herro,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,2279,8,25,4,11,2,3,2,4,5,1,1,4,1,-5.0,10.7,2023-12-25
+lowryky01,Kyle Lowry,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,2005,5,7,1,3,1,1,0,1,4,1,2,3,4,0.0,10.0,2023-12-25
+paulch01,Chris Paul,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.DENVER_NUGGETS,Outcome.LOSS,1701,5,10,3,5,0,0,1,2,3,0,0,1,1,13.0,10.0,2023-12-25
+reaveau01,Austin Reaves,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,1695,4,9,2,3,1,1,4,2,3,1,0,2,3,-1.0,9.6,2023-12-25
+kuminjo01,Jonathan Kuminga,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.DENVER_NUGGETS,Outcome.LOSS,1382,4,8,0,1,5,8,0,5,2,0,0,1,1,-24.0,9.3,2023-12-25
+gordoer01,Eric Gordon,Team.PHOENIX_SUNS,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.LOSS,2203,6,12,2,7,0,0,0,1,2,0,0,0,3,-17.0,8.5,2023-12-25
+russeda01,D'Angelo Russell,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,1069,4,6,0,1,0,0,0,1,6,1,0,2,1,-3.0,8.5,2023-12-25
+curryst01,Stephen Curry,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.DENVER_NUGGETS,Outcome.LOSS,2060,7,21,3,13,1,1,1,1,4,1,1,3,4,-26.0,7.0,2023-12-25
+pritcpa01,Payton Pritchard,Team.BOSTON_CELTICS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.WIN,762,4,8,2,6,0,0,2,0,0,0,0,0,1,-5.0,7.0,2023-12-25
+vandeja01,Jarred Vanderbilt,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,1364,3,5,0,0,0,0,4,2,0,1,0,0,4,-10.0,6.5,2023-12-25
+portibo01,Bobby Portis,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.LOSS,1837,5,11,0,4,2,2,5,4,0,0,0,3,4,-3.0,6.4,2023-12-25
+horfoal01,Al Horford,Team.BOSTON_CELTICS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.WIN,1399,2,4,2,4,0,0,0,6,1,0,1,0,3,1.0,6.0,2023-12-25
+jackstr02,Trayce Jackson-Davis,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.DENVER_NUGGETS,Outcome.LOSS,895,3,4,0,0,2,2,0,3,1,0,0,0,5,-4.0,6.0,2023-12-25
+exumda01,Danté Exum,Team.DALLAS_MAVERICKS,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,1987,3,7,1,4,0,0,1,3,5,1,0,3,3,14.0,5.2,2023-12-25
+beverpa01,Patrick Beverley,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,767,2,4,1,3,4,4,0,3,0,0,0,2,2,-18.0,5.1,2023-12-25
+connapa01,Pat Connaughton,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.LOSS,1431,1,4,1,4,0,0,4,3,1,1,0,0,3,-13.0,4.8,2023-12-25
+poweldw01,Dwight Powell,Team.DALLAS_MAVERICKS,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,431,2,2,0,0,0,0,0,1,2,0,0,0,1,-6.0,4.7,2023-12-25
+gibsota01,Taj Gibson,Team.NEW_YORK_KNICKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,917,0,1,0,1,0,0,0,3,3,0,3,0,2,4.0,3.6,2023-12-25
+azubuud01,Udoka Azubuike,Team.PHOENIX_SUNS,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.LOSS,240,2,2,0,0,0,0,0,0,0,0,0,0,0,2.0,3.4,2023-12-25
+martike04,KJ Martin,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,332,1,1,0,0,0,0,0,0,1,1,0,0,0,-7.0,3.4,2023-12-25
+hachiru01,Rui Hachimura,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,1743,5,14,2,9,0,0,0,3,0,0,0,1,2,5.0,3.3,2023-12-25
+maxeyty01,Tyrese Maxey,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,2610,4,20,1,8,3,6,0,3,5,1,1,0,4,3.0,2.9,2023-12-25
+looneke01,Kevon Looney,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.DENVER_NUGGETS,Outcome.LOSS,1296,2,3,0,0,0,0,0,3,2,0,0,1,3,-9.0,2.8,2023-12-25
+goodwjo01,Jordan Goodwin,Team.PHOENIX_SUNS,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.LOSS,634,0,3,0,1,2,2,3,0,1,0,0,0,0,3.0,2.7,2023-12-25
+payneca01,Cameron Payne,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.LOSS,610,1,2,1,2,0,0,0,0,1,0,0,0,0,-1.0,2.7,2023-12-25
+thompkl01,Klay Thompson,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.DENVER_NUGGETS,Outcome.LOSS,1926,3,12,3,10,0,0,0,6,1,1,1,3,1,-2.0,2.6,2023-12-25
+jacksan01,Andre Jackson Jr.,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.LOSS,850,0,2,0,1,2,2,1,1,1,1,0,0,2,-4.0,2.5,2023-12-25
+grimequ01,Quentin Grimes,Team.NEW_YORK_KNICKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,728,1,2,0,1,0,1,0,1,2,0,0,0,0,-1.0,2.3,2023-12-25
+cainja01,Jamal Cain,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,1002,0,2,0,0,3,4,1,4,0,0,1,0,4,16.0,2.2,2023-12-25
+eubandr01,Drew Eubanks,Team.PHOENIX_SUNS,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.LOSS,1026,1,3,0,0,0,0,2,5,0,1,0,1,3,-14.0,2.0,2023-12-25
+hardyja02,Jaden Hardy,Team.DALLAS_MAVERICKS,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,762,1,4,1,3,0,0,0,2,1,0,0,0,0,4.0,1.9,2023-12-25
+reedpa01,Paul Reed,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,1047,2,3,0,1,0,2,0,2,1,0,1,0,5,12.0,1.9,2023-12-25
+braunch01,Christian Braun,Team.DENVER_NUGGETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,649,2,4,2,2,0,2,0,0,1,0,0,1,3,-22.0,1.7,2023-12-25
+beaucma01,MarJon Beauchamp,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.LOSS,344,0,0,0,0,0,0,0,1,0,1,0,0,0,4.0,1.3,2023-12-25
+strawju01,Julian Strawther,Team.DENVER_NUGGETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,464,1,1,0,0,0,1,0,0,0,0,0,0,0,-4.0,1.3,2023-12-25
+reddica01,Cam Reddish,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,1103,1,2,1,1,2,2,0,0,0,0,0,2,2,-12.0,1.2,2023-12-25
+willigr01,Grant Williams,Team.DALLAS_MAVERICKS,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,1601,1,3,0,2,1,2,0,3,1,0,3,2,4,-4.0,1.0,2023-12-25
+martica02,Caleb Martin,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,523,0,0,0,0,1,2,1,4,1,0,0,2,1,-5.0,0.8,2023-12-25
+quetane01,Neemias Queta,Team.BOSTON_CELTICS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.WIN,403,0,0,0,0,0,0,0,1,1,1,0,0,3,-10.0,0.8,2023-12-25
+curryse01,Seth Curry,Team.DALLAS_MAVERICKS,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,380,0,0,0,0,0,0,1,0,0,0,0,0,0,4.0,0.7,2023-12-25
+divindo01,Donte DiVincenzo,Team.NEW_YORK_KNICKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.WIN,1247,1,6,1,5,0,0,0,1,4,1,0,1,4,2.0,0.7,2023-12-25
+nnajize01,Zeke Nnaji,Team.DENVER_NUGGETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,319,0,0,0,0,0,0,0,0,0,1,0,0,1,-11.0,0.6,2023-12-25
+watsope01,Peyton Watson,Team.DENVER_NUGGETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,1231,2,5,1,2,0,0,0,0,1,0,0,2,2,-11.0,0.2,2023-12-25
+beaslma01,Malik Beasley,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.NEW_YORK_KNICKS,Outcome.LOSS,1152,0,2,0,1,0,0,0,3,2,0,0,0,2,-10.0,0.1,2023-12-25
+hamptrj01,R.J. Hampton,Team.MIAMI_HEAT,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,1046,0,4,0,3,0,0,0,0,4,0,0,0,0,-9.0,0.0,2023-12-25
+moodymo01,Moses Moody,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.DENVER_NUGGETS,Outcome.LOSS,152,0,0,0,0,0,0,0,0,0,0,0,0,0,-8.0,0.0,2023-12-25
+prospol01,Olivier-Maxence Prosper,Team.DALLAS_MAVERICKS,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,29,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0,0.0,2023-12-25
+sprinja01,Jaden Springer,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,41,0,0,0,0,0,0,0,0,0,0,0,0,0,-2.0,0.0,2023-12-25
+hausesa01,Sam Hauser,Team.BOSTON_CELTICS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.WIN,878,1,5,0,4,0,0,1,1,0,0,0,0,0,3.0,-0.1,2023-12-25
+okogijo01,Josh Okogie,Team.PHOENIX_SUNS,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.LOSS,740,0,5,0,3,1,2,1,1,2,1,0,0,2,-7.0,-0.3,2023-12-25
+littlna01,Nassir Little,Team.PHOENIX_SUNS,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.LOSS,193,0,0,0,0,0,0,0,0,0,0,0,0,1,-6.0,-0.4,2023-12-25
+lawsoaj01,A.J. Lawson,Team.DALLAS_MAVERICKS,Location.AWAY,Team.PHOENIX_SUNS,Outcome.WIN,299,0,2,0,2,0,0,0,1,0,0,0,0,0,-1.0,-1.1,2023-12-25
+hayesja02,Jaxson Hayes,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,550,0,1,0,0,0,2,0,1,0,0,0,0,0,-5.0,-1.2,2023-12-25
+houseda01,Danuel House Jr.,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,369,0,3,0,2,1,2,0,0,0,1,0,1,0,-12.0,-1.5,2023-12-25
+jacksre01,Reggie Jackson,Team.DENVER_NUGGETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.WIN,872,0,2,0,0,2,2,0,0,3,0,0,4,1,-14.0,-1.7,2023-12-25
+morrima03,Marcus Morris,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.MIAMI_HEAT,Outcome.LOSS,641,0,4,0,3,0,0,0,1,0,0,0,0,1,-17.0,-2.9,2023-12-25

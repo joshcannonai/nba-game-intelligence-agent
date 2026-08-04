@@ -1,0 +1,38 @@
+slug,name,team,location,opponent,outcome,seconds_played,made_field_goals,attempted_field_goals,made_three_point_field_goals,attempted_three_point_field_goals,made_free_throws,attempted_free_throws,offensive_rebounds,defensive_rebounds,assists,steals,blocks,turnovers,personal_fouls,plus_minus,game_score,game_date
+antetgi01,Giannis Antetokounmpo,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.WIN,2274,10,15,0,0,12,18,1,13,9,1,4,1,1,3.0,36.4,2024-12-14
+gilgesh01,Shai Gilgeous-Alexander,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.WIN,2257,8,21,2,6,14,15,0,8,6,5,1,1,3,16.0,30.2,2024-12-14
+youngtr01,Trae Young,Team.ATLANTA_HAWKS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,2376,9,18,3,5,14,17,2,5,10,0,1,5,4,-4.0,28.8,2024-12-14
+lillada01,Damian Lillard,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.WIN,2229,8,21,5,14,4,5,0,6,7,3,0,2,3,5.0,19.6,2024-12-14
+dortlu01,Luguentz Dort,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.WIN,1876,5,11,5,9,4,6,2,7,1,3,0,0,3,10.0,18.5,2024-12-14
+harteis01,Isaiah Hartenstein,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.WIN,1998,9,12,0,0,3,4,1,7,2,0,1,4,4,7.0,15.1,2024-12-14
+thompam01,Amen Thompson,Team.HOUSTON_ROCKETS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,1781,9,15,0,1,1,3,4,3,1,3,0,4,3,-14.0,13.5,2024-12-14
+lopezbr01,Brook Lopez,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.WIN,2006,7,10,2,5,0,0,0,3,1,0,2,1,2,21.0,13.0,2024-12-14
+smithja05,Jabari Smith Jr.,Team.HOUSTON_ROCKETS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,2374,3,8,2,4,6,7,3,3,3,1,1,3,2,-15.0,12.2,2024-12-14
+willija06,Jalen Williams,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.WIN,2321,8,20,2,5,2,2,0,5,5,1,0,3,2,10.0,11.4,2024-12-14
+johnsja05,Jalen Johnson,Team.ATLANTA_HAWKS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,2347,6,15,0,4,3,5,1,9,4,1,0,1,3,-11.0,11.1,2024-12-14
+portibo01,Bobby Portis,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.WIN,1377,5,10,0,3,0,0,1,8,2,0,1,0,2,-5.0,9.4,2024-12-14
+daniedy01,Dyson Daniels,Team.ATLANTA_HAWKS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,2280,5,10,0,3,1,4,1,7,5,1,1,3,2,-1.0,9.0,2024-12-14
+jacksan01,Andre Jackson Jr.,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.WIN,1522,2,4,1,1,0,0,3,4,4,2,0,1,4,1.0,8.5,2024-12-14
+bogdabo01,Bogdan Bogdanović,Team.ATLANTA_HAWKS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,1416,4,7,2,3,0,0,0,1,1,0,0,0,2,-1.0,6.9,2024-12-14
+huntede01,De'Andre Hunter,Team.ATLANTA_HAWKS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,1793,5,16,3,6,2,4,1,6,3,0,0,2,2,-3.0,6.8,2024-12-14
+easonta01,Tari Eason,Team.HOUSTON_ROCKETS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,1043,3,8,2,6,4,6,0,2,0,0,1,0,4,-12.0,6.5,2024-12-14
+sengual01,Alperen Şengün,Team.HOUSTON_ROCKETS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,1955,6,16,1,2,0,1,5,6,2,2,0,4,5,-5.0,6.5,2024-12-14
+okongon01,Onyeka Okongwu,Team.ATLANTA_HAWKS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,1156,2,5,2,2,2,2,0,3,0,0,0,0,0,3.0,6.2,2024-12-14
+brookdi01,Dillon Brooks,Team.HOUSTON_ROCKETS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,1991,5,17,4,13,0,0,2,3,2,0,0,0,5,-5.0,5.8,2024-12-14
+vanvlfr01,Fred VanVleet,Team.HOUSTON_ROCKETS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,2502,3,15,1,11,1,3,2,7,7,1,0,1,2,-6.0,5.5,2024-12-14
+capelca01,Clint Capela,Team.ATLANTA_HAWKS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,1724,3,8,0,0,0,2,2,6,0,1,4,1,4,-11.0,5.2,2024-12-14
+joeis01,Isaiah Joe,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.WIN,1077,1,3,0,1,3,3,0,2,0,1,1,1,0,6.0,4.6,2024-12-14
+adamsst01,Steven Adams,Team.HOUSTON_ROCKETS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,380,1,2,0,0,2,4,3,3,0,0,0,1,0,-1.0,4.2,2024-12-14
+wallaca01,Cason Wallace,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.WIN,1921,2,6,1,4,0,0,1,5,2,1,1,2,3,8.0,3.7,2024-12-14
+willike04,Kenrich Williams,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.WIN,641,3,4,1,2,0,0,0,1,0,0,0,1,3,-4.0,3.5,2024-12-14
+greenja05,Jalen Green,Team.HOUSTON_ROCKETS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,2047,5,14,1,8,1,1,0,3,2,0,1,3,2,-16.0,3.4,2024-12-14
+mitchaj01,Ajay Mitchell,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.WIN,545,0,0,0,0,2,2,0,2,1,0,0,0,1,8.0,2.9,2024-12-14
+greenaj01,A.J. Green,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.WIN,1153,3,6,3,6,0,0,0,1,1,0,0,2,6,6.0,2.6,2024-12-14
+middlkh01,Khris Middleton,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.WIN,1323,2,7,1,5,1,2,0,3,4,1,1,3,5,-5.0,1.9,2024-12-14
+princta02,Taurean Prince,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.WIN,1204,2,8,2,7,0,0,1,2,0,1,0,2,2,6.0,0.7,2024-12-14
+carusal01,Alex Caruso,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.WIN,1181,0,3,0,3,0,0,0,2,2,1,0,0,3,16.0,-0.3,2024-12-14
+krejcvi01,Vít Krejčí,Team.ATLANTA_HAWKS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,298,0,0,0,0,0,0,0,0,0,0,0,0,2,-3.0,-0.8,2024-12-14
+wiggiaa01,Aaron Wiggins,Team.OKLAHOMA_CITY_THUNDER,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.WIN,583,0,0,0,0,0,0,0,0,0,0,0,0,2,-2.0,-0.8,2024-12-14
+risacza01,Zaccharie Risacher,Team.ATLANTA_HAWKS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.LOSS,1010,1,3,0,1,0,0,0,0,0,0,0,1,1,-9.0,-1.1,2024-12-14
+holidaa01,Aaron Holiday,Team.HOUSTON_ROCKETS,Location.AWAY,Team.OKLAHOMA_CITY_THUNDER,Outcome.LOSS,327,0,1,0,1,0,0,0,0,0,0,0,0,2,-1.0,-1.5,2024-12-14
+trentga02,Gary Trent Jr.,Team.MILWAUKEE_BUCKS,Location.HOME,Team.ATLANTA_HAWKS,Outcome.WIN,1312,0,5,0,4,1,2,0,1,0,0,0,0,2,8.0,-3.4,2024-12-14

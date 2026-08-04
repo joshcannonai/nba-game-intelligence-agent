@@ -1,0 +1,62 @@
+slug,name,team,location,opponent,outcome,seconds_played,made_field_goals,attempted_field_goals,made_three_point_field_goals,attempted_three_point_field_goals,made_free_throws,attempted_free_throws,offensive_rebounds,defensive_rebounds,assists,steals,blocks,turnovers,personal_fouls,plus_minus,game_score,game_date
+antetgi01,Giannis Antetokounmpo,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.WIN,2261,12,22,0,1,12,16,4,12,8,3,1,3,2,8.0,35.7,2024-03-30
+bogdabo01,Bogdan Bogdanović,Team.ATLANTA_HAWKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.LOSS,2243,12,23,5,9,9,10,1,9,4,1,0,3,5,-1.0,28.5,2024-03-30
+middlkh01,Khris Middleton,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.WIN,2148,9,10,3,3,0,0,0,6,6,1,0,1,3,0.0,22.4,2024-03-30
+beverpa01,Patrick Beverley,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.WIN,2167,6,10,2,5,4,4,0,5,5,1,1,0,2,6.0,19.3,2024-03-30
+willizi01,Zion Williamson,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,2421,9,17,0,0,7,14,4,5,4,1,0,4,0,-8.0,18.0,2024-03-30
+porzikr01,Kristaps Porziņģis,Team.BOSTON_CELTICS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1888,6,14,1,6,6,6,0,10,3,2,4,2,4,12.0,17.9,2024-03-30
+tatumja01,Jayson Tatum,Team.BOSTON_CELTICS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,2130,10,17,3,6,0,0,1,8,4,0,0,4,1,8.0,16.6,2024-03-30
+cartewe01,Wendell Carter Jr.,Team.ORLANDO_MAGIC,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.WIN,1692,4,10,3,7,4,4,1,12,2,2,1,1,2,39.0,16.2,2024-03-30
+suggsja01,Jalen Suggs,Team.ORLANDO_MAGIC,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.WIN,1447,4,5,3,4,4,4,1,0,4,2,2,3,2,36.0,16.2,2024-03-30
+mccolcj01,CJ McCollum,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,2194,10,23,4,11,0,0,0,2,5,2,1,1,4,-6.0,16.1,2024-03-30
+joneshe01,Herbert Jones,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,2405,6,15,4,9,2,2,2,3,3,2,0,0,1,-5.0,15.9,2024-03-30
+banchpa01,Paolo Banchero,Team.ORLANDO_MAGIC,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.WIN,1823,5,12,1,5,2,2,0,9,7,0,4,2,0,34.0,15.0,2024-03-30
+holidjr01,Jrue Holiday,Team.BOSTON_CELTICS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,2119,5,10,3,6,0,0,1,7,7,2,1,3,2,8.0,14.6,2024-03-30
+brownja02,Jaylen Brown,Team.BOSTON_CELTICS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,2100,6,16,3,4,2,2,2,5,6,1,1,2,2,4.0,14.2,2024-03-30
+goodwjo01,Jordan Goodwin,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.LOSS,1599,6,15,4,6,0,0,5,6,3,2,0,2,3,-13.0,14.1,2024-03-30
+whitede01,Derrick White,Team.BOSTON_CELTICS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1895,5,9,3,7,2,2,1,2,3,0,0,0,1,9.0,13.7,2024-03-30
+murrade01,Dejounte Murray,Team.ATLANTA_HAWKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.LOSS,2524,7,19,3,10,3,4,1,7,12,0,0,5,5,-10.0,13.3,2024-03-30
+clarkbr01,Brandon Clarke,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.LOSS,1181,6,9,0,1,1,2,0,4,3,1,1,0,2,-6.0,12.9,2024-03-30
+capelca01,Clint Capela,Team.ATLANTA_HAWKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.LOSS,1618,5,9,0,0,0,0,3,5,2,1,2,0,2,-6.0,12.3,2024-03-30
+portibo01,Bobby Portis,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.WIN,1279,6,10,0,2,1,2,0,4,2,2,0,0,1,2.0,12.2,2024-03-30
+wagnefr01,Franz Wagner,Team.ORLANDO_MAGIC,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.WIN,1713,4,9,0,4,5,6,0,4,4,1,0,0,2,27.0,12.1,2024-03-30
+anthoco01,Cole Anthony,Team.ORLANDO_MAGIC,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.WIN,1009,5,11,5,8,0,0,0,3,3,1,0,1,1,11.0,11.9,2024-03-30
+murphtr02,Trey Murphy III,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,2326,3,10,3,6,2,2,1,8,2,2,1,1,1,-9.0,11.0,2024-03-30
+fultzma01,Markelle Fultz,Team.ORLANDO_MAGIC,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.WIN,1517,5,13,2,3,0,0,2,2,5,1,1,1,1,-6.0,10.7,2024-03-30
+horfoal01,Al Horford,Team.BOSTON_CELTICS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1803,4,7,1,3,0,0,0,6,2,1,1,0,1,8.0,10.2,2024-03-30
+pereima01,Mãozinha Pereira,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.LOSS,1717,2,5,0,1,3,4,4,4,1,2,3,1,4,-12.0,10.1,2024-03-30
+lopezbr01,Brook Lopez,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.WIN,1970,3,3,1,1,6,6,0,3,0,0,2,3,4,10.0,9.8,2024-03-30
+inglejo01,Joe Ingles,Team.ORLANDO_MAGIC,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.WIN,1059,3,4,3,4,2,2,0,0,2,0,0,2,1,13.0,8.4,2024-03-30
+fernabr01,Bruno Fernando,Team.ATLANTA_HAWKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.LOSS,1262,4,7,0,0,2,3,2,2,2,0,1,1,4,-3.0,7.8,2024-03-30
+houstca01,Caleb Houstan,Team.ORLANDO_MAGIC,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.WIN,1251,3,4,3,4,0,0,0,1,0,0,0,0,2,31.0,6.9,2024-03-30
+jacksgg01,GG Jackson II,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.LOSS,1807,2,8,2,4,5,6,0,3,3,1,0,3,0,-26.0,6.8,2024-03-30
+krejcvi01,Vít Krejčí,Team.ATLANTA_HAWKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.LOSS,1932,3,5,2,4,0,0,0,2,1,1,0,0,3,-9.0,6.8,2024-03-30
+huntede01,De'Andre Hunter,Team.ATLANTA_HAWKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.LOSS,2085,5,13,2,5,1,1,0,2,1,1,0,1,3,-11.0,6.0,2024-03-30
+laravja01,Jake LaRavia,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.LOSS,1677,4,9,2,5,0,0,1,1,1,1,0,2,1,-22.0,5.6,2024-03-30
+matthwe02,Wesley Matthews,Team.ATLANTA_HAWKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.LOSS,1102,4,9,1,3,0,0,1,0,1,1,0,0,3,2.0,5.5,2024-03-30
+pippesc02,Scotty Pippen Jr.,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.LOSS,1269,4,10,1,4,2,2,0,3,2,1,1,3,3,-12.0,5.4,2024-03-30
+stevela01,Lamar Stevens,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.LOSS,1267,3,10,1,5,0,0,1,3,2,1,0,0,1,-14.0,4.8,2024-03-30
+kennalu01,Luke Kennard,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.LOSS,1805,3,10,2,7,1,1,0,5,5,0,1,4,1,-23.0,4.5,2024-03-30
+marshna01,Naji Marshall,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,1390,2,4,1,1,0,0,0,5,1,0,1,1,1,-7.0,4.5,2024-03-30
+daniedy01,Dyson Daniels,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,639,1,3,0,2,0,0,3,0,2,2,0,1,1,-8.0,4.4,2024-03-30
+nancela02,Larry Nance Jr.,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,1243,2,5,1,3,0,0,0,3,2,0,0,0,2,-11.0,3.8,2024-03-30
+hausesa01,Sam Hauser,Team.BOSTON_CELTICS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,812,1,3,1,3,0,0,0,3,1,1,0,0,1,1.0,3.5,2024-03-30
+connapa01,Pat Connaughton,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.WIN,979,1,3,0,2,2,4,1,2,4,0,0,1,3,3.0,3.4,2024-03-30
+schofad01,Admiral Schofield,Team.ORLANDO_MAGIC,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.WIN,445,1,2,1,2,0,0,0,2,1,0,0,0,0,-9.0,3.3,2024-03-30
+beaslma01,Malik Beasley,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.WIN,2102,4,12,2,9,0,0,0,1,2,0,0,1,2,8.0,3.1,2024-03-30
+tillmxa01,Xavier Tillman Sr.,Team.BOSTON_CELTICS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,628,1,3,0,0,1,2,1,1,1,0,0,0,0,7.0,2.6,2024-03-30
+simpsza01,Zavier Simpson,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.LOSS,536,0,1,0,0,0,0,1,0,4,1,0,1,1,12.0,2.4,2024-03-30
+bitadgo01,Goga Bitadze,Team.ORLANDO_MAGIC,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.WIN,536,2,3,0,0,0,1,1,3,0,0,0,1,2,-12.0,2.1,2024-03-30
+blackan01,Anthony Black,Team.ORLANDO_MAGIC,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.WIN,720,1,2,0,1,0,0,0,0,0,1,0,0,0,-5.0,2.0,2024-03-30
+crowdja01,Jae Crowder,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.WIN,807,1,5,0,3,3,3,1,1,0,0,0,1,0,7.0,1.9,2024-03-30
+mathega01,Garrison Mathews,Team.ATLANTA_HAWKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.LOSS,1042,1,3,1,3,0,0,0,1,1,0,0,0,1,-6.0,1.9,2024-03-30
+greenaj01,A.J. Green,Team.MILWAUKEE_BUCKS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.WIN,687,1,3,0,2,0,0,0,0,0,0,1,0,1,1.0,0.6,2024-03-30
+pritcpa01,Payton Pritchard,Team.BOSTON_CELTICS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1025,1,3,0,2,0,0,2,1,0,0,0,1,1,3.0,0.6,2024-03-30
+valanjo01,Jonas Valančiūnas,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,917,1,5,0,1,0,0,0,5,2,0,0,1,1,-4.0,0.4,2024-03-30
+forretr01,Trent Forrest,Team.ATLANTA_HAWKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.LOSS,356,1,3,0,0,0,0,1,0,0,0,0,1,0,1.0,0.0,2024-03-30
+okekech01,Chuma Okeke,Team.ORLANDO_MAGIC,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.WIN,445,0,2,0,1,2,2,0,1,0,0,0,1,0,-9.0,-0.1,2024-03-30
+windldy01,Dylan Windler,Team.ATLANTA_HAWKS,Location.HOME,Team.MILWAUKEE_BUCKS,Outcome.LOSS,236,0,1,0,1,0,0,0,2,0,0,0,0,0,-2.0,-0.1,2024-03-30
+wagnemo01,Moritz Wagner,Team.ORLANDO_MAGIC,Location.HOME,Team.MEMPHIS_GRIZZLIES,Outcome.WIN,743,1,1,1,1,1,2,0,1,0,0,0,3,3,0.0,-0.6,2024-03-30
+ryanma01,Matt Ryan,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,417,0,1,0,1,0,0,0,0,0,0,0,0,0,0.0,-0.7,2024-03-30
+hawkijo01,Jordan Hawkins,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.BOSTON_CELTICS,Outcome.LOSS,448,0,3,0,1,0,0,0,0,1,0,0,0,1,-2.0,-1.8,2024-03-30
+jacksja02,Jaren Jackson Jr.,Team.MEMPHIS_GRIZZLIES,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.LOSS,1542,1,9,0,3,2,2,1,3,1,1,1,3,3,-34.0,-2.1,2024-03-30
