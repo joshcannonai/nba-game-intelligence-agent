@@ -1,4 +1,4 @@
 arm,n,accuracy,log_loss,brier
-all tools,2,1.0,0.6356,0.2213
-without retrieve_injuries,2,0.0,0.8325,0.3193
-without retrieve_team_form,2,0.0,0.8357,0.3205
+all tools,50,0.62,0.668,0.2376
+without retrieve_injuries,50,0.62,0.6571,0.2321
+without retrieve_team_form,50,0.52,0.7013,0.2539
