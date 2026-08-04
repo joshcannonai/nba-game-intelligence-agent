@@ -102,6 +102,17 @@ streamlit run ui/app.py     # localhost:8501
 streamlit run ui/chat.py    # localhost:8502
 ```
 
+**To put it on a public URL** (still running on this laptop, Gemma included):
+
+```bash
+./scripts/share.sh          # prints a https://….trycloudflare.com link
+```
+
+Nothing is deployed. Cloudflare forwards a public hostname to localhost, which is
+what lets the site keep using the cutoff-pinned local model instead of an API model
+that may have the 2025-26 results in its weights. No auth on it, and it dies when the
+laptop sleeps, so treat the link as semi-private and short-lived.
+
 Four tabs. The one to show is **Date-gating proof**: the same game at three different
 as-of dates, with the injury list changing between them. That is the whole thesis in
 one screen.
