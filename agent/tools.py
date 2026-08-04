@@ -79,7 +79,7 @@ def _todo(tool_name: str, needs_from: str, needs: str, **ctx) -> str:
     )
 
 
-def build_tools(source, include_model: bool = True):
+def build_tools(source, include_model: bool = True, without: tuple[str, ...] = ()):
     """Bind a data source into the tool set the agent gets.
 
     include_model=False withholds predict_win_probability. That is not a debug
@@ -87,6 +87,11 @@ def build_tools(source, include_model: bool = True):
     way to a winner from the retrieval tools alone; arm C gets the model's
     number handed to it. The difference between the two IS the measurement, so
     the two arms have to differ in exactly one tool and nothing else.
+
+    `without` withholds tools by name, for the ablation study: run the same games
+    with a tool removed and the accuracy change is that tool's contribution. It
+    goes through the same path as include_model, so the skills block shrinks with
+    it and the agent is never told about a tool it does not have.
     """
 
     # ---------------------------------------------------------------- WORKING
@@ -252,6 +257,11 @@ def build_tools(source, include_model: bool = True):
     ]
     if include_model:
         tools.append(predict_win_probability)
+    if without:
+        unknown = set(without) - {t.name for t in tools}
+        if unknown:
+            raise ValueError(f"cannot withhold unknown tools: {sorted(unknown)}")
+        tools = [t for t in tools if t.name not in without]
     return tools
 
 

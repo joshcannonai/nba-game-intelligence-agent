@@ -93,7 +93,12 @@ Rules:
 )
 
 
-def build_agent(source, model_backend: str = "anthropic", include_model: bool = True):
+def build_agent(
+    source,
+    model_backend: str = "anthropic",
+    include_model: bool = True,
+    without: tuple[str, ...] = (),
+):
     from langchain.agents import create_agent
 
     if model_backend == "anthropic":
@@ -116,7 +121,7 @@ def build_agent(source, model_backend: str = "anthropic", include_model: bool = 
     else:
         raise ValueError(f"unknown model backend: {model_backend!r}")
 
-    tools = build_tools(source, include_model=include_model)
+    tools = build_tools(source, include_model=include_model, without=without)
     base = SYSTEM if include_model else SYSTEM_NO_MODEL
 
     # Skills are appended for exactly the tools this agent was given, so arm B
@@ -132,8 +137,9 @@ def run_matchup(
     source,
     model_backend: str = "anthropic",
     include_model: bool = True,
+    without: tuple[str, ...] = (),
 ) -> str:
-    agent = build_agent(source, model_backend, include_model)
+    agent = build_agent(source, model_backend, include_model, without)
     user = (
         f"Produce a pregame report for matchup_id={matchup_id} as_of_date={as_of_date}."
     )
