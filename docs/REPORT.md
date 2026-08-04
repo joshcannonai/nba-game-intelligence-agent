@@ -50,8 +50,8 @@ it's predicting. That sounds obvious and is surprisingly easy to get wrong, espe
 with an AI that may simply remember who won.
 
 We also converted the results into money. Betting $100 a game on the predictor's picks
-across a full season loses **$3,325**. That's a loss — but it's a smaller loss than
-always betting the favourite, which loses $5,544 while winning *more* games.
+across a full season loses **$2,393**. That's a loss — but it's a smaller loss than
+always betting the favourite, which loses $4,628 while winning *more* games.
 
 ## 2. Introduction
 
@@ -323,25 +323,37 @@ statistically solid.
 Accuracy is abstract. So we asked a concrete question: **bet $100 on whoever each
 approach picked. Who ends up ahead?**
 
-One caveat first. Our odds file has no moneyline prices for this season, only spreads,
-so we reconstructed prices from the spread and added a realistic 4.5% house margin. The
-scores and spreads are real; the prices are modelled. That makes the *ranking*
-trustworthy — everyone faces identical prices on identical games — while the exact
-dollar figures depend on our price model.
+One caveat first, and we checked it rather than waving at it. Our odds file has no
+moneyline prices for this season, only spreads, so prices had to be reconstructed from
+the spread. The scores and spreads are real; the prices are calculated.
+
+To find out whether that calculation is trustworthy, we tested it against the **19,807
+earlier games in the same file that do carry real quoted prices**. Reconstructing those
+from their spreads and comparing to what bookmakers actually offered:
+
+| | |
+|---|---|
+| correlation with real prices | **0.9959** |
+| average error | 2.9 percentage points |
+| within 5 points | 77.6% of games |
+
+The house margin is measured from those same games (3.75%) rather than assumed. So the
+ranking below is solid — every approach faces identical prices on identical games — and
+the dollar figures carry roughly a 3-point pricing error.
 
 **Full season, 1,322 games:**
 
 | approach | games won | profit | return |
 |---|---|---|---|
-| **the predictor** | 66.4% | **−$3,325** | −2.5% |
-| always bet the favourite | 69.0% | −$5,544 | −4.2% |
-| always bet the home team | 55.5% | −$8,246 | −6.2% |
+| **the predictor** | 66.4% | **−$2,393** | −1.8% |
+| always bet the favourite | 69.0% | −$4,628 | −3.5% |
+| always bet the home team | 55.5% | −$7,350 | −5.6% |
 
 Everything loses money. That is the correct result and the most useful number in this
 report — the house margin is the bar, and none of our approaches clears it.
 
 But look at the top two rows. **Always betting the favourite wins more games (69.0% vs
-66.4%) and loses more money.** Favourites win often and pay badly. Our predictor picks
+66.4%) and loses nearly twice as much money.** Favourites win often and pay badly. Our predictor picks
 more selectively, so it loses less. That gap is the entire argument for why accuracy
 alone is a poor way to judge a prediction system.
 
@@ -349,15 +361,15 @@ alone is a poor way to judge a prediction system.
 
 | approach | profit | return |
 |---|---|---|
-| A — predictor | +$928 | +11.6% |
-| C — agent + predictor (after rules) | +$19 | +0.2% |
-| C — agent + predictor (before rules) | −$884 | −11.0% |
-| B — agent alone | −$912 | −11.4% |
+| A — predictor | +$993 | +12.4% |
+| C — agent + predictor (after rules) | +$77 | +1.0% |
+| C — agent + predictor (before rules) | −$832 | −10.4% |
+| B — agent alone | −$861 | −10.8% |
 
-**Do not read A's +$928 as a profitable system.** The same predictor loses $3,325 over
+**Do not read A's +$993 as a profitable system.** The same predictor loses $2,393 over
 the full season. Those 80 games happened to suit it — which is exactly the trap this
 whole report is about, and we'd rather demonstrate it on ourselves than pretend we
-found an edge. The genuinely interesting number is C moving from −$884 to roughly
+found an edge. The genuinely interesting number is C moving from −$832 to roughly
 break-even once we constrained it.
 
 ### 7.4 A measurement that changed our design

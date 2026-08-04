@@ -15,13 +15,25 @@ WHAT IS REAL AND WHAT IS DERIVED. This matters more than the result.
 The reconstruction: the closing spread is a fair estimate of the expected margin,
 and margins scatter around it roughly normally (sigma = 14.0, fitted on all 1,322
 games of 2025-26, mean residual -0.25). That gives a fair win probability, which
-inverts to a fair moneyline. Real sportsbooks do not offer fair prices, so a
-standard hold is applied to both sides.
+inverts to a fair moneyline. Real sportsbooks do not offer fair prices, so the
+bookmaker's margin is added back on both sides.
 
-So the dollar figures below are a SIMULATION AT REALISTIC PRICES, not a backtest
-against quoted prices. The ranking between approaches is trustworthy -- every
-approach faces identical prices on identical games. The absolute profit is only
-as good as the price model.
+WE CHECKED THE RECONSTRUCTION RATHER THAN ASSERTING IT. The same odds file carries
+real quoted moneylines for 19,807 earlier games. Reconstructing prices for those
+from their spreads and comparing against what was actually quoted:
+
+    correlation             0.9959
+    mean absolute error     2.93 percentage points
+    median absolute error   2.10 pp
+    within 5 pp             77.6% of games
+
+The bookmaker margin is measured from those same games (mean 3.75%), not guessed.
+Reproduce with `python -m eval.betting --validate`.
+
+So the dollar figures are a simulation at prices that demonstrably track real ones,
+rather than a backtest against quoted prices. The ranking between approaches is
+solid -- every approach faces identical prices on identical games. The absolute
+profit carries the ~3 pp pricing error above.
 
 Why it still answers the question: the vig is the bar. A system that predicts no
 better than the market loses money slowly no matter how accurate it looks, and
@@ -42,7 +54,11 @@ from eval.replay import MARGIN_SIGMA, _phi  # noqa: E402
 ROOT = Path(__file__).resolve().parents[1]
 
 STAKE = 100.0  # flat, every game
-HOLD = 0.045  # 4.5% overround, typical for a two-way NBA moneyline
+
+# The bookmaker's margin, MEASURED rather than assumed: 3.75% is the mean overround
+# across the 19,807 games in this same odds file that carry real quoted moneylines
+# (seasons 2008-2023). Run `python -m eval.betting --validate` to reproduce.
+HOLD = 0.0375
 
 
 def fair_home_prob(row: dict) -> float | None:
@@ -184,12 +200,75 @@ def report(title: str, res: dict, order: list[str]) -> None:
         print(f"  ({res['skipped']} games skipped — no usable closing line)")
 
 
+def validate() -> None:
+    """Check reconstructed prices against real quoted moneylines.
+
+    The 2025-26 season has no moneylines, so every dollar figure in this module
+    rests on prices derived from the spread. This is the check that makes that
+    defensible instead of assumed: earlier seasons in the SAME file do carry real
+    quoted moneylines, so we can price those from their spreads and see how close
+    the reconstruction lands.
+    """
+    import math
+    import statistics
+
+    from eval.replay import american_to_prob
+
+    rows = []
+    with (ROOT / "data/samples/odds_only.csv").open(newline="") as fh:
+        for r in csv.DictReader(fh):
+            if (r.get("moneyline_home") or "").strip() in ("", "nan", "None"):
+                continue
+            rows.append(r)
+
+    errs, holds, pairs = [], [], []
+    for r in rows:
+        h = american_to_prob(r["moneyline_home"])
+        a = american_to_prob(r["moneyline_away"])
+        if h is None or a is None or (h + a) == 0:
+            continue
+        holds.append(h + a - 1.0)
+        real = h / (h + a)
+        mine = fair_home_prob(r)
+        if mine is None:
+            continue
+        errs.append(abs(mine - real))
+        pairs.append((mine, real))
+
+    n = len(pairs)
+    if not n:
+        print("no games with both a spread and a real moneyline")
+        return
+    mx = statistics.mean([p[0] for p in pairs])
+    my = statistics.mean([p[1] for p in pairs])
+    cov = sum((x - mx) * (y - my) for x, y in pairs) / n
+    sx = math.sqrt(sum((x - mx) ** 2 for x, _ in pairs) / n)
+    sy = math.sqrt(sum((y - my) ** 2 for _, y in pairs) / n)
+
+    print("PRICE RECONSTRUCTION, CHECKED AGAINST REAL QUOTED MONEYLINES")
+    print(f"  games compared          {n:,}")
+    print(f"  correlation             {cov / (sx * sy):.4f}")
+    print(f"  mean absolute error     {statistics.mean(errs) * 100:.2f} pp")
+    print(f"  median absolute error   {statistics.median(errs) * 100:.2f} pp")
+    print(f"  within 5 pp             {sum(e <= 0.05 for e in errs) / n * 100:.1f}%")
+    print(f"\n  bookmaker margin actually charged: "
+          f"mean {statistics.mean(holds) * 100:.2f}%, "
+          f"median {statistics.median(holds) * 100:.2f}%")
+    print(f"  this module uses {HOLD * 100:.2f}%")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     global STAKE
     ap.add_argument("--stake", type=float, default=STAKE)
+    ap.add_argument("--validate", action="store_true",
+                    help="Check reconstructed prices against real quoted moneylines")
     args = ap.parse_args()
     STAKE = args.stake
+
+    if args.validate:
+        validate()
+        return
 
     odds = load_odds()
     print(

@@ -1094,13 +1094,13 @@ def build(path: Path) -> Path:
     )
     text(
         s, ML, Inches(2.05), Inches(7.6), Inches(0.4),
-        "Full season, 1,322 games. Real spreads and scores; prices modelled with a 4.5% house margin.",
+        "Full season, 1,322 games. Real spreads and scores. Prices rebuilt from the spread —\nchecked against 19,807 real quoted lines: correlation 0.9959, average error 2.9 points.",
         size=13, colour=MUTED,
     )
     bar_chart(
         s, ML - Inches(0.2), Inches(2.5), Inches(7.2), Inches(4.0),
         ["Our predictor", "Always favourite", "Always home"],
-        [("profit, $", (-3325, -5544, -8246))],
+        [("profit, $", (-2393, -4628, -7350))],
         [ACCENT],
     )
     text(
@@ -1120,7 +1120,7 @@ def build(path: Path) -> Path:
             ("But look at the first two.\n", {"colour": INK, "bold": True}),
             ("Always backing the favourite wins ", {}),
             ("more games", {"colour": INK, "bold": True}),
-            (" (69.0% vs 66.4%) and loses ", {}),
+            (" (69.0% vs 66.4%) and loses nearly twice as much ", {}),
             ("more money", {"colour": BAD, "bold": True}),
             (".\n", {}),
             ("Favourites win often and pay badly.", {"size": 13}),
