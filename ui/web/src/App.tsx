@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import system from "./data/system.json";
+import schedule from "./data/games.json";
 
 // The page is served from Vercel but the model and the datasets live on the
 // presenter's laptop, so the agent tab talks to a bridge on localhost. Vercel's
@@ -25,23 +26,20 @@ type Step = {
 	t: number;
 };
 
-const MATCHUPS = [
-	{
-		id: "CHI-ORL-2025-12-01",
-		asOf: "2025-11-30",
-		label: "CHI at ORL, 1 Dec 2025",
-	},
-	{
-		id: "LAL-DEN-2025-12-03",
-		asOf: "2025-12-02",
-		label: "LAL at DEN, 3 Dec 2025",
-	},
-	{
-		id: "BOS-NYK-2026-01-15",
-		asOf: "2026-01-14",
-		label: "BOS at NYK, 15 Jan 2026",
-	},
-];
+type Game = { id: string; d: string; a: string; h: string; asOf: string };
+const GAMES: Game[] = schedule.games;
+const NAMES: Record<string, string> = schedule.names;
+
+const DAY = { weekday: "short", month: "short", day: "numeric" } as const;
+function labelFor(g: Game) {
+  const when = new Date(g.d + "T12:00:00").toLocaleDateString(undefined, DAY);
+  return `${NAMES[g.a] ?? g.a} at ${NAMES[g.h] ?? g.h}  ·  ${when}`;
+}
+export function matches(g: Game, q: string) {
+  if (!q) return true;
+  const hay = (g.a + " " + g.h + " " + (NAMES[g.a] ?? "") + " " + (NAMES[g.h] ?? "") + " " + g.d).toLowerCase();
+  return q.toLowerCase().split(/\s+/).every((term) => hay.includes(term));
+}
 
 const ICON = {
 	width: 14,
@@ -93,7 +91,7 @@ function Row({ term, children }: { term: string; children: React.ReactNode }) {
 }
 
 function AgentTab({ health }: { health: Health | null }) {
-	const [matchup, setMatchup] = useState(MATCHUPS[0]);
+	const [matchup, setMatchup] = useState<Game>(GAMES.find((g) => g.id === "CHI-ORL-2025-12-01") ?? GAMES[0]);
 	const [steps, setSteps] = useState<Step[]>([]);
 	const [final, setFinal] = useState("");
 	const [running, setRunning] = useState(false);
@@ -206,13 +204,13 @@ function AgentTab({ health }: { health: Health | null }) {
 							value={matchup.id}
 							onChange={(e) =>
 								setMatchup(
-									MATCHUPS.find((m) => m.id === e.target.value) ?? MATCHUPS[0],
+									GAMES.find((m) => m.id === e.target.value) ?? GAMES[0],
 								)
 							}
 						>
-							{MATCHUPS.map((m) => (
+							{GAMES.map((m) => (
 								<option key={m.id} value={m.id}>
-									{m.label}
+									{labelFor(m)}
 								</option>
 							))}
 						</select>

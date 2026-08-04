@@ -5,22 +5,26 @@ use_when: You need to know what other games are on the slate.
 
 ## What it gives you
 
-Currently nothing. It returns `status: awaiting_input` because the forward-looking
-schedule table has not been committed.
+The fixtures tipping off in the days after `as_of_date`: matchup id, date, away and
+home. Read from the season's game log, filtered to the window.
 
 ## When to call it
 
-Only if asked what else is on tonight. For rest and back-to-backs, use
-`retrieve_matchup_context` — that already carries them.
+Only if asked what else is on tonight, or when the slate itself is part of the
+answer. For rest and back-to-backs use `retrieve_matchup_context`, which already
+carries them. This is not part of the win-probability path.
+
+## How to read it
+
+- `count` is how many games are in the window, not how many exist in the season.
+- Teams and dates only. There are no tip-off times in the dataset, so if you are
+  asked when a game starts, say that is not available rather than guessing.
 
 ## Rules
 
-- `awaiting_input` is not an error and not an empty result. It means the data does
-  not exist yet. Report the gap and carry on; do not retry it, and do not substitute
-  a guess about the slate.
-
-## Note for whoever fills this in
-
-`data/pull_games.py` already writes `season_schedule_2026.csv`. It just has not been
-committed. `data/raw/` stopped being gitignored on 2026-07-21, so nothing is blocking
-it now.
+- **Never report a score or a winner from this tool.** It does not return them, and
+  that is deliberate: the rows it reads carry `home_pts`, `away_pts` and `winner`
+  right next to the fixture, and only the identity fields are copied out.
+- Knowing *who plays whom* on a future date is not leakage. The NBA publishes its
+  schedule in August, so a fixture is knowable on any as-of date. Knowing *how it
+  went* is leakage. Keep that line.

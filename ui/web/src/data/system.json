@@ -23,11 +23,11 @@
     {
       "name": "retrieve_schedule",
       "use_when": "You need to know what other games are on the slate.",
-      "skill": "## What it gives you\n\nCurrently nothing. It returns `status: awaiting_input` because the forward-looking\nschedule table has not been committed.\n\n## When to call it\n\nOnly if asked what else is on tonight. For rest and back-to-backs, use\n`retrieve_matchup_context` \u2014 that already carries them.\n\n## Rules\n\n- `awaiting_input` is not an error and not an empty result. It means the data does\n  not exist yet. Report the gap and carry on; do not retry it, and do not substitute\n  a guess about the slate.\n\n## Note for whoever fills this in\n\n`data/pull_games.py` already writes `season_schedule_2026.csv`. It just has not been\ncommitted. `data/raw/` stopped being gitignored on 2026-07-21, so nothing is blocking\nit now.",
+      "skill": "## What it gives you\n\nThe fixtures tipping off in the days after `as_of_date`: matchup id, date, away and\nhome. Read from the season's game log, filtered to the window.\n\n## When to call it\n\nOnly if asked what else is on tonight, or when the slate itself is part of the\nanswer. For rest and back-to-backs use `retrieve_matchup_context`, which already\ncarries them. This is not part of the win-probability path.\n\n## How to read it\n\n- `count` is how many games are in the window, not how many exist in the season.\n- Teams and dates only. There are no tip-off times in the dataset, so if you are\n  asked when a game starts, say that is not available rather than guessing.\n\n## Rules\n\n- **Never report a score or a winner from this tool.** It does not return them, and\n  that is deliberate: the rows it reads carry `home_pts`, `away_pts` and `winner`\n  right next to the fixture, and only the identity fields are copied out.\n- Knowing *who plays whom* on a future date is not leakage. The NBA publishes its\n  schedule in August, so a fixture is knowable on any as-of date. Knowing *how it\n  went* is leakage. Keep that line.",
       "sources": [
-        "season_schedule_2026.csv"
+        "game_logs_2026.csv"
       ],
-      "status": "awaiting_input"
+      "status": "live"
     },
     {
       "name": "retrieve_team_form",

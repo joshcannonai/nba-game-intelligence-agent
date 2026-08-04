@@ -128,17 +128,8 @@ def build_tools(source, include_model: bool = True):
             as_of_date: ISO date the user is asking from.
             days_ahead: How many days of upcoming games to return.
         """
-        return _todo(
-            "retrieve_schedule",
-            "Patrick (already pulled -- needs committing)",
-            "A forward-looking slate: date, home, away, tip-off time. Patrick's "
-            "data/pull_games.py writes season_schedule_2026.csv and it has still not "
-            "been committed -- data/raw stopped being gitignored on 7/21, so there is "
-            "no longer anything in the way. data/samples/game_logs_*.csv carries "
-            "date/home/away for finished seasons and could back this tool today; what "
-            "it lacks is tip-off times and any game that has not been played yet.",
-            as_of_date=as_of_date,
-            days_ahead=days_ahead,
+        return json.dumps(
+            source.schedule(as_of_date, days_ahead=days_ahead), indent=2
         )
 
     @tool

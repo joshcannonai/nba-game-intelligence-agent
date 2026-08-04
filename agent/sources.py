@@ -28,7 +28,7 @@ from __future__ import annotations
 import csv
 import json
 import os
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
 
@@ -560,6 +560,44 @@ def closing_line(away: str, home: str, game_date: date, as_of: date) -> dict:
     }
 
 
+def slate_as_of(as_of: date, days_ahead: int = 1) -> dict:
+    """The fixtures tipping off in the days after as_of.
+
+    WHY THIS IS NOT LEAKAGE. The NBA publishes its schedule in August, so who plays
+    whom on a future date is knowable on any as_of_date. The RESULT is not, and the
+    game-log rows this reads carry `home_pts`, `away_pts` and `winner` right next to
+    the fixture. Only the four identity fields are copied out; the score columns are
+    never touched, and `tests/test_date_gating.py` asserts they never appear.
+    """
+    first = as_of + timedelta(days=1)
+    last = as_of + timedelta(days=max(1, days_ahead))
+    games = []
+    for row in _all_game_logs():
+        played = parse_date(row["game_date"])
+        if first <= played <= last:
+            games.append(
+                {
+                    "matchup_id": row["game_id"],
+                    "date": row["game_date"],
+                    "away": normalize_abbr(row["away"]),
+                    "home": normalize_abbr(row["home"]),
+                }
+            )
+    games.sort(key=lambda g: (g["date"], g["matchup_id"]))
+    return {
+        "source": "real",
+        "as_of_date": as_of.isoformat(),
+        "window": {"from": first.isoformat(), "to": last.isoformat()},
+        "games": games,
+        "count": len(games),
+        "caveat": (
+            "Fixtures only: teams and dates, taken from the season's game log. Tip-off "
+            "times are not in that dataset, so this cannot tell you when a game starts. "
+            "No score or result is read."
+        ),
+    }
+
+
 @lru_cache(maxsize=1)
 def _player_feature_rows() -> tuple[dict, ...]:
     if not PLAYER_FEATURES_CSV.exists():
@@ -727,6 +765,16 @@ class MockSource:
                 return out
         return {"error": f"player not found: {player_name}"}
 
+    def schedule(self, as_of_date: str, days_ahead: int = 1) -> dict:
+        """The fixture list is real data, not a fixture value, so mock says so."""
+        return {
+            "source": "mock",
+            "as_of_date": as_of_date,
+            "games": [],
+            "count": 0,
+            "caveat": "MockSource carries no schedule; run with --source real.",
+        }
+
     def player_features(
         self, player_name: str, matchup_id: str, as_of_date: str
     ) -> dict:
@@ -859,6 +907,10 @@ class CsvSource:
             "source": self.name,
             "error": f"player not found in nba_stats: {player_name}",
         }
+
+    def schedule(self, as_of_date: str, days_ahead: int = 1) -> dict:
+        """Fixtures tipping off after as_of. See slate_as_of for why that is safe."""
+        return slate_as_of(parse_date(as_of_date), days_ahead)
 
     def player_features(
         self, player_name: str, matchup_id: str, as_of_date: str
