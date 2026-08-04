@@ -77,6 +77,172 @@ const Chevron = () => (
 	</svg>
 );
 
+
+// Every team's fixtures, built once. A team appears in a game as home or away, so
+// each game lands in two buckets: the picker wants "this team's season", not
+// "this team's home games".
+const BY_TEAM: Record<string, Game[]> = (() => {
+	const out: Record<string, Game[]> = {};
+	for (const g of GAMES) {
+		(out[g.h] ||= []).push(g);
+		(out[g.a] ||= []).push(g);
+	}
+	for (const k of Object.keys(out)) out[k].sort((x, y) => x.d.localeCompare(y.d));
+	return out;
+})();
+const TEAM_CODES = Object.keys(BY_TEAM).sort((a, b) =>
+	(NAMES[a] ?? a).localeCompare(NAMES[b] ?? b),
+);
+
+function GamePicker({
+	open,
+	onClose,
+	onPick,
+	current,
+}: {
+	open: boolean;
+	onClose: () => void;
+	onPick: (g: Game) => void;
+	current: Game;
+}) {
+	const [q, setQ] = useState("");
+	const [expanded, setExpanded] = useState<string | null>(current.h);
+
+	useEffect(() => {
+		if (!open) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") onClose();
+		};
+		window.addEventListener("keydown", onKey);
+		document.body.style.overflow = "hidden";
+		return () => {
+			window.removeEventListener("keydown", onKey);
+			document.body.style.overflow = "";
+		};
+	}, [open, onClose]);
+
+	if (!open) return null;
+
+	const teams = TEAM_CODES.filter((code) =>
+		!q ? true : (code + " " + (NAMES[code] ?? "")).toLowerCase().includes(q.toLowerCase()),
+	);
+
+	return (
+		<div className="sheet" role="dialog" aria-modal="true" aria-label="Choose a game">
+			<div className="sheet-head">
+				<div className="sheet-title">
+					<strong>Choose a game</strong>
+					<span>
+						{GAMES.length.toLocaleString()} games, {TEAM_CODES.length} teams, 2025-26
+					</span>
+				</div>
+				<input
+					type="search"
+					autoFocus
+					value={q}
+					placeholder="Filter teams"
+					onChange={(e) => setQ(e.target.value)}
+				/>
+				<button className="sheet-close" onClick={onClose} aria-label="Close">
+					<svg viewBox="0 0 16 16" {...ICON} width="18" height="18" aria-hidden="true">
+						<path d="M4 4l8 8M12 4l-8 8" />
+					</svg>
+				</button>
+			</div>
+
+			<div className="sheet-body">
+				{teams.length === 0 && <p className="note">No team matches that.</p>}
+				{teams.map((code) => {
+					const isOpen = expanded === code;
+					const games = BY_TEAM[code];
+					return (
+						<div className="team" key={code}>
+							<button
+								className="team-row"
+								aria-expanded={isOpen}
+								onClick={() => setExpanded(isOpen ? null : code)}
+							>
+								<span className="team-chev" data-open={isOpen}>
+									<Chevron />
+								</span>
+								<span className="team-name">{NAMES[code] ?? code}</span>
+								<span className="team-code">{code}</span>
+								<span className="team-count">{games.length} games</span>
+							</button>
+							{isOpen && (
+								<div className="team-games">
+									{games.map((g) => {
+										const opp = g.h === code ? g.a : g.h;
+										const home = g.h === code;
+										return (
+											<button
+												key={g.id}
+												className={
+													"game-row" + (g.id === current.id ? " is-current" : "")
+												}
+												onClick={() => {
+													onPick(g);
+													onClose();
+												}}
+											>
+												<span className="game-date">
+													{new Date(g.d + "T12:00:00").toLocaleDateString(
+														undefined,
+														DAY,
+													)}
+												</span>
+												<span className="game-vs">
+													{home ? "vs" : "at"} {NAMES[opp] ?? opp}
+												</span>
+												<span className="game-id">{g.id}</span>
+											</button>
+										);
+									})}
+								</div>
+							)}
+						</div>
+					);
+				})}
+			</div>
+		</div>
+	);
+}
+
+
+const Sun = () => (
+	<svg viewBox="0 0 16 16" {...ICON} width="15" height="15" aria-hidden="true">
+		<circle cx="8" cy="8" r="3.2" />
+		<path d="M8 1v1.6M8 13.4V15M15 8h-1.6M2.6 8H1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1M12.9 12.9l-1.1-1.1M4.2 4.2L3.1 3.1" />
+	</svg>
+);
+const Moon = () => (
+	<svg viewBox="0 0 16 16" {...ICON} width="15" height="15" aria-hidden="true">
+		<path d="M13.5 9.5A5.8 5.8 0 016.5 2.5a5.8 5.8 0 107 7z" />
+	</svg>
+);
+
+function ThemeToggle() {
+	// Dark is the default because the use scene is a shared screen in a lit room.
+	// The choice is remembered so a presenter who switches once is not switched
+	// back by their OS preference mid-demo.
+	const [theme, setTheme] = useState<"dark" | "light">(
+		() => (localStorage.getItem("theme") as "dark" | "light") ?? "dark",
+	);
+	useEffect(() => {
+		document.documentElement.setAttribute("data-theme", theme);
+		localStorage.setItem("theme", theme);
+	}, [theme]);
+	return (
+		<button
+			className="theme-btn"
+			onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+			aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+		>
+			{theme === "dark" ? <Sun /> : <Moon />}
+		</button>
+	);
+}
+
 function Pill({ ok, label }: { ok: boolean | null; label: string }) {
 	return (
 		<span className="pill">
@@ -187,12 +353,11 @@ function Tldr({ raw, game }: { raw: string; game: Game }) {
 }
 
 function AgentTab({ health }: { health: Health | null }) {
-	const [query, setQuery] = useState("");
 	const [arm, setArm] = useState<"A" | "B" | "C">("C");
+	const [pickerOpen, setPickerOpen] = useState(false);
 	const [matchup, setMatchup] = useState<Game>(
 		GAMES.find((g) => g.id === "CHI-ORL-2025-12-01") ?? GAMES[0],
 	);
-	const hits = GAMES.filter((g) => matches(g, query));
 	const [steps, setSteps] = useState<Step[]>([]);
 	const [final, setFinal] = useState("");
 	const [running, setRunning] = useState(false);
@@ -335,43 +500,15 @@ function AgentTab({ health }: { health: Health | null }) {
 							))}
 						</div>
 					</div>
-					<label className="field grow">
-						<span>Search {GAMES.length.toLocaleString()} games</span>
-						<input
-							type="search"
-							value={query}
-							placeholder="lakers, or BOS, or 2026-01"
-							onChange={(e) => {
-								const q = e.target.value;
-								setQuery(q);
-								const next = GAMES.filter((g) => matches(g, q));
-								if (next.length && !next.some((g) => g.id === matchup.id))
-									setMatchup(next[0]);
-							}}
-						/>
-					</label>
-					<label className="field grow">
-						<span>
-							{hits.length === GAMES.length
-								? "Game to predict"
-								: hits.length === 0
-									? "No game matches that"
-									: `${hits.length} match${hits.length === 1 ? "" : "es"}`}
-						</span>
-						<select
-							value={matchup.id}
-							disabled={hits.length === 0}
-							onChange={(e) =>
-								setMatchup(GAMES.find((g) => g.id === e.target.value) ?? matchup)
-							}
-						>
-							{hits.slice(0, 400).map((g) => (
-								<option key={g.id} value={g.id}>
-									{labelFor(g)}
-								</option>
-							))}
-						</select>
-					</label>
+					<div className="field grow">
+						<span>Game to predict</span>
+						<button className="picker" onClick={() => setPickerOpen(true)}>
+							<span>{labelFor(matchup)}</span>
+							<svg viewBox="0 0 16 16" {...ICON} width="13" height="13" aria-hidden="true">
+								<path d="M4 6l4 4 4-4" />
+							</svg>
+						</button>
+					</div>
 					<label className="field">
 						<span>Knows nothing after</span>
 						<input type="date" value={matchup.asOf} readOnly tabIndex={-1} />
@@ -393,6 +530,13 @@ function AgentTab({ health }: { health: Health | null }) {
 					agent cannot see the result it is being asked to predict.
 				</p>
 			</div>
+
+			<GamePicker
+				open={pickerOpen}
+				onClose={() => setPickerOpen(false)}
+				onPick={setMatchup}
+				current={matchup}
+			/>
 
 			{steps.length > 0 && (
 				<>
@@ -463,7 +607,19 @@ function ToolsTab() {
 							<span className="tool-name">{t.name}</span>
 							<span className="when">{t.use_when}</span>
 							<span className="reads">
-								reads {t.sources.join(", ") || "nothing yet"}
+								reads{" "}
+								{((t as any).source_links ?? []).length === 0
+									? "nothing yet"
+									: ((t as any).source_links as { label: string; url: string; path: string }[]).map(
+											(f, i) => (
+												<span key={f.url}>
+													{i > 0 && ", "}
+													<a href={f.url} target="_blank" rel="noreferrer" title={f.path}>
+														{f.label}
+													</a>
+												</span>
+											),
+										)}
 							</span>
 						</div>
 						<span className={"state " + t.status}>
@@ -862,6 +1018,7 @@ export default function App() {
 						ok={health && health.ollama}
 						label={health?.ollama ? "gemma4 loaded" : "ollama off"}
 					/>
+					<ThemeToggle />
 				</div>
 			</header>
 
