@@ -188,6 +188,7 @@ function Tldr({ raw, game }: { raw: string; game: Game }) {
 
 function AgentTab({ health }: { health: Health | null }) {
 	const [query, setQuery] = useState("");
+	const [arm, setArm] = useState<"A" | "B" | "C">("C");
 	const [matchup, setMatchup] = useState<Game>(
 		GAMES.find((g) => g.id === "CHI-ORL-2025-12-01") ?? GAMES[0],
 	);
@@ -211,13 +212,26 @@ function AgentTab({ health }: { health: Health | null }) {
 		setRunning(true);
 		setElapsed(0);
 		try {
+			if (arm === "A") {
+				const r = await fetch(BRIDGE + "/api/predict", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						matchup_id: matchup.id,
+						as_of_date: matchup.asOf,
+					}),
+				});
+				setFinal(JSON.stringify(await r.json(), null, 2));
+				setRunning(false);
+				return;
+			}
 			const res = await fetch(BRIDGE + "/api/run", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					matchup_id: matchup.id,
 					as_of_date: matchup.asOf,
-					include_model: true,
+					include_model: arm === "C",
 					model_backend: "ollama",
 				}),
 			});
@@ -300,6 +314,27 @@ function AgentTab({ health }: { health: Health | null }) {
 
 			<div className="slab console">
 				<div className="controls">
+					<div className="field">
+						<span>Which approach</span>
+						<div className="segmented" role="group" aria-label="Which approach">
+							{(
+								[
+									["A", "Model only"],
+									["B", "Agent only"],
+									["C", "Both"],
+								] as const
+							).map(([k, label]) => (
+								<button
+									key={k}
+									type="button"
+									aria-pressed={arm === k}
+									onClick={() => setArm(k)}
+								>
+									{label}
+								</button>
+							))}
+						</div>
+					</div>
 					<label className="field grow">
 						<span>Search {GAMES.length.toLocaleString()} games</span>
 						<input
@@ -348,7 +383,12 @@ function AgentTab({ health }: { health: Health | null }) {
 					</button>
 				</div>
 				<p className="note tight" style={{ marginTop: 16 }}>
-					Gemma 4 runs on this laptop and takes roughly 40 seconds a game. Every
+					{arm === "A"
+						? "The fitted model on its own, no language model involved. Returns instantly, because scoring a logistic regression is a dot product. "
+						: arm === "B"
+							? "The agent without the model tool. It has to reason its own way to a probability from the retrieval tools alone. "
+							: "The agent given the model's number as one input among several. "}
+					Every
 					call below is filtered to the as-of date before it returns, so the
 					agent cannot see the result it is being asked to predict.
 				</p>
@@ -390,10 +430,11 @@ function AgentTab({ health }: { health: Health | null }) {
 
 			{final && (
 				<>
-					<h2 className="sec">What it concluded</h2>
+					<h2 className="sec">{arm === "A" ? "What the model returned" : "What it concluded"}</h2>
 					<p className="note">
-						The agent must return valid JSON, including anything it could not
-						find.
+						{arm === "A"
+							? "The eight features it used are in the payload, so the number can be checked by hand."
+							: "The agent must return valid JSON, including anything it could not find."}
 					</p>
 					<pre className="out">{final}</pre>
 					<Tldr raw={final} game={matchup} />
@@ -550,6 +591,131 @@ function DataTab() {
 	);
 }
 
+
+type ArmStat = { n: number; accuracy: number; log_loss: number; brier: number };
+const LABELS: Record<string, string> = {
+	arm_A: "A. Model only",
+	arm_B: "B. Agent only",
+	arm_C: "C. Agent + model",
+	vegas: "Vegas closing line",
+	always_home: "Always pick home",
+};
+
+function pct(n: number) {
+	return (n * 100).toFixed(1) + "%";
+}
+
+function ArmTable({
+	title,
+	note,
+	data,
+	order,
+}: {
+	title: string;
+	note: string;
+	data: Record<string, ArmStat>;
+	order: string[];
+}) {
+	const rows = order.filter((k) => data[k]);
+	const best = rows.reduce((a, b) => (data[b].accuracy > data[a].accuracy ? b : a), rows[0]);
+	return (
+		<>
+			<h2 className="sec">{title}</h2>
+			<p className="note">{note}</p>
+			<div className="tablewrap">
+				<table>
+					<thead>
+						<tr>
+							<th>Approach</th>
+							<th>Accuracy</th>
+							<th>Log loss</th>
+							<th>Brier</th>
+							<th>Games</th>
+						</tr>
+					</thead>
+					<tbody>
+						{rows.map((k) => (
+							<tr key={k}>
+								<td>{LABELS[k] ?? k}</td>
+								{/* Only the leader is coloured. Tinting every arm made a losing
+								    arm read as a good result, which is the opposite of the finding. */}
+								<td className={"mono" + (k === best ? " win" : "")}>
+									{pct(data[k].accuracy)}
+								</td>
+								{/* Always-pick-home predicts a hard 1.0, so its log loss is a
+								    divide-by-epsilon artefact rather than a measurement. */}
+								<td className="mono">
+									{k === "always_home" ? "n/a" : data[k].log_loss.toFixed(3)}
+								</td>
+								<td className="mono">
+									{k === "always_home" ? "n/a" : data[k].brier.toFixed(3)}
+								</td>
+								<td className="mono">{data[k].n.toLocaleString()}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</>
+	);
+}
+
+function CompareTab() {
+	const a = system.arms as any;
+	return (
+		<div className="panel">
+			<h2 className="sec first">Three ways to predict the same games</h2>
+			<p className="note">
+				The project's actual question. Every number below was produced by the replay
+				harness and is reproducible from the CSVs in the repo.
+			</p>
+			<dl className="readout">
+				{Object.entries(a.definitions as Record<string, string>).map(([k, v]) => (
+					<Row key={k} term={LABELS[k] ?? k}>
+						<span style={{ fontFamily: "var(--sans)", fontSize: 14, color: "var(--ink-2)" }}>
+							{v}
+						</span>
+					</Row>
+				))}
+			</dl>
+
+			<ArmTable
+				title="The full season"
+				note="Every game of 2025-26. Only the model can be run at this scale: the agent takes about 40 seconds a game locally, which is 15 hours for the season."
+				data={a.season}
+				order={["arm_A", "vegas", "always_home"]}
+			/>
+
+			<ArmTable
+				title="All three arms, 40 games"
+				note="The same 40 games given to each approach. This is the comparison the report is built around, and the result was negative: handing the agent the model's number made it worse than the model alone."
+				data={a.sample40}
+				order={["arm_A", "arm_B", "arm_C", "vegas", "always_home"]}
+			/>
+
+			<ArmTable
+				title="A second sample, different seed"
+				note="A different 40 games, to check the first sample was not a fluke. It was not."
+				data={a.sample40_seed1}
+				order={["arm_A", "arm_B", "arm_C", "vegas", "always_home"]}
+			/>
+
+			<ArmTable
+				title="After the skills layer was added"
+				note="The same 40 games as the first sample, with nothing changed but the written rules the agent is given. Arm C recovered most of the gap without a line of code changing."
+				data={a.skills_after}
+				order={["arm_A", "arm_C", "vegas"]}
+			/>
+
+			<p className="note" style={{ marginTop: 22 }}>
+				Forty games is a small sample and these are single runs, so treat the
+				direction as the finding and not the decimal. The season row is the one with
+				statistical weight behind it.
+			</p>
+		</div>
+	);
+}
+
 function SystemTab() {
 	const { llm, win_model, stat_model, baselines, gate_rules } = system;
 	const pct = (n: number) => (n * 100).toFixed(1) + "%";
@@ -659,7 +825,7 @@ function SystemTab() {
 }
 
 export default function App() {
-	const [tab, setTab] = useState<"agent" | "prompt" | "tools" | "data" | "system">("agent");
+	const [tab, setTab] = useState<"agent" | "compare" | "prompt" | "tools" | "data" | "system">("agent");
 	const [health, setHealth] = useState<Health | null>(null);
 
 	useEffect(() => {
@@ -703,6 +869,7 @@ export default function App() {
 				{(
 					[
 						["agent", "Agent"],
+						["compare", "Compare"],
 						["prompt", "Prompt"],
 						["tools", "Tools"],
 						["data", "Data"],
@@ -721,6 +888,7 @@ export default function App() {
 			</nav>
 
 			{tab === "agent" && <AgentTab health={health} />}
+			{tab === "compare" && <CompareTab />}
 			{tab === "prompt" && <PromptTab />}
 			{tab === "tools" && <ToolsTab />}
 			{tab === "data" && <DataTab />}

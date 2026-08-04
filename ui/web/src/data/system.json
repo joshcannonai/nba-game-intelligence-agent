@@ -260,5 +260,124 @@
       "kb": 4578,
       "url": "https://github.com/joshcannonai/nba-game-intelligence-agent/blob/josh/final-readme-and-report/data/raw/nba_stats_1947_present/Player Per Game.csv"
     }
-  ]
+  ],
+  "arms": {
+    "season": {
+      "arm_A": {
+        "n": 1322,
+        "accuracy": 0.6641,
+        "log_loss": 0.6118,
+        "brier": 0.2116
+      },
+      "vegas": {
+        "n": 1322,
+        "accuracy": 0.6899,
+        "log_loss": 0.5782,
+        "brier": 0.1977
+      },
+      "always_home": {
+        "n": 1322,
+        "accuracy": 0.5552,
+        "log_loss": 15.3622,
+        "brier": 0.4448
+      }
+    },
+    "sample40": {
+      "arm_A": {
+        "n": 40,
+        "accuracy": 0.75,
+        "log_loss": 0.5782,
+        "brier": 0.1965
+      },
+      "arm_B": {
+        "n": 40,
+        "accuracy": 0.575,
+        "log_loss": 0.6577,
+        "brier": 0.2323
+      },
+      "arm_C": {
+        "n": 40,
+        "accuracy": 0.55,
+        "log_loss": 0.6754,
+        "brier": 0.2409
+      },
+      "vegas": {
+        "n": 40,
+        "accuracy": 0.575,
+        "log_loss": 0.6488,
+        "brier": 0.2278
+      },
+      "always_home": {
+        "n": 40,
+        "accuracy": 0.5,
+        "log_loss": 17.2694,
+        "brier": 0.5
+      }
+    },
+    "sample40_seed1": {
+      "arm_A": {
+        "n": 40,
+        "accuracy": 0.7,
+        "log_loss": 0.5567,
+        "brier": 0.1871
+      },
+      "arm_B": {
+        "n": 40,
+        "accuracy": 0.625,
+        "log_loss": 0.6394,
+        "brier": 0.2242
+      },
+      "arm_C": {
+        "n": 40,
+        "accuracy": 0.625,
+        "log_loss": 0.6723,
+        "brier": 0.2352
+      },
+      "vegas": {
+        "n": 40,
+        "accuracy": 0.775,
+        "log_loss": 0.4683,
+        "brier": 0.1514
+      },
+      "always_home": {
+        "n": 40,
+        "accuracy": 0.625,
+        "log_loss": 12.952,
+        "brier": 0.375
+      }
+    },
+    "skills_after": {
+      "arm_A": {
+        "n": 40,
+        "accuracy": 0.75,
+        "log_loss": 0.5782,
+        "brier": 0.1965
+      },
+      "arm_C": {
+        "n": 40,
+        "accuracy": 0.65,
+        "log_loss": 0.5957,
+        "brier": 0.2048
+      },
+      "vegas": {
+        "n": 40,
+        "accuracy": 0.575,
+        "log_loss": 0.6488,
+        "brier": 0.2278
+      },
+      "always_home": {
+        "n": 40,
+        "accuracy": 0.5,
+        "log_loss": 17.2694,
+        "brier": 0.5
+      }
+    },
+    "definitions": {
+      "arm_A": "The fitted model alone. No language model involved.",
+      "arm_B": "The agent with the retrieval tools only. It has to reason its own way to a probability.",
+      "arm_C": "The agent given the model's number as one input among several.",
+      "vegas": "The closing line, converted to a probability. Never available to the agent.",
+      "always_home": "Pick the home team every time."
+    }
+  }
 }

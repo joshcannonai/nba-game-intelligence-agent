@@ -180,12 +180,14 @@ select, input[type="date"] {
   padding: 10px 12px;
   min-width: 216px;
 }
-/* The game label carries two full team names and a dated year, so it needs room.
-   Let it take the slack in the row rather than truncating the thing it names. */
-.controls .field:nth-child(2) { flex: 1 1 340px; min-width: 0; }
-.controls .field:nth-child(2) select { width: 100%; min-width: 0; }
-.controls .field:first-child { flex: 0 1 230px; min-width: 0; }
-.controls .field:first-child input { width: 100%; min-width: 0; }
+/* Row order is: arm selector, search box, game select, as-of date, run button.
+   The game label carries two full team names and a year, so it takes the slack;
+   the arm selector must never shrink or its last option gets clipped. */
+.controls > .field:nth-child(1) { flex: 0 0 auto; }
+.controls > .field:nth-child(2) { flex: 0 1 230px; min-width: 0; }
+.controls > .field:nth-child(2) input { width: 100%; min-width: 0; }
+.controls > .field:nth-child(3) { flex: 1 1 340px; min-width: 0; }
+.controls > .field:nth-child(3) select { width: 100%; min-width: 0; }
 input[type="date"] { min-width: 150px; }
 input[type="date"] { color: var(--ink-2); }
 select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
@@ -456,3 +458,22 @@ select:disabled { opacity: 0.5; }
 /* The composed prompt is long, so give it a ceiling and let it scroll in place
    rather than turning the tab into an endless column. */
 .panel pre.out { max-height: 34rem; overflow-y: auto; }
+
+/* arm selector */
+.segmented { display: inline-flex; border: 1px solid var(--rule); border-radius: 7px; overflow: hidden; background: var(--raised); }
+.segmented button {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+  background: none;
+  border: none;
+  padding: 10px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.12s, background 0.12s;
+}
+.segmented button + button { border-left: 1px solid var(--rule); }
+.segmented button:hover { color: var(--ink); }
+.segmented button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.segmented button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }

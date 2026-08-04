@@ -107,6 +107,34 @@ def health() -> dict:
     }
 
 
+
+class PredictRequest(BaseModel):
+    matchup_id: str
+    as_of_date: str
+
+
+@app.post("/api/predict")
+def predict_only(req: PredictRequest) -> dict:
+    """Arm A: the fitted model on its own, no language model in the loop.
+
+    Instant, because scoring a logistic regression is a dot product. Having this
+    next to the agent is the point of the comparison: the same game, the same
+    as-of date, one answer from a model and one from a model plus an agent.
+    """
+    from agent.sources import parse_matchup_id
+    from models.predict import model_available, predict
+
+    away, home, _ = parse_matchup_id(req.matchup_id)
+    if not model_available():
+        return {
+            "status": "awaiting_input",
+            "needs": "models/win_probability.json is missing. Run `python -m models.train`.",
+        }
+    out = predict(home, away, req.as_of_date)
+    out["arm"] = "A"
+    return out
+
+
 def _sse(event: str, data: dict) -> str:
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
