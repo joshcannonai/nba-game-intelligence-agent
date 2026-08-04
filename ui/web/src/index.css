@@ -180,6 +180,13 @@ select, input[type="date"] {
   padding: 10px 12px;
   min-width: 216px;
 }
+/* The game label carries two full team names and a dated year, so it needs room.
+   Let it take the slack in the row rather than truncating the thing it names. */
+.controls .field:nth-child(2) { flex: 1 1 340px; min-width: 0; }
+.controls .field:nth-child(2) select { width: 100%; min-width: 0; }
+.controls .field:first-child { flex: 0 1 230px; min-width: 0; }
+.controls .field:first-child input { width: 100%; min-width: 0; }
+input[type="date"] { min-width: 150px; }
 input[type="date"] { color: var(--ink-2); }
 select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 

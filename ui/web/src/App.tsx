@@ -30,7 +30,12 @@ type Game = { id: string; d: string; a: string; h: string; asOf: string };
 const GAMES: Game[] = schedule.games;
 const NAMES: Record<string, string> = schedule.names;
 
-const DAY = { weekday: "short", month: "short", day: "numeric" } as const;
+const DAY = {
+	weekday: "short",
+	month: "short",
+	day: "numeric",
+	year: "numeric",
+} as const;
 function labelFor(g: Game) {
   const when = new Date(g.d + "T12:00:00").toLocaleDateString(undefined, DAY);
   return `${NAMES[g.a] ?? g.a} at ${NAMES[g.h] ?? g.h}  ·  ${when}`;
