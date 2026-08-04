@@ -136,25 +136,64 @@ def chat_is_up(url: str) -> bool:
 
 st.title("🏀 NBA Game Intelligence Agent")
 st.markdown(
-    '<div class="lede">Pick a game, then pick a date you are asking <b>from</b>. '
-    "The system answers using only what was knowable that morning — no future "
-    "information reaches the prediction. That constraint is the point: it is what "
-    "lets us test on a season that has already happened without the model simply "
-    "remembering the result.<br><span style='opacity:.65'>CECS 499 · Josh Cannon · "
-    "agent lane</span></div>",
+    '<div class="lede">Predicting who wins an NBA game — using only information that '
+    "existed <b>before</b> the game was played."
+    "<br><span style='opacity:.65'>CECS 499 senior capstone · University of Tennessee · "
+    "Josh Cannon, Patrick Haley, Sarvesh Vinod Kumar, Kirtan Patel</span></div>",
     unsafe_allow_html=True,
 )
 
+# First-time visitors get this open; it collapses once they have interacted, so it
+# does not become furniture for anyone using the page repeatedly.
+if "seen_intro" not in st.session_state:
+    st.session_state.seen_intro = False
+
+with st.expander("**New here? Start with this**", expanded=not st.session_state.seen_intro):
+    st.markdown(
+        """
+**What this does.** Pick any NBA game from a past season. Pick a date *before* it was
+played. The system predicts who wins, using only what was known on that date.
+
+**Why that matters.** Testing a prediction on a game that already happened is easy to
+get wrong. If the system can peek at the result — or if the AI simply *remembers* it —
+you get a great-looking score that means nothing. Everything here is built to make
+peeking impossible, and then to prove it.
+
+**What you are looking at.**
+
+| Tab | What it shows |
+|---|---|
+| **The prediction** | Who we think wins, and every fact behind that number |
+| **What the AI can see** | The seven functions the AI is allowed to call. That's its whole world. |
+| **Proof it can't cheat** | The same game asked from three different dates. Watch the injury list change. |
+| **What's built** | An honest status board, including the parts we never finished |
+
+**A few words you'll see:**
+
+- **As-of date** — the day you're pretending it is. Nothing after it is visible.
+- **Win probability** — our confidence, 0–100%. 50% means a coin flip.
+- **The predictor** — a statistical model. No AI involved.
+- **The agent** — an AI chatbot that calls the seven functions and writes the summary.
+
+*Nothing on this page is pre-written or faked. Every number is computed live when you
+change a setting.*
+        """
+    )
+st.session_state.seen_intro = True
+
 # ---------------------------------------------------------------- sidebar
 with st.sidebar:
-    st.header("Matchup")
+    st.header("Pick a game")
     # Discovered from disk, newest first, so a season landing in data/samples
     # shows up without editing this list. 2026 is the replay/test season.
     seasons = sorted(
         (int(p.stem.rsplit("_", 1)[1]) for p in SAMPLE_DIR.glob("game_logs_*.csv")),
         reverse=True,
     )
-    season = st.selectbox("Season sample", seasons, index=0)
+    season = st.selectbox(
+        "Season", seasons, index=0,
+        help="Which season to pick a game from. 2026 means the 2025-26 season.",
+    )
     games = load_games(season)
 
     if not games:
@@ -180,19 +219,25 @@ with st.sidebar:
     matchup_id = f"{game['away']}-{game['home']}-{game['game_date']}"
     tip = parse_iso(game["game_date"])
     as_of = st.date_input(
-        "As-of date (what we knew)",
+        "Pretend it is this date",
         value=tip - timedelta(days=1),
         max_value=tip - timedelta(days=1),
+        help="The system will only use information that existed on this date. "
+        "You cannot pick a date on or after the game — that is the whole point.",
     )
     st.caption(f"`{matchup_id}`")
 
-    source_kind = st.radio("Data source", ["real", "mock"], horizontal=True)
+    source_kind = st.radio(
+        "Data", ["real", "mock"], horizontal=True,
+        help="'real' uses the actual NBA datasets. 'mock' uses a small fixed example, "
+        "which is what the tests run against.",
+    )
 
     # The advisor's architecture (2026-07-28): gate the data on disk first,
     # then point the agent at only that copy. Off by default because it costs a
     # subprocess per run; the query-time filter is always on either way.
     pregate = st.checkbox(
-        "Pre-gate data on disk",
+        "Delete the future before running",
         value=False,
         help="Copy only what was knowable by the as-of date into "
         "data/snapshots/<date>, then run the agent against that directory.",
@@ -215,7 +260,7 @@ source = get_source(source_kind)
 as_of_str = as_of.isoformat()
 
 report_tab, tools_tab, gating_tab, status_tab = st.tabs(
-    ["Pregame report", "Agent tools", "Date-gating proof", "Build status"]
+    ["The prediction", "What the AI can see", "Proof it can't cheat", "What's built"]
 )
 
 # ---------------------------------------------------------------- report
@@ -284,8 +329,9 @@ with report_tab:
 
     st.subheader("What drove it")
     st.markdown(
-        '<div class="lede">Every line is a real value pulled through a tool and filtered '
-        "to the as-of date. None of this is written by an LLM.</div>",
+        '<div class="lede">Every line below is a real number the system looked up, '
+        "filtered to the date you picked. None of it is written by an AI — this is the "
+        "evidence the prediction was built from.</div>",
         unsafe_allow_html=True,
     )
     for factor in report.get("key_factors", []):
@@ -321,7 +367,7 @@ with report_tab:
 
 # ---------------------------------------------------------------- tools
 with tools_tab:
-    st.subheader("What the agent is allowed to do")
+    st.subheader("The seven things the AI is allowed to do")
     st.markdown(
         '<div class="lede">These seven functions are the agent\'s entire world. It cannot '
         "query a database, browse the web, or invent a number — it can only call these, "
@@ -371,11 +417,12 @@ with tools_tab:
 
 # ---------------------------------------------------------------- gating
 with gating_tab:
-    st.subheader("Same game, three different days of knowledge")
+    st.subheader("The same game, asked from three different days")
     st.caption(
-        "The 2025-26 season already happened, so any online LLM may remember the "
-        "results. Every query carries an as-of date and returns only records from "
-        "before it -- this is what makes leakage-free replay possible."
+        "This is the proof. Below is one single game, asked three times from three "
+        "different dates. Because the system can only see what existed on each date, "
+        "the injury lists differ — and so does the prediction. If it were secretly "
+        "reading the final result, these three columns would be identical."
     )
 
     probe_dates = [
@@ -436,7 +483,7 @@ with gating_tab:
 
 # ---------------------------------------------------------------- status
 with status_tab:
-    st.subheader("What is built, and what is blocked")
+    st.subheader("What works, and what we never finished")
     st.caption(
         "Generated by probing all seven tools -- `python -m agent.run --status`. "
         "Owners come from the tool contracts in `agent/tools.py`."
