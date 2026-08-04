@@ -448,3 +448,11 @@ select:disabled { opacity: 0.5; }
 .reasons li { font-size: 14.5px; color: var(--ink-2); line-height: 1.6; }
 .reasons li::marker { color: var(--accent); }
 .reasons .none { margin: 0; font-size: 14.5px; color: var(--ink-3); }
+
+/* Prompt and Data tabs */
+.tablewrap a { color: var(--accent); text-decoration: none; }
+.tablewrap a:hover { text-decoration: underline; }
+.tablewrap a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+/* The composed prompt is long, so give it a ceiling and let it scroll in place
+   rather than turning the tab into an endless column. */
+.panel pre.out { max-height: 34rem; overflow-y: auto; }

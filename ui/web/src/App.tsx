@@ -433,16 +433,119 @@ function ToolsTab() {
 							<div className="foot">
 								<details>
 									<summary>
-										<Chevron />
-										the rules it is given
+										<Chevron />{" "}{t.skill_path}
 									</summary>
-									<pre>{t.skill}</pre>
+									<pre>{t.skill_raw ?? t.skill}</pre>
 								</details>
 							</div>
 						)}
 					</div>
 				))}
 			</div>
+		</div>
+	);
+}
+
+
+function PromptTab() {
+	const p = system.prompt;
+	return (
+		<div className="panel">
+			<h2 className="sec first">Exactly what the model is told</h2>
+			<p className="note">
+				This is the complete string handed to Gemma on every run, not a summary of
+				it. It is assembled at startup from two places: the base rules in{" "}
+				<code>{p.base_in}</code>, and a block composed from the{" "}
+				<code>skills/</code> files by <code>{p.composed_in}</code>. Nothing else
+				reaches the model except tool results.
+			</p>
+			<dl className="readout">
+				<Row term="Base rules">
+					{p.base_chars.toLocaleString()} characters
+					<span className="after">{p.base_in}</span>
+				</Row>
+				<Row term="Tool skills block">
+					{p.skills_chars.toLocaleString()} characters
+					<span className="after">composed from skills/*.md at startup</span>
+				</Row>
+				<Row term="Total sent to the model">
+					<em>{p.total_chars.toLocaleString()} characters</em>
+					<span className="after">every run</span>
+				</Row>
+				<Row term="Same prompt without the model tool">
+					{p.arm_b_total.toLocaleString()} characters
+					<span className="after">
+						the {(p.total_chars - p.arm_b_total).toLocaleString()} character
+						difference is the entire experiment
+					</span>
+				</Row>
+			</dl>
+
+			<h2 className="sec">The base rules</h2>
+			<p className="note">
+				These say when to call what, and what to do when something is missing. The
+				rule about never quoting a betting line is here rather than in a skill,
+				because it applies whether or not the tool exists.
+			</p>
+			<pre className="out">{p.base}</pre>
+
+			<h2 className="sec">The tool skills block, appended after it</h2>
+			<p className="note">
+				One entry per tool the agent was actually given. This is where "when to read
+				it and how to weight it" lives: each entry states when to call the tool, how
+				to read what comes back, and the rules it must follow. Editing a{" "}
+				<code>skills/*.md</code> file changes behaviour with no code change, which is
+				why the evaluation is re-run after any edit.
+			</p>
+			<pre className="out">{p.skills_block}</pre>
+		</div>
+	);
+}
+
+function DataTab() {
+	return (
+		<div className="panel">
+			<h2 className="sec first">Everything it reads</h2>
+			<p className="note">
+				Nine files on disk. No database, no API calls at run time, no network. Two of
+				them are rebuilt copies with the answer columns removed, because the raw
+				versions keep the result in the same row as the inputs.
+			</p>
+			<div className="tablewrap">
+				<table>
+					<thead>
+						<tr>
+							<th>File</th>
+							<th>What it is</th>
+							<th>Rows</th>
+							<th>Size</th>
+							<th>Collected by</th>
+						</tr>
+					</thead>
+					<tbody>
+						{system.datasets.map((f) => (
+							<tr key={f.path}>
+								<td className="mono">
+									<a href={f.url} target="_blank" rel="noreferrer">
+										{f.path.split("/").pop()}
+									</a>
+								</td>
+								<td>{f.what}</td>
+								<td className="mono">{f.rows?.toLocaleString() ?? "?"}</td>
+								<td className="mono">{f.kb.toLocaleString()} KB</td>
+								<td>{f.who}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+			<p className="note" style={{ marginTop: 16 }}>
+				<code>player_features_2026.csv</code> and <code>odds_only.csv</code> are the
+				stripped copies. The engineered export keeps a player's points beside the
+				rolling averages that predict them, and the raw odds file keeps the final
+				score beside the line, so the agent reads versions with those columns
+				removed. Tests assert they stay removed.
+			</p>
 		</div>
 	);
 }
@@ -556,7 +659,7 @@ function SystemTab() {
 }
 
 export default function App() {
-	const [tab, setTab] = useState<"agent" | "tools" | "system">("agent");
+	const [tab, setTab] = useState<"agent" | "prompt" | "tools" | "data" | "system">("agent");
 	const [health, setHealth] = useState<Health | null>(null);
 
 	useEffect(() => {
@@ -600,7 +703,9 @@ export default function App() {
 				{(
 					[
 						["agent", "Agent"],
+						["prompt", "Prompt"],
 						["tools", "Tools"],
+						["data", "Data"],
 						["system", "System"],
 					] as const
 				).map(([k, label]) => (
@@ -616,7 +721,9 @@ export default function App() {
 			</nav>
 
 			{tab === "agent" && <AgentTab health={health} />}
+			{tab === "prompt" && <PromptTab />}
 			{tab === "tools" && <ToolsTab />}
+			{tab === "data" && <DataTab />}
 			{tab === "system" && <SystemTab />}
 		</div>
 	);
