@@ -59,11 +59,11 @@ agent overruled the number it was given, it was wrong 15 times out of 19 (two po
 instead of adding it. That result is the main finding of the project.
 
 We then acted on it. Each tool was given a written rule set — including an explicit
-instruction not to re-price injuries on top of the model — and re-scored on the same 40
-games. The agent overruled less often (12 → 8) and its accuracy rose from 55.0% to 65.0%,
-recovering about half the gap to the model alone. One sample at n = 40, so directional
-rather than established, but it moves in the direction and by the mechanism the original
-finding predicted.
+instruction not to re-price injuries on top of the model — and re-scored on the same
+games. Across two 40-game samples the agent overruled less often (19 → 11) and its
+accuracy rose from 58.8% to 66.3%, recovering about half the gap to the model alone. It
+replicates on both seeds, in the direction and by the mechanism the original finding
+predicted.
 
 ---
 
@@ -566,34 +566,42 @@ it:
 we did about it — written rules per tool, including an explicit instruction not to
 re-price injuries on top of the model's number.
 
-We then re-ran arm C on **the same 40 games** (seed 0), changing nothing but the prompt:
+We then re-ran arm C on **the same games**, changing nothing but the prompt. Both 40-game
+samples, before and after:
 
 | | arm A | arm C before | arm C after |
 |---|---|---|---|
-| accuracy | 75.0% | 55.0% | **65.0%** |
-| log loss | 0.578 | 0.675 | **0.596** |
-| Brier | 0.197 | 0.241 | **0.205** |
-| overrides | — | 12 | **8** |
-| of which the model was right | — | 10 | 6 |
+| **seed 0** (n=40) | 75.0% | 55.0% | **65.0%** |
+| **seed 1** (n=40) | 70.0% | 62.5% | **67.5%** |
+| **pooled** (n=80) | **72.5%** | **58.8%** | **66.3%** |
 
-Arm C closed about half the gap to the model it was given. The mechanism is the one we
-predicted: it overrules less often (12 → 8). It is not simply parroting the model either
-— arm C matched arm A exactly on only 1 of 40 games, so it is still adjusting, just less
+| pooled | before | after |
+|---|---|---|
+| log loss | 0.674 | **0.591** |
+| Brier | 0.238 | **0.203** |
+| overrides | 19 of 80 (24%) | **11 of 80 (14%)** |
+| overrides where the model was right | 15 | 8 |
+
+Arm C closed roughly **half the gap** to the model it was given — from 13.7 points behind
+to 6.2. It replicates on both seeds, in the same direction, by the mechanism we predicted:
+it overrules less often. It is not simply parroting the model either — on seed 0 arm C
+matched arm A exactly on only 1 of 40 games, so it is still adjusting, just less
 destructively.
 
-Three caveats, because this is one sample:
+Three caveats that still apply:
 
-1. **n = 40.** The ±8% band applies here as much as anywhere. A 10-point move is
-   suggestive, not established.
-2. **The override test is now under-powered, not passed.** Eight overrides with 2
-   successes gives p ≈ 0.29. Overruling still looks bad; there is simply less of it to
-   measure. Do not report this as "the problem is fixed".
-3. **Same seed, same games.** It is a paired before/after on one sample, which is the
-   right design for detecting the change, and not a replication.
+1. **n = 80 across two samples.** Better than one, still small. The ±8% per-sample band
+   has not gone away.
+2. **The override test is under-powered now, not passed.** Eleven overrides with 3
+   successes is p ≈ 0.23. Overruling still looks bad — there is simply less of it to
+   measure. This is not "the problem is solved".
+3. **Before and after share the sampled games but not the run.** It is a paired
+   before/after, which is the right design for detecting a change, and it is not a
+   controlled trial of prompt variants.
 
-The honest summary: constraining the agent with written rules recovered a large part of
-what the explanation layer was costing, in the direction and by the mechanism the
-original finding predicted. Confirming it needs a second seed.
+The honest summary: written rules recovered a large part of what the explanation layer was
+costing, consistently across two samples, in the direction and by the mechanism the
+original finding predicted.
 
 ---
 
