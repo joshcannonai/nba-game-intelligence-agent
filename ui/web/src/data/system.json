@@ -225,8 +225,8 @@
     }
   },
   "baselines": {
-    "always_home": 0.555,
-    "vegas_closing": 0.69
+    "always_home": 0.5552,
+    "vegas_closing": 0.6899
   },
   "gate_rules": [
     {
@@ -334,7 +334,7 @@
     "season": {
       "arm_A": {
         "n": 1322,
-        "accuracy": 0.6641,
+        "accuracy": 0.6649,
         "log_loss": 0.6118,
         "brier": 0.2116
       },

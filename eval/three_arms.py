@@ -329,11 +329,14 @@ def main() -> None:
                     "home": r.home,
                     "away": r.away,
                     "actual_home_win": r.home_won,
-                    "vegas": round(vegas[r.game_id], 4) if r.game_id in vegas else "",
+                    # 6dp, not 4. At 4 a probability of 0.499967 writes as 0.5000 and the
+# scorer then reads it as a home pick, which cost exactly one game and
+# made this file disagree with models/win_probability.json by 0.08%.
+                    "vegas": round(vegas[r.game_id], 6) if r.game_id in vegas else "",
                 }
                 for k, probs in per_game_probs.items():
                     row[f"arm_{k}"] = (
-                        round(probs[r.game_id], 4) if r.game_id in probs else ""
+                        round(probs[r.game_id], 6) if r.game_id in probs else ""
                     )
                 w.writerow(row)
         print(f"\nwrote {p}")
