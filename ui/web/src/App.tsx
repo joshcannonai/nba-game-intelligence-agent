@@ -816,6 +816,62 @@ function ArmTable({
 	);
 }
 
+
+function AblationSection() {
+	const a = (system as any).ablation;
+	if (!a) return null;
+	return (
+		<>
+			<h2 className="sec">What each tool is actually worth</h2>
+			<p className="note">
+				Remove one tool, run the identical {a.n} games again, and the change in
+				accuracy is that tool's contribution. Run on the agent-only arm: with the
+				model tool present the agent defers to the model, and removing a retrieval
+				tool changed the output not at all.
+			</p>
+			<div className="tablewrap">
+				<table>
+					<thead>
+						<tr>
+							<th>Tools given</th>
+							<th>Accuracy</th>
+							<th>Log loss</th>
+							<th>Cost of removing it</th>
+						</tr>
+					</thead>
+					<tbody>
+						{a.rows.map((r: any) => (
+							<tr key={r.label}>
+								<td>{r.is_baseline ? "everything" : r.label.replace("without ", "no ")}</td>
+								<td
+									className={
+										"mono" +
+										(r.accuracy < a.always_home ? " bad" : r.is_baseline ? " win" : "")
+									}
+								>
+									{(r.accuracy * 100).toFixed(1)}%
+								</td>
+								<td className="mono">{r.log_loss.toFixed(3)}</td>
+								<td className="mono">
+									{r.is_baseline ? "" : (r.delta * 100).toFixed(1) + " pts"}
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+			<p className="note" style={{ marginTop: 16 }}>
+				Current form is load-bearing: without it the agent falls to 52%, which is
+				below the {(a.always_home * 100).toFixed(1)}% you get from blindly picking
+				the home team. It is carrying negative information at that point. The injury
+				tool costs nothing to remove, which independently replicates the within-team
+				measurement that found no effect for a missing 20-point scorer. Two unrelated
+				methods, same answer. n = {a.n}, so roughly a plus or minus 7 point band.
+			</p>
+		</>
+	);
+}
+
 function CompareTab() {
 	const a = system.arms as any;
 	return (
@@ -862,6 +918,8 @@ function CompareTab() {
 				data={a.skills_after}
 				order={["arm_A", "arm_C", "vegas"]}
 			/>
+
+			<AblationSection />
 
 			<p className="note" style={{ marginTop: 22 }}>
 				Forty games is a small sample and these are single runs, so treat the

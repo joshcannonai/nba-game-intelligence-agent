@@ -448,5 +448,34 @@
       "vegas": "The closing line, converted to a probability. Never available to the agent.",
       "always_home": "Pick the home team every time."
     }
+  },
+  "ablation": {
+    "arm": "B",
+    "n": 50,
+    "seed": 0,
+    "always_home": 0.555,
+    "rows": [
+      {
+        "label": "all tools",
+        "accuracy": 0.62,
+        "log_loss": 0.668,
+        "delta": 0.0,
+        "is_baseline": true
+      },
+      {
+        "label": "without retrieve_injuries",
+        "accuracy": 0.62,
+        "log_loss": 0.6571,
+        "delta": 0.0,
+        "is_baseline": false
+      },
+      {
+        "label": "without retrieve_team_form",
+        "accuracy": 0.52,
+        "log_loss": 0.7013,
+        "delta": -0.1,
+        "is_baseline": false
+      }
+    ]
   }
 }
