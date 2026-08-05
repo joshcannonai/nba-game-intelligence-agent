@@ -360,15 +360,15 @@
       },
       "arm_B": {
         "n": 40,
-        "accuracy": 0.575,
-        "log_loss": 0.6577,
-        "brier": 0.2323
+        "accuracy": 0.675,
+        "log_loss": 0.6364,
+        "brier": 0.222
       },
       "arm_C": {
         "n": 40,
-        "accuracy": 0.55,
-        "log_loss": 0.6754,
-        "brier": 0.2409
+        "accuracy": 0.65,
+        "log_loss": 0.5957,
+        "brier": 0.2048
       },
       "vegas": {
         "n": 40,
@@ -447,7 +447,8 @@
       "arm_C": "The agent given the model's number as one input among several.",
       "vegas": "The closing line, converted to a probability. Never available to the agent.",
       "always_home": "Pick the home team every time."
-    }
+    },
+    "sample40_note": "Re-run 2026-08-04 on the current build, all seven tools live."
   },
   "ablation": {
     "arm": "B",
