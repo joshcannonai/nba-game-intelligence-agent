@@ -1,0 +1,189 @@
+{
+  "model": "ridge_stat_line_v1",
+  "trained_by": "josh",
+  "feature_names": [
+    "rolling_pts_5",
+    "rolling_reb_5",
+    "rolling_ast_5",
+    "rolling_min_5",
+    "rolling_pts_10",
+    "rolling_reb_10",
+    "rolling_ast_10",
+    "rolling_min_10",
+    "rolling_fg_pct_5",
+    "rolling_3p_pct_5",
+    "home_away_pts_avg",
+    "home_away_reb_avg",
+    "home_away_ast_avg",
+    "rest_days",
+    "is_back_to_back",
+    "is_home"
+  ],
+  "scaler_mean": [
+    11.090547,
+    3.926665,
+    2.614427,
+    23.098043,
+    11.02865,
+    3.905596,
+    2.592201,
+    22.950294,
+    0.454754,
+    0.340694,
+    10.826778,
+    3.835968,
+    2.507266,
+    2.129979,
+    0.172072,
+    0.501415
+  ],
+  "scaler_scale": [
+    7.566137,
+    2.611726,
+    2.217797,
+    9.682458,
+    7.337636,
+    2.499897,
+    2.13362,
+    9.458662,
+    0.114951,
+    0.173133,
+    7.24532,
+    2.430694,
+    2.061109,
+    0.981434,
+    0.377443,
+    0.499998
+  ],
+  "alpha": 1.0,
+  "train_seasons": [
+    2024
+  ],
+  "test_season": 2025,
+  "targets": {
+    "points": {
+      "coefficients": [
+        1.822371,
+        0.053881,
+        0.134345,
+        0.911204,
+        2.438318,
+        0.310423,
+        0.293738,
+        -0.597013,
+        -0.414671,
+        -0.135516,
+        2.149892,
+        -0.135406,
+        -0.127613,
+        -0.096021,
+        0.067353,
+        0.061565
+      ],
+      "intercept": 11.172507,
+      "metrics": {
+        "train": {
+          "n": 22973,
+          "mae": 4.693,
+          "rmse": 6.1229,
+          "r2": 0.551
+        },
+        "test": {
+          "n": 23944,
+          "mae": 4.888,
+          "rmse": 6.4314,
+          "r2": 0.479
+        },
+        "test_trailing_5_baseline": {
+          "n": 23944,
+          "mae": 4.9485,
+          "rmse": 6.5037,
+          "r2": 0.4672
+        }
+      }
+    },
+    "total_rebounds": {
+      "coefficients": [
+        -0.155536,
+        0.183183,
+        -0.016704,
+        0.744678,
+        0.189521,
+        1.368283,
+        0.104354,
+        -0.707628,
+        0.12861,
+        -0.092321,
+        0.024731,
+        0.635425,
+        -0.091999,
+        -0.012534,
+        0.015984,
+        0.02271
+      ],
+      "intercept": 3.953424,
+      "metrics": {
+        "train": {
+          "n": 22973,
+          "mae": 1.8461,
+          "rmse": 2.4253,
+          "r2": 0.4615
+        },
+        "test": {
+          "n": 23944,
+          "mae": 1.8821,
+          "rmse": 2.4686,
+          "r2": 0.4462
+        },
+        "test_trailing_5_baseline": {
+          "n": 23944,
+          "mae": 1.9627,
+          "rmse": 2.5919,
+          "r2": 0.3894
+        }
+      }
+    },
+    "assists": {
+      "coefficients": [
+        0.085086,
+        -0.011624,
+        0.327637,
+        0.334843,
+        0.191369,
+        -0.006426,
+        0.936009,
+        -0.321613,
+        -0.011238,
+        0.012647,
+        -0.073513,
+        -0.031487,
+        0.608861,
+        -0.026768,
+        0.005426,
+        0.036393
+      ],
+      "intercept": 2.643843,
+      "metrics": {
+        "train": {
+          "n": 22973,
+          "mae": 1.4004,
+          "rmse": 1.8926,
+          "r2": 0.5198
+        },
+        "test": {
+          "n": 23944,
+          "mae": 1.4197,
+          "rmse": 1.9292,
+          "r2": 0.4765
+        },
+        "test_trailing_5_baseline": {
+          "n": 23944,
+          "mae": 1.4363,
+          "rmse": 1.9674,
+          "r2": 0.4556
+        }
+      }
+    }
+  },
+  "note": "Trained on 2023-24, tested on 2024-25, and never fitted on 2025-26 -- the season the replay harness scores. Features are as-of by construction (models/stat_line_features.py). Replace this file to swap in a different model; keep the JSON shape and the tool keeps working."
+}

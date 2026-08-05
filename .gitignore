@@ -23,6 +23,10 @@ data/*.db
 *.sqlite
 *.sqlite3
 
+# Gated snapshots are generated: `python -m scripts.gate_snapshot --as-of DATE`
+# rebuilds any of them in about a second, and one is ~8MB per cutoff date.
+data/snapshots/
+
 # OS / editor
 .DS_Store
 .vscode/
@@ -31,3 +35,6 @@ data/*.db
 # Models
 *.joblib
 *.pkl
+
+# Rendered docs -- regenerate with ./scripts/render_docs.sh
+docs/html/

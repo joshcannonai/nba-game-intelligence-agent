@@ -1,0 +1,47 @@
+slug,name,team,location,opponent,outcome,seconds_played,made_field_goals,attempted_field_goals,made_three_point_field_goals,attempted_three_point_field_goals,made_free_throws,attempted_free_throws,offensive_rebounds,defensive_rebounds,assists,steals,blocks,turnovers,personal_fouls,plus_minus,game_score,game_date
+halibty01,Tyrese Haliburton,Team.INDIANA_PACERS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.WIN,2192,11,19,3,9,2,2,3,4,15,0,1,0,1,0.0,32.2,2023-12-07
+antetgi01,Giannis Antetokounmpo,Team.MILWAUKEE_BUCKS,Location.HOME,Team.INDIANA_PACERS,Outcome.LOSS,2430,13,19,0,1,11,13,1,9,2,0,2,1,3,-5.0,32.1,2023-12-07
+jamesle01,LeBron James,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1352,9,12,4,4,8,8,0,5,8,0,0,0,1,36.0,31.9,2023-12-07
+turnemy01,Myles Turner,Team.INDIANA_PACERS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.WIN,1910,9,18,2,8,6,8,1,9,2,1,3,0,2,-5.0,23.3,2023-12-07
+davisan02,Anthony Davis,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1873,5,10,0,2,6,8,5,10,5,2,2,2,1,35.0,21.2,2023-12-07
+reaveau01,Austin Reaves,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1392,5,9,3,6,4,4,0,5,7,1,0,2,0,21.0,18.1,2023-12-07
+lillada01,Damian Lillard,Team.MILWAUKEE_BUCKS,Location.HOME,Team.INDIANA_PACERS,Outcome.LOSS,2496,7,20,4,9,6,6,0,7,7,1,1,3,2,6.0,17.7,2023-12-07
+middlkh01,Khris Middleton,Team.MILWAUKEE_BUCKS,Location.HOME,Team.INDIANA_PACERS,Outcome.LOSS,1776,7,13,4,5,2,2,1,6,4,2,0,4,2,-3.0,16.2,2023-12-07
+toppiob01,Obi Toppin,Team.INDIANA_PACERS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.WIN,1276,6,8,1,3,1,2,3,3,2,0,0,0,3,-7.0,13.6,2023-12-07
+princta02,Taurean Prince,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1397,5,9,5,8,0,0,0,3,1,1,0,0,3,23.0,12.1,2023-12-07
+lopezbr01,Brook Lopez,Team.MILWAUKEE_BUCKS,Location.HOME,Team.INDIANA_PACERS,Outcome.LOSS,2213,7,17,3,10,1,3,2,4,2,0,4,1,5,-3.0,11.9,2023-12-07
+jacksis01,Isaiah Jackson,Team.INDIANA_PACERS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.WIN,970,5,7,0,0,1,1,1,5,0,1,0,1,1,14.0,9.9,2023-12-07
+nembhan01,Andrew Nembhard,Team.INDIANA_PACERS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.WIN,847,4,5,0,0,0,0,0,0,2,1,1,0,0,6.0,9.2,2023-12-07
+joneshe01,Herbert Jones,Team.NEW_ORLEANS_PELICANS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,1561,4,10,0,3,2,2,4,3,1,2,1,1,4,-22.0,9.1,2023-12-07
+mccontj01,T.J. McConnell,Team.INDIANA_PACERS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.WIN,688,4,7,0,0,1,2,1,0,4,3,0,3,0,9.0,8.8,2023-12-07
+alvarjo01,Jose Alvarado,Team.NEW_ORLEANS_PELICANS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,1218,3,7,2,3,0,0,0,2,4,2,0,1,1,-13.0,8.3,2023-12-07
+reddica01,Cam Reddish,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1406,3,6,1,2,2,2,2,3,2,0,0,1,1,31.0,8.3,2023-12-07
+murphtr02,Trey Murphy III,Team.NEW_ORLEANS_PELICANS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,1345,5,13,2,7,2,2,0,3,1,0,0,0,1,-25.0,8.1,2023-12-07
+hachiru01,Rui Hachimura,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1281,5,9,1,3,1,2,0,1,2,0,0,0,3,9.0,7.8,2023-12-07
+russeda01,D'Angelo Russell,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1319,6,10,2,5,0,0,0,3,1,1,0,4,1,23.0,7.6,2023-12-07
+valanjo01,Jonas Valančiūnas,Team.NEW_ORLEANS_PELICANS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,1385,3,9,1,4,2,2,0,3,2,1,3,1,2,-25.0,7.5,2023-12-07
+hieldbu01,Buddy Hield,Team.INDIANA_PACERS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.WIN,1802,3,11,0,6,2,2,4,7,2,2,1,2,3,0.0,7.3,2023-12-07
+willizi01,Zion Williamson,Team.NEW_ORLEANS_PELICANS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,1545,6,8,0,0,1,6,1,1,3,0,0,3,3,-33.0,6.7,2023-12-07
+beaucma01,MarJon Beauchamp,Team.MILWAUKEE_BUCKS,Location.HOME,Team.INDIANA_PACERS,Outcome.LOSS,925,2,3,0,0,1,4,3,3,0,0,1,0,0,-17.0,6.2,2023-12-07
+brownbr01,Bruce Brown,Team.INDIANA_PACERS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.WIN,1687,3,9,0,1,4,4,0,3,1,1,0,1,2,-5.0,5.7,2023-12-07
+marshna01,Naji Marshall,Team.NEW_ORLEANS_PELICANS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,728,1,2,1,1,2,2,2,2,0,0,0,1,1,-17.0,4.6,2023-12-07
+daniedy01,Dyson Daniels,Team.NEW_ORLEANS_PELICANS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,1018,1,5,0,2,2,2,2,6,0,0,1,0,1,2.0,4.4,2023-12-07
+woodch01,Christian Wood,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,495,2,4,0,1,0,0,3,3,2,0,0,2,0,6.0,4.4,2023-12-07
+portibo01,Bobby Portis,Team.MILWAUKEE_BUCKS,Location.HOME,Team.INDIANA_PACERS,Outcome.LOSS,1067,2,5,0,1,0,0,4,2,1,0,1,1,2,-6.0,4.3,2023-12-07
+chrisma02,Max Christie,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1023,3,5,0,1,0,2,0,2,0,1,0,0,1,6.0,4.1,2023-12-07
+mccolcj01,CJ McCollum,Team.NEW_ORLEANS_PELICANS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,1520,4,14,1,4,0,0,1,3,2,2,0,1,2,-38.0,4.0,2023-12-07
+vandeja01,Jarred Vanderbilt,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,864,1,2,0,0,0,0,0,5,1,0,1,0,0,9.0,3.9,2023-12-07
+beaslma01,Malik Beasley,Team.MILWAUKEE_BUCKS,Location.HOME,Team.INDIANA_PACERS,Outcome.LOSS,2176,3,9,1,4,0,0,1,2,1,0,0,0,2,6.0,3.1,2023-12-07
+ingrabr01,Brandon Ingram,Team.NEW_ORLEANS_PELICANS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,1872,4,13,0,3,1,2,1,2,7,0,0,3,3,-33.0,3.1,2023-12-07
+nesmiaa01,Aaron Nesmith,Team.INDIANA_PACERS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.WIN,1604,2,6,1,4,1,1,0,1,1,0,1,0,5,16.0,2.3,2023-12-07
+mathube01,Bennedict Mathurin,Team.INDIANA_PACERS,Location.AWAY,Team.MILWAUKEE_BUCKS,Outcome.WIN,1424,3,12,0,2,3,3,2,4,1,0,1,2,4,17.0,2.2,2023-12-07
+zelleco01,Cody Zeller,Team.NEW_ORLEANS_PELICANS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,720,0,1,0,0,2,2,1,1,1,0,0,0,2,-5.0,2.2,2023-12-07
+hayesja02,Jaxson Hayes,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1006,2,3,0,1,0,1,0,4,0,0,0,1,4,9.0,0.9,2023-12-07
+lewisma05,Maxwell Lewis,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,495,1,4,1,2,0,0,0,1,1,0,0,1,0,6.0,0.6,2023-12-07
+hoodsja01,Jalen Hood-Schifino,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,495,0,3,0,0,1,2,1,3,1,0,1,1,1,6.0,0.1,2023-12-07
+robinje02,Jeremiah Robinson-Earl,Team.NEW_ORLEANS_PELICANS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,383,0,2,0,0,0,0,0,2,1,0,0,0,0,-3.0,-0.1,2023-12-07
+jacksan01,Andre Jackson Jr.,Team.MILWAUKEE_BUCKS,Location.HOME,Team.INDIANA_PACERS,Outcome.LOSS,76,0,0,0,0,0,0,0,0,0,0,0,0,1,-4.0,-0.4,2023-12-07
+hawkijo01,Jordan Hawkins,Team.NEW_ORLEANS_PELICANS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,720,2,8,0,3,0,0,0,2,0,0,0,0,1,-5.0,-0.6,2023-12-07
+greenaj01,A.J. Green,Team.MILWAUKEE_BUCKS,Location.HOME,Team.INDIANA_PACERS,Outcome.LOSS,253,0,1,0,0,0,0,0,0,0,0,0,0,0,-1.0,-0.7,2023-12-07
+lewiski01,Kira Lewis Jr.,Team.NEW_ORLEANS_PELICANS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,383,1,3,0,1,0,0,0,0,0,0,0,1,0,-3.0,-0.7,2023-12-07
+payneca01,Cameron Payne,Team.MILWAUKEE_BUCKS,Location.HOME,Team.INDIANA_PACERS,Outcome.LOSS,987,2,9,0,3,0,0,0,1,2,0,0,2,0,-18.0,-1.8,2023-12-07

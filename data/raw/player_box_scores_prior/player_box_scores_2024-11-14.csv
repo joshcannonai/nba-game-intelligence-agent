@@ -1,0 +1,21 @@
+slug,name,team,location,opponent,outcome,seconds_played,made_field_goals,attempted_field_goals,made_three_point_field_goals,attempted_three_point_field_goals,made_free_throws,attempted_free_throws,offensive_rebounds,defensive_rebounds,assists,steals,blocks,turnovers,personal_fouls,plus_minus,game_score,game_date
+doncilu01,Luka Dončić,Team.DALLAS_MAVERICKS,Location.AWAY,Team.UTAH_JAZZ,Outcome.LOSS,2284,13,25,4,13,7,7,1,6,9,1,0,3,0,-8.0,31.5,2024-11-14
+collijo01,John Collins,Team.UTAH_JAZZ,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,2130,10,20,1,3,7,7,6,3,3,2,0,4,2,-4.0,22.4,2024-11-14
+marshna01,Naji Marshall,Team.DALLAS_MAVERICKS,Location.AWAY,Team.UTAH_JAZZ,Outcome.LOSS,2035,9,14,0,2,1,1,2,0,4,3,0,3,2,6.0,16.2,2024-11-14
+clarkjo01,Jordan Clarkson,Team.UTAH_JAZZ,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,1815,7,16,3,9,3,3,2,2,4,0,0,0,1,3.0,16.0,2024-11-14
+grimequ01,Quentin Grimes,Team.DALLAS_MAVERICKS,Location.AWAY,Team.UTAH_JAZZ,Outcome.LOSS,2162,5,9,3,7,2,3,0,4,5,1,0,1,4,3.0,13.4,2024-11-14
+sextoco01,Collin Sexton,Team.UTAH_JAZZ,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,1865,7,12,2,5,0,0,2,3,3,1,0,2,3,-10.0,12.6,2024-11-14
+filipky01,Kyle Filipowski,Team.UTAH_JAZZ,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,1790,6,8,1,1,1,4,3,4,2,1,0,2,2,-11.0,12.5,2024-11-14
+georgke01,Keyonte George,Team.UTAH_JAZZ,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,1862,5,10,4,7,0,0,0,0,6,2,0,3,2,-9.0,11.4,2024-11-14
+gaffoda01,Daniel Gafford,Team.DALLAS_MAVERICKS,Location.AWAY,Team.UTAH_JAZZ,Outcome.LOSS,1139,4,7,0,0,2,4,4,1,0,0,2,0,1,-19.0,10.0,2024-11-14
+markkla01,Lauri Markkanen,Team.UTAH_JAZZ,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,1467,4,8,2,5,3,3,1,4,2,0,0,1,4,11.0,9.7,2024-11-14
+thompkl01,Klay Thompson,Team.DALLAS_MAVERICKS,Location.AWAY,Team.UTAH_JAZZ,Outcome.LOSS,1686,6,17,5,13,0,0,0,3,2,0,1,3,0,4.0,7.5,2024-11-14
+eubandr01,Drew Eubanks,Team.UTAH_JAZZ,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,1023,2,3,0,0,1,2,1,4,1,1,1,0,1,11.0,7.2,2024-11-14
+livelde01,Dereck Lively II,Team.DALLAS_MAVERICKS,Location.AWAY,Team.UTAH_JAZZ,Outcome.LOSS,1049,2,2,0,0,1,2,1,1,0,1,4,1,5,11.0,5.8,2024-11-14
+hardyja02,Jaden Hardy,Team.DALLAS_MAVERICKS,Location.AWAY,Team.UTAH_JAZZ,Outcome.LOSS,1325,3,6,0,2,1,1,1,1,1,3,0,3,2,-8.0,4.9,2024-11-14
+poweldw01,Dwight Powell,Team.DALLAS_MAVERICKS,Location.AWAY,Team.UTAH_JAZZ,Outcome.LOSS,763,0,1,0,0,0,0,2,1,3,0,2,1,2,6.0,2.7,2024-11-14
+willico04,Cody Williams,Team.UTAH_JAZZ,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,929,1,3,0,1,1,2,0,3,2,0,0,1,2,11.0,1.4,2024-11-14
+klebima01,Maxi Kleber,Team.DALLAS_MAVERICKS,Location.AWAY,Team.UTAH_JAZZ,Outcome.LOSS,1007,1,2,0,1,1,2,0,0,0,0,0,0,2,-5.0,0.8,2024-11-14
+colliis01,Isaiah Collier,Team.UTAH_JAZZ,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,1104,1,2,0,1,0,0,1,1,1,3,1,5,2,12.0,0.6,2024-11-14
+dinwisp01,Spencer Dinwiddie,Team.DALLAS_MAVERICKS,Location.AWAY,Team.UTAH_JAZZ,Outcome.LOSS,950,0,2,0,1,0,0,0,2,1,2,1,2,0,0.0,0.6,2024-11-14
+juzanjo01,Johnny Juzang,Team.UTAH_JAZZ,Location.HOME,Team.DALLAS_MAVERICKS,Outcome.WIN,415,0,3,0,2,0,0,0,0,1,1,0,0,1,-4.0,-0.8,2024-11-14

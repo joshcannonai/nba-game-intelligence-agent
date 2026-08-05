@@ -27,20 +27,42 @@ from __future__ import annotations
 
 import csv
 import json
-from datetime import date, datetime
+import os
+from datetime import date, datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
 
-from agent.teams import abbr_from_nickname, full_name, normalize_abbr
+from agent.teams import abbr_from_nickname, full_name, normalize_abbr, odds_abbr
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+# Set NBA_SNAPSHOT_DIR to a directory built by scripts/gate_snapshot.py and the
+# whole data layer reads from there instead -- a copy that physically never
+# held anything after the cutoff. Unset (the default) reads the full data
+# directory. Either way the query-time filters below still apply: the snapshot
+# removes what nobody may see, the filters decide what each tool may see.
+DATA_ROOT = Path(os.environ.get("NBA_SNAPSHOT_DIR") or REPO_ROOT / "data")
 MOCK_DIR = REPO_ROOT / "data" / "mock"
-RAW_DIR = REPO_ROOT / "data" / "raw"
-SAMPLE_DIR = REPO_ROOT / "data" / "samples"
+RAW_DIR = DATA_ROOT / "raw"
+SAMPLE_DIR = DATA_ROOT / "samples"
 
 INJURY_CSV = RAW_DIR / "injury_data_2016_2025" / "injury_data.csv"
+# The Kaggle set stops at 2025-01-12, which left the 2025-26 replay window with
+# no injuries at all. The second file continues the same log from 2025-01-13
+# (scraped from the same upstream source, identical columns) so the two join
+# without a gap or an overlap. Kept as separate files to preserve provenance.
+INJURY_CSVS = (
+    INJURY_CSV,
+    RAW_DIR / "injury_pst_2025_2026" / "injury_data.csv",
+)
 TEAM_SUMMARY_CSV = RAW_DIR / "nba_stats_1947_present" / "Team Summaries.csv"
 PLAYER_PER_GAME_CSV = RAW_DIR / "nba_stats_1947_present" / "Player Per Game.csv"
+ODDS_CSV = SAMPLE_DIR / "odds_only.csv"
+# Features only -- no points, rebounds, assists or outcome. Built by
+# `python -m models.stat_line_features` from Patrick's engineered export, which
+# keeps the box-score result in the same row as the features. Same hazard as the
+# odds file keeping score_home beside the line, handled the same way.
+PLAYER_FEATURES_CSV = SAMPLE_DIR / "player_features_2026.csv"
 
 
 def parse_date(value: str) -> date:
@@ -77,21 +99,24 @@ def _injury_rows() -> tuple[tuple[date, str, str, str, str], ...]:
 
     direction is 'out' (Relinquished) or 'back' (Acquired).
     """
-    if not INJURY_CSV.exists():
-        return ()
     rows: list[tuple[date, str, str, str, str]] = []
-    with INJURY_CSV.open(newline="") as f:
-        for r in csv.DictReader(f):
-            abbr = abbr_from_nickname(r["Team"])
-            if not abbr:
-                continue
-            note = r["Notes"].strip()
-            acquired = r["Acquired"].strip()
-            relinquished = r["Relinquished"].strip()
-            if relinquished:
-                rows.append((parse_date(r["Date"]), abbr, relinquished, "out", note))
-            elif acquired:
-                rows.append((parse_date(r["Date"]), abbr, acquired, "back", note))
+    for path in INJURY_CSVS:
+        if not path.exists():
+            continue
+        with path.open(newline="", encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                abbr = abbr_from_nickname(r["Team"])
+                if not abbr:
+                    continue
+                note = r["Notes"].strip()
+                acquired = r["Acquired"].strip()
+                relinquished = r["Relinquished"].strip()
+                if relinquished:
+                    rows.append(
+                        (parse_date(r["Date"]), abbr, relinquished, "out", note)
+                    )
+                elif acquired:
+                    rows.append((parse_date(r["Date"]), abbr, acquired, "back", note))
     rows.sort(key=lambda x: x[0])
     return tuple(rows)
 
@@ -153,9 +178,50 @@ def injuries_as_of(team_abbr: str, as_of: date) -> list[dict]:
         if age > STALE_INJURY_DAYS:
             continue  # unrecorded departure, not an injury
         inj["days_out"] = age
+        inj.update(player_importance(player, as_of))
         active.append(inj)
 
-    return sorted(active, key=lambda i: i["published"], reverse=True)
+    # importance is None for players with no prior season, so `or 0.0` not a default
+    return sorted(active, key=lambda i: -(i.get("importance") or 0.0))
+
+
+def player_importance(player_name: str, as_of: date) -> dict:
+    """How much this player actually matters, from the PRIOR completed season.
+
+    The advisor's 2026-07-21 note: the injury list weighted a franchise player
+    and a tenth man identically, so a team losing its best player looked the
+    same as a team losing a bench body.
+
+    Minutes carry most of the signal -- a coach's own revealed ranking of who
+    matters -- with scoring as a secondary term. Prior season only, same gating
+    rule as team ratings: using the current season mid-year would leak.
+    """
+    row = player_season_averages(player_name, season_end_year(as_of) - 1)
+    if not row:
+        return {
+            "importance": None,
+            "tier": "unknown",
+            "importance_basis": "no prior season",
+        }
+
+    minutes = min((row.get("min_avg") or 0.0) / 36.0, 1.0)
+    points = min((row.get("pts_avg") or 0.0) / 28.0, 1.0)
+    score = round(0.6 * minutes + 0.4 * points, 3)
+
+    if score >= 0.70:
+        tier = "star"
+    elif score >= 0.45:
+        tier = "starter"
+    elif score >= 0.25:
+        tier = "rotation"
+    else:
+        tier = "bench"
+
+    return {
+        "importance": score,
+        "tier": tier,
+        "importance_basis": row.get("basis", "prior completed season"),
+    }
 
 
 @lru_cache(maxsize=1)
@@ -163,7 +229,7 @@ def _team_summaries() -> dict[tuple[int, str], dict]:
     if not TEAM_SUMMARY_CSV.exists():
         return {}
     table: dict[tuple[int, str], dict] = {}
-    with TEAM_SUMMARY_CSV.open(newline="") as f:
+    with TEAM_SUMMARY_CSV.open(newline="", encoding="utf-8") as f:
         for r in csv.DictReader(f):
             if r["lg"] != "NBA" or not r["abbreviation"] or not r["season"]:
                 continue
@@ -198,7 +264,7 @@ def _player_per_game() -> dict[tuple[int, str], dict]:
     if not PLAYER_PER_GAME_CSV.exists():
         return {}
     table: dict[tuple[int, str], dict] = {}
-    with PLAYER_PER_GAME_CSV.open(newline="") as f:
+    with PLAYER_PER_GAME_CSV.open(newline="", encoding="utf-8") as f:
         for r in csv.DictReader(f):
             if r["lg"] != "NBA" or not r["season"]:
                 continue
@@ -243,7 +309,7 @@ def _game_logs(season: int) -> tuple[dict, ...]:
     path = _game_log_path(season)
     if not path.exists():
         return ()
-    with path.open(newline="") as f:
+    with path.open(newline="", encoding="utf-8") as f:
         return tuple(csv.DictReader(f))
 
 
@@ -254,7 +320,7 @@ def _all_game_logs() -> tuple[dict, ...]:
     games: list[dict] = []
     if SAMPLE_DIR.exists():
         for path in sorted(SAMPLE_DIR.glob("game_logs_*.csv")):
-            with path.open(newline="") as f:
+            with path.open(newline="", encoding="utf-8") as f:
                 games.extend(csv.DictReader(f))
     return tuple(games)
 
@@ -340,6 +406,299 @@ from datetime import timedelta  # noqa: E402
 _ONE_DAY = timedelta(days=1)
 
 
+def team_form_as_of(team_abbr: str, as_of: date, last_n: int = 10) -> dict | None:
+    """A team's CURRENT strength from games PLAYED before as_of, not last season.
+
+    The stale-ratings fix. Team ratings on file are end-of-season aggregates, so
+    mid-season they either leak (current season) or go stale (prior season, wrong
+    by December). This reads the game logs -- outcomes gated at as_of -- and
+    builds a rolling record and average point differential, a light net-rating
+    proxy that actually reflects who the team is right now.
+
+    Results are gated: a game counts only once it has been played AND is on or
+    before as_of. Returns None when there are no in-season games yet (opening
+    week), so the caller falls back to prior-season ratings rather than guess.
+    """
+    team = normalize_abbr(team_abbr)
+    season = season_end_year(as_of)
+    played = []
+    for g in _game_logs(season):
+        gd = parse_date(g["game_date"])
+        if gd >= as_of:
+            continue  # not yet played, or the game itself -- would leak
+        h, a = normalize_abbr(g["home"]), normalize_abbr(g["away"])
+        if team not in (h, a):
+            continue
+        is_home = team == h
+        pf = int(g["home_pts"] if is_home else g["away_pts"])
+        pa = int(g["away_pts"] if is_home else g["home_pts"])
+        played.append((gd, pf - pa, pf > pa))
+
+    if not played:
+        return None
+
+    played.sort(key=lambda x: x[0])
+    window = played[-last_n:]
+    wins = sum(1 for _, _, w in played if w)
+    recent_wins = sum(1 for _, _, w in window if w)
+    avg_margin = sum(m for _, m, _ in window) / len(window)
+
+    return {
+        "abbr": team,
+        "as_of": as_of.isoformat(),
+        "games_played": len(played),
+        "record": f"{wins}-{len(played) - wins}",
+        "last_n": len(window),
+        "recent_record": f"{recent_wins}-{len(window) - recent_wins}",
+        "avg_point_diff": round(avg_margin, 2),
+        "basis": f"rolling over last {len(window)} games before {as_of.isoformat()}",
+    }
+
+
+# --------------------------------------------------------------------------
+# Historical betting lines
+# --------------------------------------------------------------------------
+
+# The file stores one row per game: the CLOSING line, the market's final
+# number. That is a fact about tip-off, not about the morning of. It is the
+# benchmark we score a prediction against -- it is not an as-of feature, and
+# feeding it to the model would teach the model to copy Vegas.
+CLOSING_LINE_CAVEAT = (
+    "Closing line -- the market's final number, not knowable until tip-off. "
+    "Score predictions against it; never hand it to a model as an as-of feature."
+)
+
+# moneyline_away/moneyline_home are empty from the 2023-24 season onward,
+# which is every season we actually test on. Spread and total are populated
+# throughout. Say so rather than returning a silent null.
+NO_MONEYLINE = (
+    "moneyline: the source file carries none from the 2023-24 season onward, "
+    "which includes the entire 2025-26 replay window. Spread and total are present."
+)
+
+
+@lru_cache(maxsize=1)
+def _odds_rows() -> dict[tuple[str, str, str], dict]:
+    """(away, home, iso date) -> row, keyed in the odds file's own spellings.
+
+    Callers come in with repo abbreviations and go through teams.odds_abbr.
+    """
+    if not ODDS_CSV.exists():
+        return {}
+    table: dict[tuple[str, str, str], dict] = {}
+    with ODDS_CSV.open(newline="", encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            key = (
+                r["away"].strip().lower(),
+                r["home"].strip().lower(),
+                r["date"].strip(),
+            )
+            table[key] = r
+    return table
+
+
+def closing_line(away: str, home: str, game_date: date, as_of: date) -> dict:
+    """The closing line for one game, or a stated reason there is none.
+
+    Gated the same way matchup_context is: a query dated after tip-off is
+    refused. The line sits one column away from the result in the source data,
+    so it is exactly the field a replay must not be able to reach backwards for.
+    """
+    if as_of > game_date:
+        return {
+            "status": "gated",
+            "reason": (
+                f"as_of_date {as_of.isoformat()} is after tip-off "
+                f"{game_date.isoformat()}. Withheld: a replay query must not be "
+                "able to reach past the game it is predicting."
+            ),
+        }
+
+    row = _odds_rows().get((odds_abbr(away), odds_abbr(home), game_date.isoformat()))
+    if row is None:
+        return {
+            "status": "not_found",
+            "reason": (
+                f"No odds row for {normalize_abbr(away)} at {normalize_abbr(home)} "
+                f"on {game_date.isoformat()}."
+            ),
+        }
+
+    def num(key: str) -> float | None:
+        try:
+            return float(row[key])
+        except (KeyError, ValueError):
+            return None
+
+    spread = num("spread")
+    favored = row["whos_favored"].strip().lower()
+    favorite = normalize_abbr(home if favored == "home" else away) if favored else None
+
+    # The file stores an unsigned magnitude plus whos_favored, so "spread 6.5"
+    # alone cannot say who is laying the points. Sign it per team: the favorite
+    # is negative, the underdog positive.
+    spread_home = spread_away = None
+    if spread is not None and favored in ("home", "away"):
+        home_favored = favored == "home"
+        spread_home = -spread if home_favored else spread
+        spread_away = spread if home_favored else -spread
+
+    ml_away, ml_home = num("moneyline_away"), num("moneyline_home")
+
+    return {
+        "status": "ok",
+        "line_type": "closing",
+        "favorite": favorite,
+        "spread": spread,
+        "spread_home": spread_home,
+        "spread_away": spread_away,
+        "total": num("total"),
+        "moneyline_away": ml_away,
+        "moneyline_home": ml_home,
+        "unavailable": [] if ml_home is not None else [NO_MONEYLINE],
+        "caveat": CLOSING_LINE_CAVEAT,
+    }
+
+
+def slate_as_of(as_of: date, days_ahead: int = 1) -> dict:
+    """The fixtures tipping off in the days after as_of.
+
+    WHY THIS IS NOT LEAKAGE. The NBA publishes its schedule in August, so who plays
+    whom on a future date is knowable on any as_of_date. The RESULT is not, and the
+    game-log rows this reads carry `home_pts`, `away_pts` and `winner` right next to
+    the fixture. Only the four identity fields are copied out; the score columns are
+    never touched, and `tests/test_date_gating.py` asserts they never appear.
+    """
+    first = as_of + timedelta(days=1)
+    last = as_of + timedelta(days=max(1, days_ahead))
+    games = []
+    for row in _all_game_logs():
+        played = parse_date(row["game_date"])
+        if first <= played <= last:
+            games.append(
+                {
+                    "matchup_id": row["game_id"],
+                    "date": row["game_date"],
+                    "away": normalize_abbr(row["away"]),
+                    "home": normalize_abbr(row["home"]),
+                }
+            )
+    games.sort(key=lambda g: (g["date"], g["matchup_id"]))
+    return {
+        "source": "real",
+        "as_of_date": as_of.isoformat(),
+        "window": {"from": first.isoformat(), "to": last.isoformat()},
+        "games": games,
+        "count": len(games),
+        "caveat": (
+            "Fixtures only: teams and dates, taken from the season's game log. Tip-off "
+            "times are not in that dataset, so this cannot tell you when a game starts. "
+            "No score or result is read."
+        ),
+    }
+
+
+@lru_cache(maxsize=1)
+def _player_feature_rows() -> tuple[dict, ...]:
+    if not PLAYER_FEATURES_CSV.exists():
+        return ()
+    with PLAYER_FEATURES_CSV.open(encoding="utf-8") as f:
+        return tuple(csv.DictReader(f))
+
+
+def player_features_as_of(player_name: str, game_date: date, as_of: date) -> dict:
+    """One player's as-of form for a specific game, gated at as_of.
+
+    THE GATE, precisely. The row for a game on date D carries rolling averages
+    computed with `shift(1)` -- over that player's games strictly BEFORE D. So the
+    row for the game being predicted is exactly "what was knowable going in", and
+    it is the only row that is safe to serve. We therefore take the player's first
+    game after as_of and require it to be the game we were asked about. If the
+    player's next appearance is later than the tip-off, they did not play, and the
+    honest answer is that there is no line to project -- not a projection built
+    from someone else's row.
+    """
+    if as_of >= game_date:
+        raise ValueError(
+            f"as_of_date {as_of.isoformat()} is not before tip-off "
+            f"{game_date.isoformat()}: the trailing averages for that game would "
+            "then include games played after as_of."
+        )
+
+    wanted = player_name.strip().casefold()
+    played = [
+        r
+        for r in _player_feature_rows()
+        if r.get("name", "").strip().casefold() == wanted
+    ]
+    if not played:
+        return {
+            "available": False,
+            "reason": f"No 2025-26 game rows for {player_name!r}.",
+        }
+
+    upcoming = sorted(
+        (r for r in played if parse_date(r["game_date"]) > as_of),
+        key=lambda r: r["game_date"],
+    )
+    if not upcoming:
+        return {
+            "available": False,
+            "reason": (
+                f"{player_name} has no game after {as_of.isoformat()} in the data."
+            ),
+        }
+
+    row = upcoming[0]
+    if parse_date(row["game_date"]) != game_date:
+        return {
+            "available": False,
+            "reason": (
+                f"{player_name} has no box score for {game_date.isoformat()} -- their "
+                f"next appearance is {row['game_date']}. They did not play; there is "
+                "no stat line to project."
+            ),
+        }
+
+    def num(key: str) -> float | None:
+        raw = row.get(key, "")
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            return None
+
+    return {
+        "available": True,
+        "player": row.get("name"),
+        "team": row.get("team"),
+        "opponent": row.get("opponent"),
+        "game_date": row["game_date"],
+        "features": {k: num(k) for k in STAT_LINE_FEATURE_KEYS},
+    }
+
+
+# Kept here rather than imported from models/ so the data layer does not depend on
+# the model layer; models/train_stat_line.py asserts the two lists agree.
+STAT_LINE_FEATURE_KEYS = (
+    "rolling_pts_5",
+    "rolling_reb_5",
+    "rolling_ast_5",
+    "rolling_min_5",
+    "rolling_pts_10",
+    "rolling_reb_10",
+    "rolling_ast_10",
+    "rolling_min_10",
+    "rolling_fg_pct_5",
+    "rolling_3p_pct_5",
+    "home_away_pts_avg",
+    "home_away_reb_avg",
+    "home_away_ast_avg",
+    "rest_days",
+    "is_back_to_back",
+    "is_home",
+)
+
+
 # --------------------------------------------------------------------------
 # Sources
 # --------------------------------------------------------------------------
@@ -358,7 +717,7 @@ class MockSource:
             )
             if candidate.exists():
                 path = candidate
-        with path.open() as f:
+        with path.open(encoding="utf-8") as f:
             return json.load(f)
 
     def matchup_context(self, matchup_id: str, as_of_date: str) -> dict:
@@ -405,6 +764,50 @@ class MockSource:
                     )
                 return out
         return {"error": f"player not found: {player_name}"}
+
+    def schedule(self, as_of_date: str, days_ahead: int = 1) -> dict:
+        """The fixture list is real data, not a fixture value, so mock says so."""
+        return {
+            "source": "mock",
+            "as_of_date": as_of_date,
+            "games": [],
+            "count": 0,
+            "caveat": "MockSource carries no schedule; run with --source real.",
+        }
+
+    def player_features(
+        self, player_name: str, matchup_id: str, as_of_date: str
+    ) -> dict:
+        # The fixture has no game-by-game history, so there are no trailing
+        # averages to serve. Gate first anyway, so mock and real refuse an
+        # after-tip query identically.
+        _, _, game_date = parse_matchup_id(matchup_id)
+        as_of = parse_date(as_of_date)
+        if as_of >= game_date:
+            raise ValueError(
+                f"as_of_date {as_of_date} is not before tip-off "
+                f"{game_date.isoformat()}."
+            )
+        return {
+            "available": False,
+            "reason": "MockSource carries no game logs; run with --source real.",
+        }
+
+    def betting_line(self, matchup_id: str, as_of_date: str) -> dict:
+        # The fixture carries no odds. Gate first anyway, so mock and real
+        # refuse an after-tip query identically.
+        _, _, game_date = parse_matchup_id(matchup_id)
+        if parse_date(as_of_date) > game_date:
+            return {
+                "status": "gated",
+                "reason": (
+                    f"as_of_date {as_of_date} is after tip-off {game_date.isoformat()}."
+                ),
+            }
+        return {
+            "status": "not_found",
+            "reason": "The mock fixture carries no betting line. Use --source real.",
+        }
 
 
 class CsvSource:
@@ -460,9 +863,9 @@ class CsvSource:
     def injuries(self, team_abbr: str, as_of_date: str) -> dict:
         """Who was known to be out that morning -- the log replayed, stopped at as_of.
 
-        Two limits are stated in the payload rather than hidden: the log ends
-        2025-01-12, and it carries no measure of how much a player matters, so a
-        10th man and a franchise player weigh exactly the same here.
+        Each entry carries an `importance` (0-1) and a `tier`, so a 10th man and a
+        franchise player no longer weigh the same. The remaining limit is stated in
+        the payload rather than hidden: the log ends 2025-01-12.
         """
         as_of = parse_date(as_of_date)
         payload = {
@@ -470,9 +873,10 @@ class CsvSource:
             "team": normalize_abbr(team_abbr),
             "as_of_date": as_of_date,
             "injuries": injuries_as_of(normalize_abbr(team_abbr), as_of),
-            "importance_unavailable": (
-                "This is a COUNT, not an impact. Six bench players and one MVP look "
-                "identical here. Player-value weighting is not built."
+            "importance_basis": (
+                "importance = 0.6*(min/36) + 0.4*(pts/28) from the PRIOR completed "
+                "season; tier is a band on that. A minutes/points proxy for role, "
+                "not a fitted impact coefficient. None = no prior season (rookie)."
             ),
         }
         end = injury_data_through()
@@ -503,6 +907,47 @@ class CsvSource:
             "source": self.name,
             "error": f"player not found in nba_stats: {player_name}",
         }
+
+    def schedule(self, as_of_date: str, days_ahead: int = 1) -> dict:
+        """Fixtures tipping off after as_of. See slate_as_of for why that is safe."""
+        return slate_as_of(parse_date(as_of_date), days_ahead)
+
+    def player_features(
+        self, player_name: str, matchup_id: str, as_of_date: str
+    ) -> dict:
+        """Trailing form for one player going into one game. See player_features_as_of.
+
+        Note this is per-GAME, unlike `player_splits`, which serves prior-season
+        averages. The two answer different questions and read different files.
+        """
+        _, _, game_date = parse_matchup_id(matchup_id)
+        payload = player_features_as_of(player_name, game_date, parse_date(as_of_date))
+        payload["source"] = self.name
+        return payload
+
+    def betting_line(self, matchup_id: str, as_of_date: str) -> dict:
+        # The week-5 branch had a second betting_line with no as-of gate, reading
+        # a separate 2025-26 odds extract. Both are retired: one gated accessor,
+        # one odds file, used by the agent and the eval harness alike.
+        away, home, game_date = parse_matchup_id(matchup_id)
+        return closing_line(away, home, game_date, parse_date(as_of_date))
+
+    def team_form(self, team_abbr: str, as_of_date: str, last_n: int = 10) -> dict:
+        """Current rolling strength from game logs, or a reason it is unavailable."""
+        form = team_form_as_of(team_abbr, parse_date(as_of_date), last_n)
+        if form is None:
+            return {
+                "source": self.name,
+                "team": normalize_abbr(team_abbr),
+                "as_of": as_of_date,
+                "unavailable": (
+                    "No games played this season before as_of (opening week), or no "
+                    f"game logs for season {season_end_year(parse_date(as_of_date))}. "
+                    "Fall back to prior-season ratings; do not guess."
+                ),
+            }
+        form["source"] = self.name
+        return form
 
 
 def get_source(kind: str):

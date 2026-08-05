@@ -1,0 +1,120 @@
+slug,name,team,location,opponent,outcome,seconds_played,made_field_goals,attempted_field_goals,made_three_point_field_goals,attempted_three_point_field_goals,made_free_throws,attempted_free_throws,offensive_rebounds,defensive_rebounds,assists,steals,blocks,turnovers,personal_fouls,plus_minus,game_score,game_date
+whiteco01,Coby White,Team.CHICAGO_BULLS,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.WIN,2193,16,28,7,15,5,6,0,5,1,2,0,1,3,2.0,32.4,2025-03-06
+brunsja01,Jalen Brunson,Team.NEW_YORK_KNICKS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,2471,13,26,1,7,12,13,0,4,10,0,0,3,2,-8.0,30.0,2025-03-06
+curryst01,Stephen Curry,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,2136,12,20,7,13,9,9,2,2,4,0,0,5,3,-16.0,29.4,2025-03-06
+siakapa01,Pascal Siakam,Team.INDIANA_PACERS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.LOSS,2017,12,18,3,5,8,9,2,7,3,0,0,3,1,8.0,29.0,2025-03-06
+jamesle01,LeBron James,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.WIN,2633,11,23,2,8,7,8,1,11,8,0,1,1,3,4.0,27.0,2025-03-06
+tatumja01,Jayson Tatum,Team.BOSTON_CELTICS,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,1889,14,23,5,11,2,2,1,6,2,3,0,4,2,19.0,26.6,2025-03-06
+doncilu01,Luka Dončić,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.WIN,2595,9,23,4,12,10,12,0,7,12,4,0,5,5,16.0,26.2,2025-03-06
+butleji01,Jimmy Butler,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,2106,7,13,1,1,10,10,1,1,6,3,0,1,0,17.0,25.9,2025-03-06
+okongon01,Onyeka Okongwu,Team.ATLANTA_HAWKS,Location.HOME,Team.INDIANA_PACERS,Outcome.WIN,2064,7,8,0,1,6,7,4,9,2,1,1,0,2,11.0,24.6,2025-03-06
+youngtr01,Trae Young,Team.ATLANTA_HAWKS,Location.HOME,Team.INDIANA_PACERS,Outcome.WIN,2153,7,17,1,5,7,7,0,3,16,0,0,1,2,7.0,23.2,2025-03-06
+johnsca02,Cameron Johnson,Team.BROOKLYN_NETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.LOSS,2060,9,16,3,7,5,6,2,4,4,1,0,1,4,11.0,21.8,2025-03-06
+giddejo01,Josh Giddey,Team.CHICAGO_BULLS,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.WIN,2329,6,14,0,3,7,8,4,9,9,1,0,2,2,-3.0,21.2,2025-03-06
+sengual01,Alperen Şengün,Team.HOUSTON_ROCKETS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,2181,11,14,0,0,0,3,1,5,8,3,1,4,5,15.0,20.9,2025-03-06
+niangge01,Georges Niang,Team.ATLANTA_HAWKS,Location.HOME,Team.INDIANA_PACERS,Outcome.WIN,1488,10,15,4,8,0,0,1,5,3,0,0,1,0,-1.0,20.8,2025-03-06
+oubreke01,Kelly Oubre Jr.,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,2031,9,20,3,5,6,7,2,3,6,3,0,3,5,-19.0,20.7,2025-03-06
+pritcpa01,Payton Pritchard,Team.BOSTON_CELTICS,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,1938,6,13,4,8,3,3,3,1,6,2,0,0,1,14.0,20.5,2025-03-06
+murphtr02,Trey Murphy III,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,2331,9,15,3,8,5,5,1,4,0,0,2,2,1,-9.0,20.0,2025-03-06
+jonestr01,Tre Jones,Team.CHICAGO_BULLS,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.WIN,1827,7,12,1,2,5,5,2,3,4,1,0,1,1,-4.0,19.1,2025-03-06
+thompam01,Amen Thompson,Team.HOUSTON_ROCKETS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,2310,10,13,0,1,1,4,3,8,2,0,1,3,2,10.0,17.5,2025-03-06
+turnemy01,Myles Turner,Team.INDIANA_PACERS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.LOSS,2019,6,8,1,2,4,4,0,9,1,1,2,1,4,-3.0,17.0,2025-03-06
+thomaca02,Cam Thomas,Team.BROOKLYN_NETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.LOSS,1590,8,18,2,6,5,6,0,3,7,0,0,1,3,-9.0,16.8,2025-03-06
+caldwke01,Kentavious Caldwell-Pope,Team.ORLANDO_MAGIC,Location.HOME,Team.CHICAGO_BULLS,Outcome.LOSS,1900,8,10,2,4,1,2,1,3,2,2,0,2,4,5.0,16.2,2025-03-06
+nesmiaa01,Aaron Nesmith,Team.INDIANA_PACERS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.LOSS,2101,8,15,4,9,1,1,0,3,2,1,2,1,3,1.0,16.2,2025-03-06
+cartewe01,Wendell Carter Jr.,Team.ORLANDO_MAGIC,Location.HOME,Team.CHICAGO_BULLS,Outcome.LOSS,1560,5,9,2,3,5,6,3,2,2,1,1,0,5,6.0,16.1,2025-03-06
+easonta01,Tari Eason,Team.HOUSTON_ROCKETS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1852,7,14,4,8,2,2,1,1,4,5,1,5,4,9.0,15.9,2025-03-06
+hartjo01,Josh Hart,Team.NEW_YORK_KNICKS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,2633,6,13,2,6,4,7,5,5,2,4,0,3,4,-6.0,15.9,2025-03-06
+anthoco01,Cole Anthony,Team.ORLANDO_MAGIC,Location.HOME,Team.CHICAGO_BULLS,Outcome.LOSS,1434,6,12,2,5,6,6,1,3,3,1,1,2,4,6.0,15.8,2025-03-06
+claxtni01,Nic Claxton,Team.BROOKLYN_NETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.LOSS,1830,4,7,0,0,0,0,2,7,10,2,2,2,5,18.0,14.6,2025-03-06
+willizi01,Zion Williamson,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,1938,5,15,0,0,10,12,4,6,3,1,2,4,3,-18.0,14.6,2025-03-06
+kornelu01,Luke Kornet,Team.BOSTON_CELTICS,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,1949,4,4,0,0,1,2,3,4,4,0,4,1,2,26.0,14.5,2025-03-06
+scheiba01,Baylor Scheierman,Team.BOSTON_CELTICS,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,1787,5,10,3,7,2,2,1,2,3,1,0,0,1,18.0,14.0,2025-03-06
+banchpa01,Paolo Banchero,Team.ORLANDO_MAGIC,Location.HOME,Team.CHICAGO_BULLS,Outcome.LOSS,2259,5,15,0,5,10,11,2,7,3,0,0,3,1,-3.0,13.3,2025-03-06
+daniedy01,Dyson Daniels,Team.ATLANTA_HAWKS,Location.HOME,Team.INDIANA_PACERS,Outcome.WIN,2083,8,12,1,1,0,0,0,4,5,1,0,3,3,-8.0,13.3,2025-03-06
+edwarju01,Justin Edwards,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,1797,5,7,2,3,2,2,1,3,2,0,1,1,2,-22.0,13.0,2025-03-06
+craigto01,Torrey Craig,Team.BOSTON_CELTICS,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,1213,4,5,2,2,2,2,4,0,1,0,0,0,2,3.0,12.8,2025-03-06
+wagnefr01,Franz Wagner,Team.ORLANDO_MAGIC,Location.HOME,Team.CHICAGO_BULLS,Outcome.LOSS,2277,6,17,0,3,6,7,1,1,6,2,1,2,3,2.0,12.8,2025-03-06
+martity01,Tyrese Martin,Team.BROOKLYN_NETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.LOSS,1442,7,12,3,6,0,0,0,2,1,0,0,0,1,5.0,12.3,2025-03-06
+paytoga02,Gary Payton II,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,1238,7,12,0,2,2,2,3,6,1,0,0,2,3,-15.0,11.8,2025-03-06
+nembhan01,Andrew Nembhard,Team.INDIANA_PACERS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.LOSS,1821,5,13,2,5,3,3,0,1,10,0,0,2,4,-15.0,11.6,2025-03-06
+mccontj01,T.J. McConnell,Team.INDIANA_PACERS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.LOSS,1575,4,10,1,4,0,0,1,3,6,2,0,0,0,11.0,11.4,2025-03-06
+postqu01,Quinten Post,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,1268,4,8,2,4,0,2,3,4,2,0,2,0,0,13.0,11.3,2025-03-06
+dowtije01,Jeff Dowtin Jr.,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,1051,4,6,2,2,0,0,0,1,2,1,1,0,0,6.0,10.8,2025-03-06
+walkelo01,Lonnie Walker IV,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,1654,6,13,5,10,0,0,1,0,3,0,0,2,1,-25.0,10.7,2025-03-06
+smithja05,Jabari Smith Jr.,Team.HOUSTON_ROCKETS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1685,6,13,2,8,2,4,0,5,1,0,1,0,2,4.0,10.6,2025-03-06
+bitadgo01,Goga Bitadze,Team.ORLANDO_MAGIC,Location.HOME,Team.CHICAGO_BULLS,Outcome.LOSS,1034,3,3,0,0,2,2,1,0,3,0,1,0,1,-6.0,10.2,2025-03-06
+huertke01,Kevin Huerter,Team.CHICAGO_BULLS,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.WIN,1495,4,9,3,7,2,2,1,4,3,1,0,3,2,1.0,9.5,2025-03-06
+anunoog01,OG Anunoby,Team.NEW_YORK_KNICKS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,2667,7,18,4,11,2,3,1,3,1,0,1,2,4,-13.0,9.2,2025-03-06
+greendr01,Draymond Green,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,2020,2,5,0,0,3,3,2,5,10,0,0,3,5,-7.0,9.2,2025-03-06
+brookdi01,Dillon Brooks,Team.HOUSTON_ROCKETS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,2175,6,9,1,4,1,2,1,3,1,0,0,1,5,-1.0,9.0,2025-03-06
+vincega01,Gabe Vincent,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.WIN,1430,4,5,4,4,0,0,0,1,1,0,0,1,3,4.0,8.9,2025-03-06
+johnske07,Keon Johnson,Team.BROOKLYN_NETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.LOSS,1451,5,7,2,3,0,0,0,1,2,1,0,1,5,16.0,8.8,2025-03-06
+missiyv01,Yves Missi,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,1653,3,5,0,0,4,6,2,2,1,0,0,0,2,-7.0,8.8,2025-03-06
+blackan01,Anthony Black,Team.ORLANDO_MAGIC,Location.HOME,Team.CHICAGO_BULLS,Outcome.LOSS,1186,3,4,2,3,0,2,0,3,2,2,1,2,0,-9.0,8.6,2025-03-06
+alvarjo01,Jose Alvarado,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,1385,3,9,1,4,0,0,0,2,4,4,0,0,2,2.0,8.5,2025-03-06
+knechda01,Dalton Knecht,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.WIN,1233,4,8,3,7,0,0,1,3,1,0,0,1,0,-1.0,8.3,2025-03-06
+quetane01,Neemias Queta,Team.BOSTON_CELTICS,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,1444,4,10,0,0,0,0,4,5,4,0,2,2,2,7.0,8.3,2025-03-06
+moodymo01,Moses Moody,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,1721,4,7,2,5,0,0,0,5,2,0,0,1,1,4.0,8.2,2025-03-06
+wilsoja03,Jalen Wilson,Team.BROOKLYN_NETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.LOSS,1047,1,3,1,2,6,6,0,3,0,0,0,0,0,14.0,8.2,2025-03-06
+greenja05,Jalen Green,Team.HOUSTON_ROCKETS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,2054,3,10,2,7,1,1,0,2,8,0,1,2,0,8.0,8.1,2025-03-06
+whitede01,Derrick White,Team.BOSTON_CELTICS,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,1451,4,14,2,10,2,2,0,3,6,0,0,0,2,9.0,8.1,2025-03-06
+bridgmi01,Mikal Bridges,Team.NEW_YORK_KNICKS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,2581,3,6,0,1,0,0,1,2,3,3,0,1,1,-12.0,8.0,2025-03-06
+risacza01,Zaccharie Risacher,Team.ATLANTA_HAWKS,Location.HOME,Team.INDIANA_PACERS,Outcome.WIN,1495,4,9,3,3,0,0,2,2,2,0,1,2,1,16.0,8.0,2025-03-06
+buzelma01,Matas Buzelis,Team.CHICAGO_BULLS,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.WIN,1757,4,8,2,4,1,1,2,3,2,0,3,3,5,8.0,7.8,2025-03-06
+drumman01,Andre Drummond,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,1484,4,10,1,2,0,0,4,6,2,1,0,2,2,-21.0,7.8,2025-03-06
+robinmi01,Mitchell Robinson,Team.NEW_YORK_KNICKS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,783,2,3,0,0,2,2,2,2,0,1,0,0,1,2.0,7.3,2025-03-06
+adamsst01,Steven Adams,Team.HOUSTON_ROCKETS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,1124,1,2,0,0,1,2,3,5,6,1,0,2,3,17.0,7.2,2025-03-06
+willizi02,Ziaire Williams,Team.BROOKLYN_NETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.LOSS,1473,4,8,2,5,0,0,1,0,1,0,0,0,1,-19.0,7.0,2025-03-06
+hayesja02,Jaxson Hayes,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.WIN,2010,3,5,0,0,2,2,1,4,3,0,2,2,6,5.0,6.7,2025-03-06
+walkeja02,Jarace Walker,Team.INDIANA_PACERS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.LOSS,1528,4,9,0,2,0,0,3,4,1,0,1,1,1,-3.0,6.6,2025-03-06
+townska01,Karl-Anthony Towns,Team.NEW_YORK_KNICKS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,2536,3,13,1,6,5,7,3,11,1,1,0,2,5,-1.0,6.4,2025-03-06
+mannte01,Terance Mann,Team.ATLANTA_HAWKS,Location.HOME,Team.INDIANA_PACERS,Outcome.WIN,1315,5,9,1,4,1,2,1,0,0,0,0,1,3,12.0,5.8,2025-03-06
+olynyke01,Kelly Olynyk,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,1366,2,5,1,1,3,4,2,3,2,0,1,2,4,9.0,5.7,2025-03-06
+bonaad01,Adem Bona,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,795,3,5,0,0,0,0,2,0,1,0,1,1,0,-4.0,5.5,2025-03-06
+santogu01,Gui Santos,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,1442,2,4,0,1,2,2,1,2,3,0,1,1,4,12.0,5.5,2025-03-06
+capelca01,Clint Capela,Team.ATLANTA_HAWKS,Location.HOME,Team.INDIANA_PACERS,Outcome.WIN,816,3,6,0,0,0,0,3,2,0,0,0,0,1,-5.0,5.3,2025-03-06
+walshjo01,Jordan Walsh,Team.BOSTON_CELTICS,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,762,2,3,1,2,0,0,0,4,3,1,0,2,2,6.0,5.2,2025-03-06
+leverca01,Caris LeVert,Team.ATLANTA_HAWKS,Location.HOME,Team.INDIANA_PACERS,Outcome.WIN,1613,4,11,0,4,0,2,0,2,4,0,1,0,1,-8.0,4.8,2025-03-06
+reeseal01,Alex Reese,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,584,1,4,0,2,1,1,3,0,1,0,2,0,0,10.0,4.8,2025-03-06
+looneke01,Kevon Looney,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,695,1,4,0,1,3,4,2,3,1,0,1,0,3,5.0,4.7,2025-03-06
+matkoka01,Karlo Matković,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,1284,2,9,0,3,2,4,3,3,3,1,2,1,4,-8.0,4.6,2025-03-06
+mccolcj01,CJ McCollum,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,2026,5,15,3,6,0,0,0,2,2,0,0,2,0,-8.0,4.5,2025-03-06
+sheppbe01,Ben Sheppard,Team.INDIANA_PACERS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.LOSS,1359,3,8,2,5,0,0,2,0,1,0,0,0,3,-13.0,4.5,2025-03-06
+vandeja01,Jarred Vanderbilt,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.WIN,1004,1,3,0,1,0,0,2,3,0,2,1,0,3,-11.0,4.1,2025-03-06
+russeda01,D'Angelo Russell,Team.BROOKLYN_NETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.LOSS,1450,3,7,1,3,0,0,0,0,4,1,1,3,2,-8.0,4.0,2025-03-06
+gueyemo02,Mouhamed Gueye,Team.ATLANTA_HAWKS,Location.HOME,Team.INDIANA_PACERS,Outcome.WIN,1373,2,7,0,4,0,0,0,5,0,3,1,0,3,6.0,3.9,2025-03-06
+terryda01,Dalen Terry,Team.CHICAGO_BULLS,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.WIN,775,2,4,1,2,0,0,1,1,1,0,1,1,2,4.0,3.6,2025-03-06
+butleja02,Jared Butler,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,684,2,5,1,3,0,0,0,5,1,0,0,1,1,3.0,3.1,2025-03-06
+grimequ01,Quentin Grimes,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,1962,2,11,1,5,1,2,2,6,5,1,0,3,1,-13.0,3.0,2025-03-06
+jemistr01,Trey Jemison,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.WIN,805,3,4,0,0,1,2,1,3,0,0,0,2,4,-2.0,3.0,2025-03-06
+watfotr01,Trendon Watford,Team.BROOKLYN_NETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.LOSS,1005,2,5,1,1,0,0,2,0,1,1,0,2,1,-18.0,3.0,2025-03-06
+shamela01,Landry Shamet,Team.NEW_YORK_KNICKS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,352,2,3,1,2,0,0,0,0,0,0,0,0,2,6.0,2.9,2025-03-06
+dasiltr01,Tristan Da Silva,Team.ORLANDO_MAGIC,Location.HOME,Team.CHICAGO_BULLS,Outcome.LOSS,1232,1,7,0,3,4,4,0,2,3,0,0,1,1,-5.0,2.8,2025-03-06
+davisjd01,JD Davison,Team.BOSTON_CELTICS,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,393,1,2,1,2,0,0,0,0,1,0,0,0,0,-6.0,2.7,2025-03-06
+houstca01,Caleb Houstan,Team.ORLANDO_MAGIC,Location.HOME,Team.CHICAGO_BULLS,Outcome.LOSS,450,1,2,1,2,0,0,0,2,0,0,0,0,0,-6.0,2.6,2025-03-06
+spencpa01,Pat Spencer,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,355,1,1,0,0,0,0,1,1,1,0,0,1,0,9.0,2.4,2025-03-06
+councri01,Ricky Council IV,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,471,2,7,0,4,0,0,1,1,2,0,0,0,0,10.0,2.3,2025-03-06
+howarje01,Jett Howard,Team.ORLANDO_MAGIC,Location.HOME,Team.CHICAGO_BULLS,Outcome.LOSS,574,2,6,0,3,0,0,0,0,0,2,0,0,1,-3.0,2.2,2025-03-06
+sharpda01,Day'Ron Sharpe,Team.BROOKLYN_NETS,Location.HOME,Team.GOLDEN_STATE_WARRIORS,Outcome.LOSS,1050,1,4,0,0,0,0,1,4,0,1,2,1,2,-20.0,2.1,2025-03-06
+greenje02,Jeff Green,Team.HOUSTON_ROCKETS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,308,1,1,0,0,0,0,0,0,0,1,1,1,1,-2.0,2.0,2025-03-06
+phillju01,Julian Phillips,Team.CHICAGO_BULLS,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.WIN,1183,2,2,0,0,0,0,0,1,1,0,1,2,3,5.0,1.9,2025-03-06
+hawkijo01,Jordan Hawkins,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,1250,2,8,1,4,2,2,2,3,0,1,0,3,2,-8.0,1.7,2025-03-06
+smithja04,Jalen Smith,Team.CHICAGO_BULLS,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.WIN,1563,1,6,0,4,1,2,2,7,3,0,1,1,6,7.0,1.7,2025-03-06
+brownbr01,Bruce Brown,Team.NEW_ORLEANS_PELICANS,Location.HOME,Team.HOUSTON_ROCKETS,Outcome.LOSS,1167,0,2,0,1,0,0,1,1,2,2,0,1,1,-13.0,1.6,2025-03-06
+tillmxa01,Xavier Tillman Sr.,Team.BOSTON_CELTICS,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,392,2,4,1,3,0,0,0,0,0,0,0,1,1,-6.0,1.6,2025-03-06
+yabusgu01,Guerschon Yabusele,Team.PHILADELPHIA_76ERS,Location.AWAY,Team.BOSTON_CELTICS,Outcome.LOSS,1887,2,7,0,3,0,0,2,2,4,0,0,2,3,-15.0,1.5,2025-03-06
+bryanth01,Thomas Bryant,Team.INDIANA_PACERS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.LOSS,824,1,5,0,4,0,0,2,3,0,1,0,1,0,-4.0,1.2,2025-03-06
+peterdr01,Drew Peterson,Team.BOSTON_CELTICS,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,941,0,3,0,3,0,0,0,3,2,1,0,0,1,4.0,0.8,2025-03-06
+finnedo01,Dorian Finney-Smith,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.WIN,2271,1,5,0,3,0,0,4,1,0,1,0,2,1,12.0,0.6,2025-03-06
+norrimi01,Miles Norris,Team.BOSTON_CELTICS,Location.HOME,Team.PHILADELPHIA_76ERS,Outcome.WIN,241,0,0,0,0,0,0,0,2,0,0,0,0,0,-4.0,0.6,2025-03-06
+sheppre01,Reed Sheppard,Team.HOUSTON_ROCKETS,Location.AWAY,Team.NEW_ORLEANS_PELICANS,Outcome.WIN,711,1,5,0,1,0,0,0,3,3,0,0,1,2,0.0,0.1,2025-03-06
+podzibr01,Brandin Podziemski,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,44,0,0,0,0,0,0,0,0,0,0,0,0,0,-1.0,0.0,2025-03-06
+josepco01,Cory Joseph,Team.ORLANDO_MAGIC,Location.HOME,Team.CHICAGO_BULLS,Outcome.LOSS,494,0,2,0,2,0,0,0,1,2,0,0,0,1,3.0,-0.1,2025-03-06
+hortota01,Talen Horton-Tucker,Team.CHICAGO_BULLS,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.WIN,557,1,2,1,2,0,2,0,1,1,0,0,2,1,2.0,-0.2,2025-03-06
+toppiob01,Obi Toppin,Team.INDIANA_PACERS,Location.AWAY,Team.ATLANTA_HAWKS,Outcome.LOSS,1156,1,5,1,3,0,0,0,2,3,0,0,2,2,-12.0,-0.2,2025-03-06
+payneca01,Cameron Payne,Team.NEW_YORK_KNICKS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,616,1,6,1,6,0,0,0,2,1,0,0,1,0,8.0,-0.5,2025-03-06
+mcbrimi01,Miles McBride,Team.NEW_YORK_KNICKS,Location.AWAY,Team.LOS_ANGELES_LAKERS,Outcome.LOSS,1261,0,6,0,4,0,0,2,3,2,1,1,1,2,4.0,-0.6,2025-03-06
+colliza01,Zach Collins,Team.CHICAGO_BULLS,Location.AWAY,Team.ORLANDO_MAGIC,Outcome.WIN,721,0,1,0,1,3,4,1,1,0,0,1,2,6,-12.0,-0.8,2025-03-06
+reaveau01,Austin Reaves,Team.LOS_ANGELES_LAKERS,Location.HOME,Team.NEW_YORK_KNICKS,Outcome.WIN,1919,2,13,1,7,3,4,2,4,0,0,0,2,3,-7.0,-1.3,2025-03-06
+hieldbu01,Buddy Hield,Team.GOLDEN_STATE_WARRIORS,Location.AWAY,Team.BROOKLYN_NETS,Outcome.WIN,1372,0,8,0,5,0,0,0,1,1,0,0,2,0,-11.0,-6.6,2025-03-06

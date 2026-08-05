@@ -97,7 +97,7 @@ def main() -> None:
     SAMPLE_DIR.mkdir(parents=True, exist_ok=True)
     out = SAMPLE_DIR / f"game_logs_{args.season}.csv"
     fields = ["game_id", "game_date", "home", "away", "home_pts", "away_pts", "winner"]
-    with out.open("w", newline="") as f:
+    with out.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
         writer.writeheader()
         writer.writerows(games)

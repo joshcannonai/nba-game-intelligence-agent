@@ -9,9 +9,13 @@ from __future__ import annotations
 
 import csv
 import json
+import os
+import socket
+import subprocess
 import sys
 from datetime import date, timedelta
 from pathlib import Path
+from urllib.parse import urlparse
 
 import streamlit as st
 
@@ -19,8 +23,50 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
 from agent.run import _probe_args, dry_run, status_board  # noqa: E402
-from agent.sources import get_source  # noqa: E402
+from agent.sources import SAMPLE_DIR, get_source  # noqa: E402
 from agent.tools import build_tools  # noqa: E402
+from scripts.gate_snapshot import build_snapshot  # noqa: E402
+
+
+@st.cache_data(show_spinner="Gating data to the as-of date…")
+def snapshot_for(as_of: str) -> str:
+    """Materialise the gated copy the agent will read. Cached per date."""
+    return str(build_snapshot(date(*(int(p) for p in as_of.split("-")))))
+
+
+def report_from_snapshot(
+    matchup: str, as_of: str, source_kind: str
+) -> tuple[dict, dict]:
+    """Run the report against a snapshot, in its own interpreter.
+
+    A subprocess, not an env var flipped in place: `agent.sources` captures its
+    directory constants at import and caches every reader, so an in-process
+    switch would keep reading the ungated data and the gate would be theatre.
+    """
+    snap = snapshot_for(as_of)
+    env = dict(os.environ, NBA_SNAPSHOT_DIR=snap)
+    out = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "agent.run",
+            "--dry-run",
+            "--source",
+            source_kind,
+            "--matchup",
+            matchup,
+            "--as-of",
+            as_of,
+        ],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    manifest = json.loads((Path(snap) / "_manifest.json").read_text(encoding="utf-8"))
+    return json.loads(out.stdout), manifest
+
 
 st.set_page_config(
     page_title="NBA Game Intelligence Agent", page_icon="🏀", layout="wide"
@@ -61,7 +107,7 @@ def load_games(season: int) -> list[dict]:
     path = REPO_ROOT / "data" / "samples" / f"game_logs_{season}.csv"
     if not path.exists():
         return []
-    with open(path) as fh:
+    with open(path, encoding="utf-8") as fh:
         return list(csv.DictReader(fh))
 
 
@@ -70,21 +116,84 @@ def parse_iso(s: str) -> date:
     return date(y, m, d)
 
 
+# The chat front end runs as its own Streamlit app. Override the port with
+# NBA_CHAT_PORT if 8701 is taken.
+CHAT_PORT = int(os.environ.get("NBA_CHAT_PORT", "8701"))
+CHAT_URL = f"http://localhost:{CHAT_PORT}"
+
+
+@st.cache_data(ttl=10)
+def chat_is_up(url: str) -> bool:
+    """Is the chat app actually listening? A dead button mid-demo is worse
+    than a disabled one that says how to start it."""
+    host, port = urlparse(url).hostname, urlparse(url).port
+    try:
+        with socket.create_connection((host, port), timeout=0.4):
+            return True
+    except OSError:
+        return False
+
+
 st.title("🏀 NBA Game Intelligence Agent")
 st.markdown(
-    '<div class="lede">Pick a game, then pick a date you are asking <b>from</b>. '
-    "The system answers using only what was knowable that morning — no future "
-    "information reaches the prediction. That constraint is the point: it is what "
-    "lets us test on a season that has already happened without the model simply "
-    "remembering the result.<br><span style='opacity:.65'>CECS 499 · Josh Cannon · "
-    "agent lane</span></div>",
+    '<div class="lede">Predicting who wins an NBA game — using only information that '
+    "existed <b>before</b> the game was played."
+    "<br><span style='opacity:.65'>CECS 499 senior capstone · University of Tennessee · "
+    "Josh Cannon, Patrick Haley, Sarvesh Vinod Kumar, Kirtan Patel</span></div>",
     unsafe_allow_html=True,
 )
 
+# First-time visitors get this open; it collapses once they have interacted, so it
+# does not become furniture for anyone using the page repeatedly.
+if "seen_intro" not in st.session_state:
+    st.session_state.seen_intro = False
+
+with st.expander("**New here? Start with this**", expanded=not st.session_state.seen_intro):
+    st.markdown(
+        """
+**What this does.** Pick any NBA game from a past season. Pick a date *before* it was
+played. The system predicts who wins, using only what was known on that date.
+
+**Why that matters.** Testing a prediction on a game that already happened is easy to
+get wrong. If the system can peek at the result — or if the AI simply *remembers* it —
+you get a great-looking score that means nothing. Everything here is built to make
+peeking impossible, and then to prove it.
+
+**What you are looking at.**
+
+| Tab | What it shows |
+|---|---|
+| **The prediction** | Who we think wins, and every fact behind that number |
+| **What the AI can see** | The seven functions the AI is allowed to call. That's its whole world. |
+| **Proof it can't cheat** | The same game asked from three different dates. Watch the injury list change. |
+| **What's built** | An honest status board, including the parts we never finished |
+
+**A few words you'll see:**
+
+- **As-of date** — the day you're pretending it is. Nothing after it is visible.
+- **Win probability** — our confidence, 0–100%. 50% means a coin flip.
+- **The predictor** — a statistical model. No AI involved.
+- **The agent** — an AI chatbot that calls the seven functions and writes the summary.
+
+*Nothing on this page is pre-written or faked. Every number is computed live when you
+change a setting.*
+        """
+    )
+st.session_state.seen_intro = True
+
 # ---------------------------------------------------------------- sidebar
 with st.sidebar:
-    st.header("Matchup")
-    season = st.selectbox("Season sample", [2025, 2024], index=0)
+    st.header("Pick a game")
+    # Discovered from disk, newest first, so a season landing in data/samples
+    # shows up without editing this list. 2026 is the replay/test season.
+    seasons = sorted(
+        (int(p.stem.rsplit("_", 1)[1]) for p in SAMPLE_DIR.glob("game_logs_*.csv")),
+        reverse=True,
+    )
+    season = st.selectbox(
+        "Season", seasons, index=0,
+        help="Which season to pick a game from. 2026 means the 2025-26 season.",
+    )
     games = load_games(season)
 
     if not games:
@@ -110,28 +219,71 @@ with st.sidebar:
     matchup_id = f"{game['away']}-{game['home']}-{game['game_date']}"
     tip = parse_iso(game["game_date"])
     as_of = st.date_input(
-        "As-of date (what we knew)",
+        "Pretend it is this date",
         value=tip - timedelta(days=1),
         max_value=tip - timedelta(days=1),
+        help="The system will only use information that existed on this date. "
+        "You cannot pick a date on or after the game — that is the whole point.",
     )
     st.caption(f"`{matchup_id}`")
 
-    source_kind = st.radio("Data source", ["real", "mock"], horizontal=True)
+    source_kind = st.radio(
+        "Data", ["real", "mock"], horizontal=True,
+        help="'real' uses the actual NBA datasets. 'mock' uses a small fixed example, "
+        "which is what the tests run against.",
+    )
+
+    # The advisor's architecture (2026-07-28): gate the data on disk first,
+    # then point the agent at only that copy. Off by default because it costs a
+    # subprocess per run; the query-time filter is always on either way.
+    pregate = st.checkbox(
+        "Delete the future before running",
+        value=False,
+        help="Copy only what was knowable by the as-of date into "
+        "data/snapshots/<date>, then run the agent against that directory.",
+    )
+
+    st.divider()
+    if chat_is_up(CHAT_URL):
+        st.link_button("🏀  Ask the agent", CHAT_URL, use_container_width=True)
+        st.caption("Same tools, same date gate — conversational.")
+    else:
+        st.button(
+            "🏀  Ask the agent",
+            disabled=True,
+            use_container_width=True,
+            help="The chat app is not running.",
+        )
+        st.caption(f"Start it: `streamlit run ui/chat.py --server.port {CHAT_PORT}`")
 
 source = get_source(source_kind)
 as_of_str = as_of.isoformat()
 
 report_tab, tools_tab, gating_tab, status_tab = st.tabs(
-    ["Pregame report", "Agent tools", "Date-gating proof", "Build status"]
+    ["The prediction", "What the AI can see", "Proof it can't cheat", "What's built"]
 )
 
 # ---------------------------------------------------------------- report
 with report_tab:
+    manifest = None
     try:
-        report = json.loads(dry_run(matchup_id, as_of_str, source))
+        if pregate:
+            report, manifest = report_from_snapshot(matchup_id, as_of_str, source_kind)
+        else:
+            report = json.loads(dry_run(matchup_id, as_of_str, source))
     except Exception as exc:
         st.error(f"{type(exc).__name__}: {exc}")
         st.stop()
+
+    if manifest:
+        cleared = sum(f["outcomes_cleared"] for f in manifest["files"])
+        dropped = sum(f["rows_in"] - f["rows_out"] for f in manifest["files"])
+        st.success(
+            f"Agent read a gated copy of the data, not the repo. Building it "
+            f"dropped **{dropped:,} rows** and cleared **{cleared:,} game results** "
+            f"dated after {as_of_str}. The report below could not have used them "
+            "because they were not on disk."
+        )
 
     hp, ap = report.get("home_win_prob"), report.get("away_win_prob")
     c1, c2, c3 = st.columns(3)
@@ -143,16 +295,43 @@ with report_tab:
     )
     c3.metric("As of", as_of_str)
 
-    st.warning(
-        "Win probability is `stub_net_rating_v0` -- a net-rating heuristic, **not** the "
-        "XGBoost model. It ignores the injury list entirely. Sarvvesh's model drops into "
-        "this same tool signature."
-    )
+    # Report whatever actually produced the number. This banner used to hard-code
+    # "stub_net_rating_v2 -- not a real model", and stayed that way after the fitted
+    # model landed, so the demo talked the project down.
+    model_info = report.get("model") or {}
+    model_name = model_info.get("name") or "unknown"
+
+    if model_info.get("warning") or str(model_name).startswith("stub_"):
+        st.warning(
+            f"Win probability is `{model_name}` — a hand-tuned net-rating heuristic, "
+            "**not** a fitted model. "
+            + (model_info.get("warning") or "Run `python -m models.train` to fit one.")
+        )
+    else:
+        seasons = model_info.get("trained_on_seasons") or []
+        acc = model_info.get("holdout_accuracy")
+        st.info(
+            f"Win probability is `{model_name}`"
+            + (
+                f", trained by {model_info['trained_by']}"
+                if model_info.get("trained_by")
+                else ""
+            )
+            + (f" on {', '.join(str(s) for s in seasons)}" if seasons else "")
+            + (
+                f". Holdout accuracy on all 1,322 games of 2025-26 — a season it never "
+                f"trained on — is **{acc:.1%}**, against 55.5% for always picking the "
+                "home team and 69.0% for the Vegas closing line."
+                if acc is not None
+                else "."
+            )
+        )
 
     st.subheader("What drove it")
     st.markdown(
-        '<div class="lede">Every line is a real value pulled through a tool and filtered '
-        "to the as-of date. None of this is written by an LLM.</div>",
+        '<div class="lede">Every line below is a real number the system looked up, '
+        "filtered to the date you picked. None of it is written by an AI — this is the "
+        "evidence the prediction was built from.</div>",
         unsafe_allow_html=True,
     )
     for factor in report.get("key_factors", []):
@@ -166,7 +345,7 @@ with report_tab:
 
     missing = report.get("missing", [])
     if missing:
-        st.subheader(f"Awaiting input — {len(missing)} of 10 tools")
+        st.subheader(f"Awaiting input — {len(missing)} of 7 tools")
         st.markdown(
             '<div class="lede">The agent reports gaps instead of guessing. These tools '
             "are written and callable — they are waiting on data or a model.</div>",
@@ -188,11 +367,11 @@ with report_tab:
 
 # ---------------------------------------------------------------- tools
 with tools_tab:
-    st.subheader("What the agent is allowed to do")
+    st.subheader("The seven things the AI is allowed to do")
     st.markdown(
-        '<div class="lede">These ten functions are the agent\'s entire world. It cannot '
+        '<div class="lede">These seven functions are the agent\'s entire world. It cannot '
         "query a database, browse the web, or invent a number — it can only call these, "
-        "and every one takes an <b>as-of date</b>. All ten are written by the agent lane; "
+        "and every one takes an <b>as-of date</b>. All seven are written by the agent lane; "
         "what varies is whether the data or model behind each one exists yet.</div>",
         unsafe_allow_html=True,
     )
@@ -218,7 +397,7 @@ with tools_tab:
         elif payload.get("warning") or str(payload.get("model", "")).startswith(
             "stub_"
         ):
-            key, owner = "stub", "Sarvvesh"
+            key, owner = "stub", "Sarvesh"
             detail = payload.get("warning", "placeholder logic")
         else:
             key, owner, detail = "built", "—", "Returns real, date-gated data."
@@ -238,11 +417,12 @@ with tools_tab:
 
 # ---------------------------------------------------------------- gating
 with gating_tab:
-    st.subheader("Same game, three different days of knowledge")
+    st.subheader("The same game, asked from three different days")
     st.caption(
-        "The 2025-26 season already happened, so any online LLM may remember the "
-        "results. Every query carries an as-of date and returns only records from "
-        "before it -- this is what makes leakage-free replay possible."
+        "This is the proof. Below is one single game, asked three times from three "
+        "different dates. Because the system can only see what existed on each date, "
+        "the injury lists differ — and so does the prediction. If it were secretly "
+        "reading the final result, these three columns would be identical."
     )
 
     probe_dates = [
@@ -275,11 +455,37 @@ with gating_tab:
         "cannot see a report filed after the date you asked from."
     )
 
+    st.divider()
+    st.subheader("The second gate: what never reached the disk")
+    st.caption(
+        "The columns above prove the query-time filter refuses future records. "
+        "This proves something stronger -- with **Pre-gate data on disk** ticked "
+        "in the sidebar, the agent reads a copy that never contained them. "
+        "Built by `python -m scripts.gate_snapshot --as-of DATE`."
+    )
+    if manifest:
+        st.table(
+            [
+                {
+                    "file": f["file"],
+                    "kept": f"{f['rows_out']:,}",
+                    "dropped": f"{f['rows_in'] - f['rows_out']:,}",
+                    "results cleared": f"{f['outcomes_cleared']:,}",
+                    "rule": f["rule"],
+                }
+                for f in manifest["files"]
+            ]
+        )
+    else:
+        st.info(
+            "Tick **Pre-gate data on disk** in the sidebar to build and inspect it."
+        )
+
 # ---------------------------------------------------------------- status
 with status_tab:
-    st.subheader("What is built, and what is blocked")
+    st.subheader("What works, and what we never finished")
     st.caption(
-        "Generated by probing all ten tools -- `python -m agent.run --status`. "
+        "Generated by probing all seven tools -- `python -m agent.run --status`. "
         "Owners come from the tool contracts in `agent/tools.py`."
     )
     st.code(status_board(matchup_id, as_of_str, source), language="text")

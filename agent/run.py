@@ -34,25 +34,17 @@ from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from agent.sources import get_source  # noqa: E402
+from agent.skills import skills_block  # noqa: E402
 from agent.tools import build_tools  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(REPO_ROOT / ".env")
 
-SYSTEM = """You are the NBA Game Intelligence analyst agent.
-Given a matchup_id and as_of_date, use your tools to gather context and a win
-probability, then write a short structured pregame report.
-
-Rules:
+_SHARED_RULES = """
 - Always call retrieve_matchup_context first.
 - If either team is on a back-to-back, call retrieve_player_splits with
   back_to_back=true for that team's key players.
-- Always call predict_win_probability.
-- The report we owe the user is: who wins, the likely best player, a narrative,
-  statistics, and the betting line. So also attempt retrieve_betting_line,
-  predict_best_player, and retrieve_news, plus predict_stat_line for a key
-  player. Attempt them even though some are not built yet -- a tool that
-  answers "awaiting_input" is how we learn what is still blocking the report.
+- Call retrieve_team_form for BOTH teams and retrieve_injuries for both.
 - SOME TOOLS HAVE NO DATA YET. A tool may return {"status": "awaiting_input",
   "needs_from": ..., "needs": ...}. That is not an error and not an empty result.
   It means the data layer for it does not exist. When that happens, add a line to
@@ -60,15 +52,53 @@ Rules:
 - Tool output may also contain nulls with an "unavailable" or "warnings" note.
   Same rule. Never fill a gap with a guess. Never treat a null or a missing tool
   as zero. An unknown injury list is not "nobody is hurt".
+- You have no betting-line tool. Do not recall, infer, or state a spread, total
+  or moneyline from memory. The market's number is what we grade ourselves
+  against, so quoting it would be marking our own homework.
 - Final answer must be valid JSON with keys:
   matchup_id, as_of_date, home_win_prob, away_win_prob, key_factors (list of
   short strings), missing (list of "tool_name -- needs_from -- what it needs"),
   narrative (2-4 sentences).
+- home_win_prob and away_win_prob must be numbers between 0 and 1 that sum to 1.
 - Do not invent stats that tools did not return.
 """
 
+# Arm C: the agent gets the fitted model's number as one input among several.
+SYSTEM = (
+    """You are the NBA Game Intelligence analyst agent.
+Given a matchup_id and as_of_date, use your tools to gather context and a win
+probability, then write a short structured pregame report.
 
-def build_agent(source, model_backend: str = "anthropic"):
+Rules:
+- Always call predict_win_probability. Treat its number as strong evidence, not
+  as gospel: it is a logistic regression on form, rest and injury load, and it
+  cannot see anything your other tools do not also show you. If the retrieval
+  tools reveal something it plainly missed, you may move off its number -- say
+  so explicitly in key_factors when you do."""
+    + _SHARED_RULES
+)
+
+# Arm B: no model. The agent has to get there on the retrieval tools alone.
+SYSTEM_NO_MODEL = (
+    """You are the NBA Game Intelligence analyst agent.
+Given a matchup_id and as_of_date, use your tools to gather context, then reason
+your own way to a win probability and write a short structured pregame report.
+
+Rules:
+- You have NO win-probability model. Derive home_win_prob yourself from what the
+  retrieval tools return -- recent form, point differential, rest, injuries,
+  head-to-head. Show the reasoning in key_factors.
+- Home teams win about 55% of NBA games. That is the base rate to reason from."""
+    + _SHARED_RULES
+)
+
+
+def build_agent(
+    source,
+    model_backend: str = "anthropic",
+    include_model: bool = True,
+    without: tuple[str, ...] = (),
+):
     from langchain.agents import create_agent
 
     if model_backend == "anthropic":
@@ -91,13 +121,25 @@ def build_agent(source, model_backend: str = "anthropic"):
     else:
         raise ValueError(f"unknown model backend: {model_backend!r}")
 
-    return create_agent(model, build_tools(source), system_prompt=SYSTEM)
+    tools = build_tools(source, include_model=include_model, without=without)
+    base = SYSTEM if include_model else SYSTEM_NO_MODEL
+
+    # Skills are appended for exactly the tools this agent was given, so arm B
+    # never receives instructions for a tool it does not have. See agent/skills.py.
+    prompt = base + skills_block([t.name for t in tools])
+
+    return create_agent(model, tools, system_prompt=prompt)
 
 
 def run_matchup(
-    matchup_id: str, as_of_date: str, source, model_backend: str = "anthropic"
+    matchup_id: str,
+    as_of_date: str,
+    source,
+    model_backend: str = "anthropic",
+    include_model: bool = True,
+    without: tuple[str, ...] = (),
 ) -> str:
-    agent = build_agent(source, model_backend)
+    agent = build_agent(source, model_backend, include_model, without)
     user = (
         f"Produce a pregame report for matchup_id={matchup_id} as_of_date={as_of_date}."
     )
@@ -129,8 +171,6 @@ def _probe_args(matchup_id: str, as_of_date: str) -> dict[str, dict]:
             "last_n": 10,
         },
         "retrieve_injuries": {"team_abbr": home, "as_of_date": as_of_date},
-        "retrieve_news": {"team_abbr": home, "as_of_date": as_of_date, "limit": 5},
-        "retrieve_betting_line": {"matchup_id": matchup_id, "as_of_date": as_of_date},
         "predict_win_probability": {
             "home_abbr": home,
             "away_abbr": away,
@@ -141,7 +181,6 @@ def _probe_args(matchup_id: str, as_of_date: str) -> dict[str, dict]:
             "matchup_id": matchup_id,
             "as_of_date": as_of_date,
         },
-        "predict_best_player": {"matchup_id": matchup_id, "as_of_date": as_of_date},
     }
 
 
@@ -149,7 +188,7 @@ def status_board(matchup_id: str, as_of_date: str, source) -> str:
     """Which tools return data, which are stubs, and where the rest is waiting on.
 
     Deterministic and free: calls every tool once and reports what came back.
-    All ten tools are the agent lane's; what varies is whether the data or model
+    Every tool is the agent lane's; what varies is whether the data or model
     behind each one exists. So this doubles as the project's input-blocking list.
     """
     tools = {t.name: t for t in build_tools(source)}
@@ -291,12 +330,30 @@ def dry_run(matchup_id: str, as_of_date: str, source) -> str:
         key_factors.append(f"WARNING: {w}")
 
     prob = pred.get("home_win_prob")
+
+    # Name the model that actually produced the number rather than hard-coding one.
+    # This line used to say "the net-rating stub (not XGBoost yet)" while the fitted
+    # logistic regression was doing the work -- a report that understates itself is
+    # as wrong as one that overstates itself.
+    def _provenance() -> str:
+        name = pred.get("model", "unknown")
+        if str(name).startswith("stub_"):
+            return "a hand-tuned net-rating heuristic, not a fitted model"
+        acc = pred.get("holdout_accuracy")
+        seasons = pred.get("trained_on_seasons")
+        parts = [name]
+        if seasons:
+            parts.append(f"trained on {', '.join(str(s) for s in seasons)}")
+        if acc is not None:
+            parts.append(f"{acc:.1%} holdout accuracy")
+        return "; ".join(parts)
+
     narrative = (
         f"{away['abbr']} at {home['abbr']} on {ctx['game_date']}, as of {as_of_date}. "
         + (
-            f"Home win probability {prob:.1%} from the net-rating stub (not XGBoost yet). "
+            f"Home win probability {prob:.1%} from {_provenance()}. "
             if prob is not None
-            else "No win probability: the stub could not find ratings for both teams. "
+            else "No win probability: the model could not build features for both teams. "
         )
         + f"Injury list is date-gated: {len(injuries)} player(s) known out that morning. "
         + (
@@ -333,6 +390,16 @@ def dry_run(matchup_id: str, as_of_date: str, source) -> str:
             "missing": missing,
             "narrative": narrative,
             "mode": "dry_run_no_llm",
+            # Provenance travels with the number so every surface that displays it
+            # can say what produced it. The UI used to hard-code "this is a stub",
+            # which stayed on screen after the fitted model landed.
+            "model": {
+                "name": pred.get("model"),
+                "trained_by": pred.get("trained_by"),
+                "trained_on_seasons": pred.get("trained_on_seasons"),
+                "holdout_accuracy": pred.get("holdout_accuracy"),
+                "warning": pred.get("warning"),
+            },
         },
         indent=2,
     )

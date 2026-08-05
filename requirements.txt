@@ -1,7 +1,12 @@
-langchain>=0.3.0
-langchain-anthropic>=0.3.0
+# langchain MUST be the 1.x line: agent/run.py calls `create_agent`, which does
+# not exist in 0.3. The failure is not a clean ImportError either -- a 0.3
+# install sitting next to a 1.x langchain-core dies inside `langchain.agents`
+# with "No module named 'langchain_core.memory'", which reads like a broken
+# install rather than a version mismatch. Cost an hour on 08-01.
+langchain>=1.0.0
+langchain-anthropic>=1.0.0
 langchain-ollama>=1.0.0
-langchain-core>=0.3.0
+langchain-core>=1.0.0
 anthropic>=0.40.0
 pydantic>=2.0.0
 python-dotenv>=1.0.0
@@ -16,7 +21,14 @@ basketball_reference_web_scraper>=4.21.0
 pandas>=2.0.0
 requests>=2.30.0
 
-# Tests (leakage guarantees live in tests/test_date_gating.py)
+# Model training (models/train.py). Only needed to FIT the model -- scoring it
+# reads models/win_probability.json and needs neither, so the agent, the eval
+# harness and the UI all run without sklearn installed.
+scikit-learn>=1.4.0
+numpy>=1.26.0
+
+# Tests (leakage guarantees live in tests/test_date_gating.py and
+# tests/test_model_contract.py)
 pytest>=8.0.0
 
 
