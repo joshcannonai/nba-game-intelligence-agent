@@ -53,7 +53,7 @@ FORBIDDEN = {
 
 
 def _header() -> list[str]:
-    with PLAYER_FEATURES_CSV.open() as f:
+    with PLAYER_FEATURES_CSV.open(encoding="utf-8") as f:
         return next(csv.reader(f))
 
 

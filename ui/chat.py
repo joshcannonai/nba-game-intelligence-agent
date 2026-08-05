@@ -69,7 +69,7 @@ def load_games(season: int) -> list[dict]:
     path = REPO_ROOT / "data" / "samples" / f"game_logs_{season}.csv"
     if not path.exists():
         return []
-    with open(path) as fh:
+    with open(path, encoding="utf-8") as fh:
         return list(csv.DictReader(fh))
 
 

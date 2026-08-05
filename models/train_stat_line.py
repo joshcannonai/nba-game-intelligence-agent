@@ -158,7 +158,7 @@ def train(write: bool = True) -> dict:
     }
 
     if write:
-        MODEL_PATH.write_text(json.dumps(payload, indent=2) + "\n")
+        MODEL_PATH.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         print(f"\nwrote {MODEL_PATH.relative_to(REPO_ROOT)}")
     return payload
 

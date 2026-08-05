@@ -53,14 +53,14 @@ OUTCOME_COLUMNS = ("home_pts", "away_pts", "winner")
 
 def _write(path: Path, fieldnames: list[str], rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", newline="") as fh:
+    with open(path, "w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
 
 
 def _read(path: Path) -> tuple[list[str], list[dict]]:
-    with open(path) as fh:
+    with open(path, encoding="utf-8") as fh:
         reader = csv.DictReader(fh)
         return list(reader.fieldnames or []), list(reader)
 
@@ -196,7 +196,9 @@ def build_snapshot(as_of: date, out_root: Path | None = None) -> Path:
             "agent/sources.py still apply and are stricter per-tool."
         ),
     }
-    (out_root / "_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    (out_root / "_manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+    )
     return out_root
 
 
@@ -209,7 +211,7 @@ def main() -> None:
     as_of = parse_date(args.as_of)
     out = build_snapshot(as_of, Path(args.out) if args.out else None)
 
-    manifest = json.loads((out / "_manifest.json").read_text())
+    manifest = json.loads((out / "_manifest.json").read_text(encoding="utf-8"))
     # --out may point anywhere -- a tmp dir in the test suite, a scratch disk.
     # relative_to raises rather than falling back, so ask before shortening.
     shown = out.relative_to(REPO_ROOT) if out.is_relative_to(REPO_ROOT) else out

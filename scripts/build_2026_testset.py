@@ -75,7 +75,7 @@ def main() -> None:
             f"missing {SRC} -- the raw odds file is gitignored, see README"
         )
 
-    rows = [r for r in csv.DictReader(open(SRC)) if r["season"] == SEASON]
+    rows = [r for r in csv.DictReader(open(SRC, encoding="utf-8")) if r["season"] == SEASON]
     games, skipped = [], 0
 
     for r in sorted(rows, key=lambda x: x["date"]):
@@ -105,7 +105,7 @@ def main() -> None:
 
 
     OUT_GAMES.parent.mkdir(parents=True, exist_ok=True)
-    with open(OUT_GAMES, "w", newline="") as fh:
+    with open(OUT_GAMES, "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=list(games[0].keys()))
         w.writeheader()
         w.writerows(games)

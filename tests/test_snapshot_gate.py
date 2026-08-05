@@ -36,7 +36,7 @@ def snapshot(tmp_path_factory):
 
 
 def _rows(path):
-    with open(path) as fh:
+    with open(path, encoding="utf-8") as fh:
         return list(csv.DictReader(fh))
 
 
@@ -108,7 +108,7 @@ def test_no_unfinished_season_aggregates(snapshot):
 
 def test_manifest_accounts_for_every_file(snapshot):
     """The manifest is the audit trail. It has to match what is on disk."""
-    manifest = json.loads((snapshot / "_manifest.json").read_text())
+    manifest = json.loads((snapshot / "_manifest.json").read_text(encoding="utf-8"))
     assert manifest["as_of"] == AS_OF
     listed = {f["file"] for f in manifest["files"]}
     on_disk = {str(p.relative_to(snapshot)) for p in snapshot.rglob("*.csv")}

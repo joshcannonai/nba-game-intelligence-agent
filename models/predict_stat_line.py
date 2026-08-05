@@ -32,7 +32,7 @@ LABELS = {"points": "points", "total_rebounds": "rebounds", "assists": "assists"
 def load_model() -> dict | None:
     if not MODEL_PATH.exists():
         return None
-    spec = json.loads(MODEL_PATH.read_text())
+    spec = json.loads(MODEL_PATH.read_text(encoding="utf-8"))
     got = tuple(spec.get("feature_names", ()))
     if got != STAT_LINE_FEATURE_KEYS:
         # Positional feature order, same hazard as win_probability.json: a

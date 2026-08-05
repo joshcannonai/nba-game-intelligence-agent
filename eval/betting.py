@@ -96,7 +96,7 @@ def settle(pick_home: bool, home_won: bool, p_home: float) -> float:
 def load_odds() -> dict:
     path = ROOT / "data/samples/odds_only.csv"
     out = {}
-    with path.open(newline="") as fh:
+    with path.open(newline="", encoding="utf-8") as fh:
         for r in csv.DictReader(fh):
             if r.get("season") != "2026":
                 continue
@@ -108,7 +108,7 @@ def load_odds() -> dict:
 def load_predictions(path: Path, arms: list[str]) -> list[dict]:
     if not path.exists():
         return []
-    with path.open(newline="") as fh:
+    with path.open(newline="", encoding="utf-8") as fh:
         rows = list(csv.DictReader(fh))
     return [r for r in rows if all(r.get(a) not in (None, "") for a in arms)]
 
@@ -215,7 +215,7 @@ def validate() -> None:
     from eval.replay import american_to_prob
 
     rows = []
-    with (ROOT / "data/samples/odds_only.csv").open(newline="") as fh:
+    with (ROOT / "data/samples/odds_only.csv").open(newline="", encoding="utf-8") as fh:
         for r in csv.DictReader(fh):
             if (r.get("moneyline_home") or "").strip() in ("", "nan", "None"):
                 continue

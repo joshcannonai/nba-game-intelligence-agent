@@ -64,7 +64,7 @@ def report_from_snapshot(
         text=True,
         check=True,
     )
-    manifest = json.loads((Path(snap) / "_manifest.json").read_text())
+    manifest = json.loads((Path(snap) / "_manifest.json").read_text(encoding="utf-8"))
     return json.loads(out.stdout), manifest
 
 
@@ -107,7 +107,7 @@ def load_games(season: int) -> list[dict]:
     path = REPO_ROOT / "data" / "samples" / f"game_logs_{season}.csv"
     if not path.exists():
         return []
-    with open(path) as fh:
+    with open(path, encoding="utf-8") as fh:
         return list(csv.DictReader(fh))
 
 

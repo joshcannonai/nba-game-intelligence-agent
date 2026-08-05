@@ -169,7 +169,7 @@ def main() -> None:
         results.append({"arm": label, "n": len(pairs), **m})
 
     OUT.parent.mkdir(exist_ok=True)
-    with OUT.open("w", newline="") as f:
+    with OUT.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(results[0]))
         w.writeheader()
         w.writerows(results)

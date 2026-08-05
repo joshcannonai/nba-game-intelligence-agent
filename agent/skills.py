@@ -38,7 +38,7 @@ class Skill:
 
 def _parse(path: Path) -> Skill | None:
     """Parse one skill file. Returns None for anything without frontmatter."""
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     match = _FRONTMATTER.match(text)
     if not match:
         return None

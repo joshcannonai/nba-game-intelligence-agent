@@ -147,7 +147,7 @@ def build_season(
             "Run scripts/fetch_game_logs.py."
         )
 
-    with open(files[season], newline="") as fh:
+    with open(files[season], newline="", encoding="utf-8") as fh:
         games = list(csv.DictReader(fh))
     games.sort(key=lambda g: (g["game_date"], g["game_id"]))
 

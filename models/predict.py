@@ -36,7 +36,7 @@ MODEL_PATH = Path(__file__).resolve().parent / "win_probability.json"
 def load_model() -> dict | None:
     if not MODEL_PATH.exists():
         return None
-    spec = json.loads(MODEL_PATH.read_text())
+    spec = json.loads(MODEL_PATH.read_text(encoding="utf-8"))
     got = tuple(spec.get("feature_names", ()))
     if got != FEATURE_NAMES:
         # Feature order is positional in the JSON. A mismatch means the file was

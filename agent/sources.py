@@ -103,7 +103,7 @@ def _injury_rows() -> tuple[tuple[date, str, str, str, str], ...]:
     for path in INJURY_CSVS:
         if not path.exists():
             continue
-        with path.open(newline="") as f:
+        with path.open(newline="", encoding="utf-8") as f:
             for r in csv.DictReader(f):
                 abbr = abbr_from_nickname(r["Team"])
                 if not abbr:
@@ -229,7 +229,7 @@ def _team_summaries() -> dict[tuple[int, str], dict]:
     if not TEAM_SUMMARY_CSV.exists():
         return {}
     table: dict[tuple[int, str], dict] = {}
-    with TEAM_SUMMARY_CSV.open(newline="") as f:
+    with TEAM_SUMMARY_CSV.open(newline="", encoding="utf-8") as f:
         for r in csv.DictReader(f):
             if r["lg"] != "NBA" or not r["abbreviation"] or not r["season"]:
                 continue
@@ -264,7 +264,7 @@ def _player_per_game() -> dict[tuple[int, str], dict]:
     if not PLAYER_PER_GAME_CSV.exists():
         return {}
     table: dict[tuple[int, str], dict] = {}
-    with PLAYER_PER_GAME_CSV.open(newline="") as f:
+    with PLAYER_PER_GAME_CSV.open(newline="", encoding="utf-8") as f:
         for r in csv.DictReader(f):
             if r["lg"] != "NBA" or not r["season"]:
                 continue
@@ -309,7 +309,7 @@ def _game_logs(season: int) -> tuple[dict, ...]:
     path = _game_log_path(season)
     if not path.exists():
         return ()
-    with path.open(newline="") as f:
+    with path.open(newline="", encoding="utf-8") as f:
         return tuple(csv.DictReader(f))
 
 
@@ -320,7 +320,7 @@ def _all_game_logs() -> tuple[dict, ...]:
     games: list[dict] = []
     if SAMPLE_DIR.exists():
         for path in sorted(SAMPLE_DIR.glob("game_logs_*.csv")):
-            with path.open(newline="") as f:
+            with path.open(newline="", encoding="utf-8") as f:
                 games.extend(csv.DictReader(f))
     return tuple(games)
 
@@ -486,7 +486,7 @@ def _odds_rows() -> dict[tuple[str, str, str], dict]:
     if not ODDS_CSV.exists():
         return {}
     table: dict[tuple[str, str, str], dict] = {}
-    with ODDS_CSV.open(newline="") as f:
+    with ODDS_CSV.open(newline="", encoding="utf-8") as f:
         for r in csv.DictReader(f):
             key = (
                 r["away"].strip().lower(),
@@ -602,7 +602,7 @@ def slate_as_of(as_of: date, days_ahead: int = 1) -> dict:
 def _player_feature_rows() -> tuple[dict, ...]:
     if not PLAYER_FEATURES_CSV.exists():
         return ()
-    with PLAYER_FEATURES_CSV.open() as f:
+    with PLAYER_FEATURES_CSV.open(encoding="utf-8") as f:
         return tuple(csv.DictReader(f))
 
 
@@ -717,7 +717,7 @@ class MockSource:
             )
             if candidate.exists():
                 path = candidate
-        with path.open() as f:
+        with path.open(encoding="utf-8") as f:
             return json.load(f)
 
     def matchup_context(self, matchup_id: str, as_of_date: str) -> dict:

@@ -340,7 +340,7 @@ def test_betting_line_never_contains_a_score():
 def test_odds_only_csv_has_no_score_columns():
     """File-level guarantee, independent of the tool: the source file itself
     must never carry score data, no matter what column order it's saved in."""
-    with ODDS_CSV.open(newline="") as f:
+    with ODDS_CSV.open(newline="", encoding="utf-8") as f:
         columns = set(csv.DictReader(f).fieldnames or [])
     leaked = SCORE_COLUMNS & columns
     assert not leaked, f"odds_only.csv contains score column(s): {leaked}"
@@ -429,7 +429,7 @@ def test_the_two_injury_files_join_without_a_gap_or_an_overlap():
     # in time rather than that every row is unique -- the Kaggle file already
     # carries one genuine duplicate of its own (Doug McDermott, 2022-12-08).
     def file_dates(path):
-        with path.open(newline="") as f:
+        with path.open(newline="", encoding="utf-8") as f:
             return {r["Date"] for r in csv.DictReader(f)}
 
     shared = file_dates(INJURY_CSVS[0]) & file_dates(INJURY_CSVS[1])
@@ -473,7 +473,7 @@ def test_odds_file_carries_no_scores():
     check rather than failed it.
     """
     assert ODDS_CSV.exists(), f"{ODDS_CSV.name} missing -- run scripts/odds_only.py"
-    with ODDS_CSV.open() as fh:
+    with ODDS_CSV.open(encoding="utf-8") as fh:
         header = fh.readline().lower()
     for banned in ("score", "_pts", "winner"):
         assert banned not in header, (

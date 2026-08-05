@@ -129,7 +129,7 @@ def load_rows(playoffs_only: bool, limit: int | None) -> tuple[list[dict], dict]
             f"missing {games_path.name}. Run: python scripts/build_2026_testset.py"
         )
 
-    games = list(csv.DictReader(open(games_path)))
+    games = list(csv.DictReader(open(games_path, encoding="utf-8")))
     if playoffs_only:
         games = [g for g in games if g.get("playoffs") == "1"]
     if limit:
@@ -216,7 +216,7 @@ def run(playoffs_only: bool, limit: int | None, out_path: str | None) -> dict:
     if out_path and rows:
         p = Path(out_path)
         p.parent.mkdir(parents=True, exist_ok=True)
-        with open(p, "w", newline="") as fh:
+        with open(p, "w", newline="", encoding="utf-8") as fh:
             w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
             w.writeheader()
             w.writerows(rows)

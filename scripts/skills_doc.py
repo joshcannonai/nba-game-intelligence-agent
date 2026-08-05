@@ -105,7 +105,7 @@ def main() -> None:
         return
 
     out = ROOT / "docs" / "SKILLS.md"
-    out.write_text(text)
+    out.write_text(text, encoding="utf-8")
     print(f"wrote {out.relative_to(ROOT)}  ({len(text.splitlines())} lines)")
 
 

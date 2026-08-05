@@ -317,7 +317,7 @@ def main() -> None:
     if args.out:
         p = Path(args.out)
         p.parent.mkdir(parents=True, exist_ok=True)
-        with open(p, "w", newline="") as fh:
+        with open(p, "w", newline="", encoding="utf-8") as fh:
             cols = ["game_id", "game_date", "home", "away", "actual_home_win", "vegas"]
             cols += [f"arm_{k}" for k in sorted(per_game_probs)]
             w = csv.DictWriter(fh, fieldnames=cols)

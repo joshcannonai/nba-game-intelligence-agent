@@ -63,7 +63,7 @@ def star_rosters() -> dict[tuple[int, str], set[str]]:
     that belongs to no single roster.
     """
     rosters: dict[tuple[int, str], set[str]] = {}
-    with PLAYER_PER_GAME_CSV.open(newline="") as fh:
+    with PLAYER_PER_GAME_CSV.open(newline="", encoding="utf-8") as fh:
         for row in csv.DictReader(fh):
             try:
                 season = int(row["season"])
@@ -80,7 +80,7 @@ def team_games(season: int):
     """Yield (team_abbr, star_was_out, team_won) for every team-game."""
     rosters = star_rosters()
     path = SAMPLE_DIR / f"game_logs_{season}.csv"
-    with path.open(newline="") as fh:
+    with path.open(newline="", encoding="utf-8") as fh:
         for game in csv.DictReader(fh):
             as_of = parse_date(game["game_date"]) - timedelta(days=1)
             prior = season_end_year(as_of) - 1

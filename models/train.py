@@ -134,7 +134,7 @@ def train(write: bool = True) -> dict:
     print(f"always-home on the same games: {home_rate:.1%}")
 
     if write:
-        MODEL_PATH.write_text(json.dumps(payload, indent=2) + "\n")
+        MODEL_PATH.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         print(f"\nwrote {MODEL_PATH.relative_to(MODEL_PATH.parents[1])}")
 
     return payload
