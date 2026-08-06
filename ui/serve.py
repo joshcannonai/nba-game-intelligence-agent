@@ -121,16 +121,9 @@ def predict_only(req: PredictRequest) -> dict:
     next to the agent is the point of the comparison: the same game, the same
     as-of date, one answer from a model and one from a model plus an agent.
     """
-    from agent.sources import parse_matchup_id
-    from models.predict import model_available, predict
+    from models.notebook_model_output import predict_model_only
 
-    away, home, _ = parse_matchup_id(req.matchup_id)
-    if not model_available():
-        return {
-            "status": "awaiting_input",
-            "needs": "models/win_probability.json is missing. Run `python -m models.train`.",
-        }
-    out = predict(home, away, req.as_of_date)
+    out = predict_model_only(req.matchup_id, req.as_of_date)
     out["arm"] = "A"
     return out
 
