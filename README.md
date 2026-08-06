@@ -65,12 +65,23 @@ cd nba-game-intelligence-agent
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-python -m models.train        # fit the model            (~7s)
-pytest                        # 73 tests                 (~80s)
-streamlit run ui/app.py       # the UI                   → localhost:8501
+python -m models.train        # fit the win model        (~7s)
+pytest                        # 80 tests                 (~75s)
+
+# The site. The front end is built output, which is gitignored, so build it once.
+cd ui/web && bun install && bun run build && cd ../..
+python -m ui.serve            # → localhost:8000
 ```
 
-That is the whole setup. Verified from a clean clone and a fresh virtualenv on 2026-08-03.
+Without the build step `python -m ui.serve` still runs, but it serves the API only and
+tells you so. Everything else in this README works without touching the front end.
+
+That is the whole setup. Verified from a clean clone of `main` on 2026-08-05: 80 tests
+pass and `python -m eval.three_arms` reproduces 66.49% without any further steps.
+
+**Windows note.** Fixed on 2026-08-04. If you are on a checkout older than that and see
+`UnicodeDecodeError: 'charmap' codec can't decode byte ...`, that is Python on Windows
+defaulting to cp1252 while our data contains accented player names. Pull `main`.
 
 <details>
 <summary><b>Everything else you can run</b></summary>
@@ -95,6 +106,15 @@ python -m scripts.gate_snapshot --as-of 2026-01-14
 # Confirm the odds file really holds CLOSING lines, not opening lines
 python eval/crosscheck_odds.py
 
+# The site: agent, three-arm comparison, the prompt, the tools, the data
+python -m ui.serve                       # → localhost:8000
+
+# Remove one tool and re-run the same games -- what was that tool worth?
+python -m eval.ablation --sample 50 --arm B --model ollama
+
+# Fit the stat-line model (needs data/raw/player_box_scores_prior/)
+python -m models.train_stat_line
+
 # The conversational UI over the same tools and the same gate
 streamlit run ui/chat.py
 
@@ -103,8 +123,16 @@ python -m agent.run --model ollama --source real \
     --matchup CHI-ORL-2025-12-01 --as-of 2025-11-30
 ```
 
+**The site.** `python -m ui.serve` serves the built front end and the agent from one
+process at `localhost:8000`. Six tabs: run any of the three arms on any of the 1,322
+games, the measured three-arm comparison, the exact prompt the model receives, all seven
+tools with their rule files, every dataset, and the model details. A read-only copy is
+hosted at https://nba-agent-cecs499.vercel.app -- everything works there except the Agent
+tab, which needs a local model and says so, which means you do not need to build anything
+to look at the results.
+
 **Sharing it with someone else.** `pip install -r requirements.txt` then
-`streamlit run ui/app.py` is the whole story — no API key, no database, no services. The
+`python -m ui.serve` is the whole story — no API key, no database, no services. The
 model weights (`models/win_probability.json`) and the sample data are committed, so a
 fresh clone is immediately runnable. For a teammate on another machine,
 `streamlit run ui/app.py --server.address 0.0.0.0` serves it on the local network.
@@ -272,8 +300,8 @@ Seven functions are the agent's entire world. Every retrieval tool takes an `as_
 | 3 | `retrieve_team_form(team_abbr, as_of_date, last_n)` | ✅ | Rolling 10-game record and point differential |
 | 4 | `retrieve_injuries(team_abbr, as_of_date)` | ✅ | Who was known to be out that morning |
 | 5 | `predict_win_probability(home, away, as_of_date)` | ✅ | Logistic regression output — **withheld in arm B** |
-| 6 | `retrieve_schedule(as_of_date, days_ahead)` | ⏳ | Blocked on a committed forward-looking schedule table |
-| 7 | `predict_stat_line(player, matchup_id, as_of_date)` | ⏳ | Points / rebounds / assists — not started |
+| 6 | `retrieve_schedule(as_of_date, days_ahead)` | ✅ | Fixtures from the season game log. Teams and dates only, never a score |
+| 7 | `predict_stat_line(player, matchup_id, as_of_date)` | ✅ | Points / rebounds / assists. Ridge on 2023-24, validated on 2024-25 |
 
 Live status: `python -m agent.run --status --source real`
 
@@ -309,7 +337,7 @@ work, so:
 | Cut | Reason |
 |---|---|
 | `retrieve_news` | No source with reliable publication timestamps was ever found. Highest effort of the ten, least measurable contribution. Cut on merit. |
-| `predict_best_player` | Depended entirely on `predict_stat_line`, which never started. A placeholder behind a placeholder. |
+| `predict_best_player` | Depended entirely on `predict_stat_line`, which was not built at the time. Cut then; `predict_stat_line` has since landed, so this could be revisited. |
 | `retrieve_betting_line` | **Not a scope cut — a leak.** See design decision 3 above. |
 </details>
 
@@ -550,7 +578,7 @@ It is, which is why there is a test for it. The agent's `team_form_as_of` re-sca
 
 **Q: Your proposal promised projected stat lines and a best-player pick. Where are they?**
 
-Not built. `predict_stat_line` exists as a tool signature and returns `awaiting_input`; the regression behind it never started. `predict_best_player` depended on it, so it was cut — a placeholder behind a placeholder. `retrieve_news` was cut too, because no source with reliable publication timestamps was ever found. The system reports these gaps rather than hiding them: `python -m agent.run --status` prints what is built and what is blocked, generated from the code.
+Built as of 2026-08-04. `predict_stat_line` is backed by ridge regressions on a player's trailing 5- and 10-game form, fitted on 2023-24 and validated on 2024-25, and never on the season being replayed. It beats a trailing 5-game average by 0.061 points of MAE, which is real and small, and the skill tells the agent to say so rather than imply otherwise. `predict_best_player` was cut when it was a placeholder behind a placeholder, and `retrieve_news` because no source with reliable publication timestamps was ever found. `python -m agent.run --status` prints what is built and what is blocked, generated from the code.
 
 > **Weak spot:** This is a stated deliverable that does not exist, and "the status board reports it" is a good process answer to a scope question, not a substitute for the feature.
 
@@ -584,7 +612,7 @@ Ranked by exposure, with how to handle each.
 
 1. **"Wasn't the model Sarvesh's job?"** — The most awkward, because the honest answer touches a teammate's delivery. One breath: the interface was mine, nothing downstream could be scored without a baseline behind it, `models/README.md` is the handoff, beating 66.5% is his task. Then move on. Do not editorialise about his progress.
 
-2. **"Where are the projected stat lines?"** — A stated PDP deliverable that does not exist. Do not lead with the status board; lead with "not built," then explain that the tool signature is waiting and the dependency chain that cut `predict_best_player` with it.
+2. **"Where are the projected stat lines?"** — Built. The honest framing is what it cost: the only player-level data in the repo covers the season being replayed, so it had to be fitted on two prior seasons scraped for the purpose, and it beats a trailing 5-game average by 0.061 points of MAE. Lead with the baseline, not the model.
 
 3. **"Explain the logistic regression without looking."** — He does this to every student and he did it to Sarvesh on the 28th. Rehearse it out loud: weighted sum, sigmoid, fit by minimising log loss, standardised features so weights compare, and be ready to name which two features dominate and which is doing nothing.
 
@@ -602,8 +630,8 @@ Stated plainly, because the gaps we name are less dangerous than the ones we do 
 
 | | Item | Owner |
 |---|---|---|
-| 1 | **`predict_stat_line`** — "projected stat lines" was a stated PDP deliverable. The tool signature exists and returns `awaiting_input`; the regression behind it does not. | Sarvesh |
-| 2 | **`retrieve_schedule`** — blocked on a committed forward-looking schedule table. `data/raw/` stopped being gitignored on 7/21, so nothing is in the way. | Patrick |
+| 1 | ~~**`predict_stat_line`**~~ — done 2026-08-04. Fitted on 2023-24, validated on 2024-25. | ~~Sarvesh~~ Josh |
+| 2 | ~~**`retrieve_schedule`**~~ — done 2026-08-04. It never needed a new file; the season game log already carried every fixture. | ~~Patrick~~ Josh |
 | 3 | **Why the agent overrules the model** — the most valuable open question. Needs error analysis of the 19 overrides' `key_factors`. | open |
 | 4 | **Larger n for arms B and C** — 40 games is a ±8% band. | open |
 | 5 | **The "let it cheat" ablation** — the advisor suggested deliberately un-gating the agent as a contrast condition. Never run. | open |
@@ -626,7 +654,7 @@ opponent-adjusted strength of schedule.
 | `models/` | Features, training, prediction, committed weights — see [`models/README.md`](models/README.md) |
 | `eval/` | Replay harness, three-arm experiment, odds cross-check, per-game results |
 | `scripts/` | Snapshot gate, test-set construction, odds allowlist, game-log fetch |
-| `tests/` | 73 tests — date gating, model contract, snapshot gate, skills |
+| `tests/` | 80 tests — date gating, model contract, snapshot gate, skills, stat line |
 | `ui/` | Two Streamlit front ends |
 | `data/` | Collection scripts, feature engineering, raw and sample datasets |
 | `docs/` | [Report](docs/REPORT.md) · [Handoff](docs/HANDOFF.md) · [Tool contracts](docs/tool-contracts.md) · [Design notes](docs/agent-design-notes.md) |
