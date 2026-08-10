@@ -32,5 +32,8 @@ numpy>=1.26.0
 pytest>=8.0.0
 
 
-# UI (ui/app.py -- the Streamlit report front end)
+# UI runtimes (ui/app.py and the FastAPI bridge in ui/serve.py)
 streamlit>=1.45.0
+fastapi>=0.115.0
+uvicorn>=0.30.0
+httpx>=0.27.0

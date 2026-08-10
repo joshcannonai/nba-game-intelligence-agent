@@ -223,10 +223,11 @@ def build_tools(source, include_model: bool = True, without: tuple[str, ...] = (
         5- and 10-game form, rest, and home/away splits, fitted on 2023-24 and
         validated on 2024-25. It is never fitted on the season being replayed.
 
-        Returns `status: unavailable` with a reason when the player has no box
-        score for that game, which is the honest answer for someone who did not
-        play. Single-game lines are high variance; the payload carries the test
-        mean absolute error so the size of the error is visible next to the number.
+        Returns `status: unavailable` when observable pregame history is
+        insufficient. That status says nothing about whether the player later
+        appeared in the game. Single-game lines are high variance; the payload
+        carries the test mean absolute error so the size of the error is visible
+        next to the number.
 
         Args:
             player_name: Full player name.

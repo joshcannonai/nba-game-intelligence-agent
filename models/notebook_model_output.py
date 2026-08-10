@@ -78,6 +78,23 @@ PLAYER_TARGETS = {
     "predicted_assists": "assists",
 }
 
+# Deliberately explicit: these columns are produced with shift(1) in
+# data/engineer_team_features.py, so they are available before tipoff.  Do not
+# replace this with dtype-based discovery; the export also contains the target
+# game's final score, which must never become a model input.
+TEAM_FEATURE_COLS = [
+    "rolling_pts_scored_5",
+    "rolling_pts_allowed_5",
+    "rolling_win_pct_5",
+    "rolling_pts_scored_10",
+    "rolling_pts_allowed_10",
+    "rolling_win_pct_10",
+    "home_away_pts_scored_avg",
+    "home_away_pts_allowed_avg",
+    "rest_days",
+    "is_back_to_back",
+]
+
 
 def _team_key(value: Any) -> str:
     s = str(value).strip().upper().replace(" ", "_").replace("-", "_")
@@ -92,7 +109,7 @@ def _parse_matchup_id(matchup_id: str) -> tuple[str, str, pd.Timestamp]:
     return _team_key(away), _team_key(home), pd.to_datetime(f"{y}-{m}-{d}")
 
 
-def _base_model(model: Any) -> Pipeline:
+def _base_model(model: Any, feature_cols: list[str]) -> Pipeline:
     return Pipeline(
         steps=[
             (
@@ -107,7 +124,7 @@ def _base_model(model: Any) -> Pipeline:
                                     ("scaler", StandardScaler()),
                                 ]
                             ),
-                            None,
+                            feature_cols,
                         )
                     ]
                 ),
@@ -118,28 +135,7 @@ def _base_model(model: Any) -> Pipeline:
 
 
 def _player_pipeline() -> Pipeline:
-    return Pipeline(
-        steps=[
-            (
-                "preprocess",
-                ColumnTransformer(
-                    transformers=[
-                        (
-                            "num",
-                            Pipeline(
-                                steps=[
-                                    ("imputer", SimpleImputer(strategy="median")),
-                                    ("scaler", StandardScaler()),
-                                ]
-                            ),
-                            PLAYER_FEATURE_COLS,
-                        )
-                    ]
-                ),
-            ),
-            ("model", LinearRegression()),
-        ]
-    )
+    return _base_model(LinearRegression(), PLAYER_FEATURE_COLS)
 
 
 def _read_player_data() -> pd.DataFrame:
@@ -188,16 +184,60 @@ def _predict_player_stat_lines(
     if len(train_df) < 50:
         return []
 
-    game_players = df[
-        (df["game_date"] == game_date)
-        & (
-            ((df["team_key"] == home_key) & (df["opponent_key"] == away_key))
-            | ((df["team_key"] == away_key) & (df["opponent_key"] == home_key))
-        )
-    ].copy()
+    # Build the candidate roster and feature snapshots entirely from rows that
+    # existed by as_of. Selecting players from the target game's box score would
+    # reveal future participation even if its outcome columns were removed.
+    latest_observed = train_df.sort_values(["slug", "game_date"]).drop_duplicates(
+        "slug", keep="last"
+    )
+    roster = latest_observed[
+        latest_observed["team_key"].isin([home_key, away_key])
+    ][["slug", "team_key"]]
 
-    if game_players.empty:
+    team_data = _read_team_data()
+    snapshots = []
+    for player in roster.itertuples(index=False):
+        target_is_home = 1 if player.team_key == home_key else 0
+        history = train_df[train_df["slug"] == player.slug].sort_values("game_date")
+        venue = history[history["is_home"] == target_is_home]
+        if history.empty or venue.empty:
+            continue
+        latest = history.iloc[-1].copy()
+        for window in (5, 10):
+            recent = history.tail(window)
+            for source, stem in [
+                ("points", "pts"),
+                ("total_rebounds", "reb"),
+                ("assists", "ast"),
+                ("minutes", "min"),
+            ]:
+                latest[f"rolling_{stem}_{window}"] = recent[source].mean()
+            latest[f"rolling_fg_pct_{window}"] = (
+                recent["made_field_goals"].sum()
+                / recent["attempted_field_goals"].sum()
+                if recent["attempted_field_goals"].sum()
+                else np.nan
+            )
+            latest[f"rolling_3p_pct_{window}"] = (
+                recent["made_three_point_field_goals"].sum()
+                / recent["attempted_three_point_field_goals"].sum()
+                if recent["attempted_three_point_field_goals"].sum()
+                else np.nan
+            )
+        latest["home_away_pts_avg"] = venue["points"].mean()
+        latest["home_away_reb_avg"] = venue["total_rebounds"].mean()
+        latest["home_away_ast_avg"] = venue["assists"].mean()
+        latest["is_home"] = target_is_home
+        rest = _target_rest_days(team_data, player.team_key, game_date)
+        latest["rest_days"] = rest
+        latest["is_back_to_back"] = int(rest == 1)
+        latest["opponent"] = away_key if target_is_home else home_key
+        snapshots.append(latest)
+
+    if not snapshots:
         return []
+
+    game_players = pd.DataFrame(snapshots)
 
     if "rolling_min_5" in game_players.columns:
         game_players = game_players[
@@ -210,16 +250,7 @@ def _predict_player_stat_lines(
     result = game_players[
         [
             c
-            for c in [
-                "name",
-                "slug",
-                "team",
-                "opponent",
-                "rolling_min_5",
-                "points",
-                "total_rebounds",
-                "assists",
-            ]
+            for c in ["name", "slug", "team", "opponent", "rolling_min_5"]
             if c in game_players.columns
         ]
     ].copy()
@@ -230,17 +261,10 @@ def _predict_player_stat_lines(
         model.fit(clean_train[PLAYER_FEATURE_COLS], clean_train[target_col])
         result[output_col] = model.predict(game_players[PLAYER_FEATURE_COLS])
 
-    rename_actuals = {
-        "points": "actual_points",
-        "total_rebounds": "actual_rebounds",
-        "assists": "actual_assists",
-    }
-    result = result.rename(columns=rename_actuals)
-
     for c in ["predicted_points", "predicted_rebounds", "predicted_assists"]:
         result[c] = result[c].round(1)
 
-    for c in ["actual_points", "actual_rebounds", "actual_assists", "rolling_min_5"]:
+    for c in ["rolling_min_5"]:
         if c in result.columns:
             result[c] = pd.to_numeric(result[c], errors="coerce").round(1)
 
@@ -278,7 +302,7 @@ def _read_team_data() -> pd.DataFrame:
         raise ValueError("Team CSV needs a location or is_home column.")
 
     points = _first_existing_numeric(
-        df, ["points", "pts", "team_points", "score", "score_for"]
+        df, ["points", "pts", "team_points", "points_scored", "score", "score_for"]
     )
     opp_points = _first_existing_numeric(
         df,
@@ -307,7 +331,52 @@ def _read_team_data() -> pd.DataFrame:
     else:
         raise ValueError("Team CSV needs won/result or points/opponent_points columns.")
 
+    missing_features = [c for c in TEAM_FEATURE_COLS if c not in df.columns]
+    if missing_features:
+        raise ValueError(
+            "Team CSV is missing pregame feature columns: "
+            f"{missing_features}."
+        )
+
     return df
+
+
+def _target_rest_days(df: pd.DataFrame, team_key: str, game_date: pd.Timestamp) -> int:
+    prior_dates = df.loc[
+        (df["team_key"] == team_key) & (df["game_date"] < game_date), "game_date"
+    ]
+    if prior_dates.empty:
+        return 7
+    return int((game_date - prior_dates.max()).days)
+
+
+def _team_feature_snapshot(
+    df: pd.DataFrame,
+    team_key: str,
+    game_date: pd.Timestamp,
+    as_of: pd.Timestamp,
+    is_home: int,
+) -> dict[str, float]:
+    observed = df[(df["team_key"] == team_key) & (df["game_date"] <= as_of)].sort_values(
+        "game_date"
+    )
+    if observed.empty:
+        raise ValueError(f"No team history for {team_key} by {as_of.date()}")
+    venue = observed[observed["_is_home"] == is_home]
+    if venue.empty:
+        venue = observed
+    out: dict[str, float] = {}
+    for window in (5, 10):
+        recent = observed.tail(window)
+        out[f"rolling_pts_scored_{window}"] = float(recent["_points"].mean())
+        out[f"rolling_pts_allowed_{window}"] = float(recent["_opp_points"].mean())
+        out[f"rolling_win_pct_{window}"] = float(recent["_won"].mean())
+    out["home_away_pts_scored_avg"] = float(venue["_points"].mean())
+    out["home_away_pts_allowed_avg"] = float(venue["_opp_points"].mean())
+    rest = _target_rest_days(df, team_key, game_date)
+    out["rest_days"] = float(rest)
+    out["is_back_to_back"] = float(rest == 1)
+    return out
 
 
 def _predict_win_probability(
@@ -319,57 +388,18 @@ def _predict_win_probability(
     df = _read_team_data()
     as_of = pd.to_datetime(as_of_date)
 
-    leakage_cols = {
-        "points",
-        "pts",
-        "team_points",
-        "score",
-        "score_for",
-        "opponent_points",
-        "opp_points",
-        "opp_pts",
-        "points_allowed",
-        "score_against",
-        "won",
-        "win",
-        "result",
-        "is_home",
-        "_is_home",
-        "_points",
-        "_opp_points",
-        "_won",
-    }
-
-    numeric_cols = [
-        c
-        for c in df.select_dtypes(include=[np.number]).columns
-        if c not in leakage_cols and not c.startswith("_")
-    ]
-
     home_rows = df[df["_is_home"] == 1].copy()
     away_rows = df[df["_is_home"] == 0].copy()
 
     base_keep = ["game_date", "team_key", "opponent_key", "_won", "_points", "_opp_points"]
-    keep = [c for c in base_keep + numeric_cols if c in df.columns]
-    
+    keep = [c for c in base_keep + TEAM_FEATURE_COLS if c in df.columns]
+
     matchups = home_rows[keep].merge(
         away_rows[keep],
         left_on=["game_date", "team_key", "opponent_key"],
         right_on=["game_date", "opponent_key", "team_key"],
         suffixes=("_home", "_away"),
     )
-
-    selected = matchups[
-        (matchups["game_date"] == game_date)
-        & (matchups["team_key_home"] == home_key)
-        & (matchups["opponent_key_home"] == away_key)
-    ].copy()
-
-    if selected.empty:
-        return {
-            "status": "unavailable",
-            "reason": "Selected matchup was not found in team_game_stats_engineered.csv.",
-        }
 
     train_df = matchups[matchups["game_date"] <= as_of].copy()
     if len(train_df) < 20 or train_df["_won_home"].nunique() < 2:
@@ -379,14 +409,19 @@ def _predict_win_probability(
         }
 
     feature_cols = []
-    for c in numeric_cols:
+    home_snapshot = _team_feature_snapshot(df, home_key, game_date, as_of, 1)
+    away_snapshot = _team_feature_snapshot(df, away_key, game_date, as_of, 0)
+    selected_values: dict[str, float] = {}
+    for c in TEAM_FEATURE_COLS:
         h = f"{c}_home"
         a = f"{c}_away"
         if h in matchups.columns and a in matchups.columns:
             d = f"{c}_diff"
             matchups[d] = matchups[h] - matchups[a]
             train_df[d] = train_df[h] - train_df[a]
-            selected[d] = selected[h] - selected[a]
+            selected_values[h] = home_snapshot[c]
+            selected_values[a] = away_snapshot[c]
+            selected_values[d] = home_snapshot[c] - away_snapshot[c]
             feature_cols.extend([h, a, d])
 
     if not feature_cols:
@@ -395,38 +430,14 @@ def _predict_win_probability(
             "reason": "No usable numeric team features were found for logistic regression.",
         }
 
-    model = Pipeline(
-        steps=[
-            (
-                "preprocess",
-                ColumnTransformer(
-                    transformers=[
-                        (
-                            "num",
-                            Pipeline(
-                                steps=[
-                                    ("imputer", SimpleImputer(strategy="median")),
-                                    ("scaler", StandardScaler()),
-                                ]
-                            ),
-                            feature_cols,
-                        )
-                    ]
-                ),
-            ),
-            ("model", LogisticRegression(max_iter=1000)),
-        ]
-    )
+    model = _base_model(LogisticRegression(max_iter=1000), feature_cols)
 
+    selected = pd.DataFrame([selected_values])
     model.fit(train_df[feature_cols], train_df["_won_home"].astype(int))
     home_prob = float(model.predict_proba(selected[feature_cols])[:, 1][0])
     away_prob = 1.0 - home_prob
 
     predicted_winner = home_key if home_prob >= 0.5 else away_key
-
-    actual_winner = None
-    if "_won_home" in selected.columns and pd.notna(selected["_won_home"].iloc[0]):
-        actual_winner = home_key if int(selected["_won_home"].iloc[0]) == 1 else away_key
 
     return {
         "status": "ok",
@@ -436,7 +447,6 @@ def _predict_win_probability(
         "home_win_prob": round(home_prob, 4),
         "away_win_prob": round(away_prob, 4),
         "predicted_winner": predicted_winner,
-        "actual_winner": actual_winner,
         "feature_count": len(feature_cols),
         "training_rows": int(len(train_df)),
     }
@@ -451,6 +461,9 @@ def predict_model_only(matchup_id: str, as_of_date: str) -> dict:
     """
     try:
         away_key, home_key, game_date = _parse_matchup_id(matchup_id)
+        as_of = pd.to_datetime(as_of_date).normalize()
+        if as_of >= game_date.normalize():
+            raise ValueError("as_of_date must be before the game date")
 
         win = _predict_win_probability(
             game_date=game_date,
@@ -478,7 +491,6 @@ def predict_model_only(matchup_id: str, as_of_date: str) -> dict:
             "home_win_prob": win.get("home_win_prob"),
             "away_win_prob": win.get("away_win_prob"),
             "predicted_winner": win.get("predicted_winner"),
-            "actual_winner": win.get("actual_winner"),
             "win_prediction": win,
             "player_stat_line_model": "Linear Regression",
             "player_stat_lines": players,

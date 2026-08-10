@@ -106,6 +106,30 @@ def test_no_unfinished_season_aggregates(snapshot):
     assert not late, f"unfinished-season rows survived: {late[:5]}"
 
 
+def test_no_player_result_after_as_of(snapshot):
+    rows = _rows(snapshot / "exports" / "player_stats_engineered.csv")
+    assert rows
+    assert all(parse_date(r["game_date"]) <= parse_date(AS_OF) for r in rows)
+
+
+def test_snapshot_player_features_remain_available(snapshot):
+    env = dict(os.environ, NBA_SNAPSHOT_DIR=str(snapshot))
+    code = (
+        "from agent.sources import CsvSource; "
+        "r=CsvSource().player_features('Nikola Jokić', "
+        "'LAL-DEN-2025-12-03', '2025-12-02'); "
+        "assert r['available'], r"
+    )
+    subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+
 def test_manifest_accounts_for_every_file(snapshot):
     """The manifest is the audit trail. It has to match what is on disk."""
     manifest = json.loads((snapshot / "_manifest.json").read_text(encoding="utf-8"))

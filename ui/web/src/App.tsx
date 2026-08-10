@@ -515,19 +515,21 @@ function AgentTab({ health }: { health: Health | null }) {
 					</label>
 					<button className="run" onClick={run} disabled={running}>
 						{running
-							? "Thinking, " + elapsed.toFixed(0) + "s"
-							: "Run the agent"}
+							? (arm === "A" ? "Scoring" : "Thinking") +
+								", " +
+								elapsed.toFixed(0) +
+								"s"
+							: arm === "A"
+								? "Run the model"
+								: "Run the agent"}
 					</button>
 				</div>
 				<p className="note tight" style={{ marginTop: 16 }}>
 					{arm === "A"
-						? "The fitted model on its own, no language model involved. Returns instantly, because scoring a logistic regression is a dot product. "
+						? "The model on its own, with no language model involved. Each request fits logistic and linear regressions using rows on or before the as-of date, then scores the selected game using only explicitly allowed pregame features. The final score and actual player results are excluded."
 						: arm === "B"
-							? "The agent without the model tool. It has to reason its own way to a probability from the retrieval tools alone. "
-							: "The agent given the model's number as one input among several. "}
-					Every
-					call below is filtered to the as-of date before it returns, so the
-					agent cannot see the result it is being asked to predict.
+							? "The agent without the model tool. It has to reason its own way to a probability from the retrieval tools alone. Every tool call is filtered to the as-of date before it returns."
+							: "The agent receives the model's number as one input among several. Every tool call is filtered to the as-of date before it returns."}
 				</p>
 			</div>
 
@@ -577,7 +579,7 @@ function AgentTab({ health }: { health: Health | null }) {
 					<h2 className="sec">{arm === "A" ? "What the model returned" : "What it concluded"}</h2>
 					<p className="note">
 						{arm === "A"
-							? "The eight features it used are in the payload, so the number can be checked by hand."
+							? "The payload reports the pregame feature count, training-row count, and resulting probabilities for inspection."
 							: "The agent must return valid JSON, including anything it could not find."}
 					</p>
 					<pre className="out">{final}</pre>
