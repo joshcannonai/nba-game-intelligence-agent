@@ -25,6 +25,31 @@ type Step = {
 	detail: string;
 	t: number;
 };
+type ContextMessage = {
+	role: "system" | "user" | "assistant" | "tool";
+	content: string;
+	name?: string;
+	tool_call_id?: string;
+	tool_calls?: unknown[];
+};
+type RunContext = {
+	matchup_id: string;
+	as_of_date: string;
+	source: string;
+	messages: ContextMessage[];
+	usage: { input_tokens: number; output_tokens: number; total_tokens: number };
+};
+type GateReceipt = {
+	tool: string;
+	source: string;
+	requested_cutoff: string;
+	tool_cutoff?: string;
+	checked_historical_dates: number;
+	latest_historical_date?: string;
+	post_cutoff_records: number;
+	status: "passed" | "failed" | "not_applicable";
+	scope: string;
+};
 
 type Game = { id: string; d: string; a: string; h: string; asOf: string };
 const GAMES: Game[] = schedule.games;
@@ -362,6 +387,8 @@ function AgentTab({ health }: { health: Health | null }) {
 	const [final, setFinal] = useState("");
 	const [running, setRunning] = useState(false);
 	const [elapsed, setElapsed] = useState(0);
+	const [context, setContext] = useState<RunContext | null>(null);
+	const [gateReceipts, setGateReceipts] = useState<GateReceipt[]>([]);
 	const logRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -376,6 +403,8 @@ function AgentTab({ health }: { health: Health | null }) {
 		setFinal("");
 		setRunning(true);
 		setElapsed(0);
+		setContext(null);
+		setGateReceipts([]);
 		try {
 			if (arm === "A") {
 				const r = await fetch(BRIDGE + "/api/predict", {
@@ -448,6 +477,15 @@ function AgentTab({ health }: { health: Health | null }) {
 								t: data.elapsed,
 							},
 						]);
+					else if (ev === "context_start") setContext(data);
+					else if (ev === "context_message")
+						setContext((current) =>
+							current
+								? { ...current, messages: [...current.messages, data.message], usage: data.usage }
+								: null,
+						);
+					else if (ev === "gate_receipt")
+						setGateReceipts((receipts) => [...receipts, data]);
 					else if (ev === "final") setFinal(data.content);
 				}
 			}
@@ -494,6 +532,7 @@ function AgentTab({ health }: { health: Health | null }) {
 									type="button"
 									aria-pressed={arm === k}
 									onClick={() => setArm(k)}
+									disabled={running}
 								>
 									{label}
 								</button>
@@ -502,7 +541,7 @@ function AgentTab({ health }: { health: Health | null }) {
 					</div>
 					<div className="field grow">
 						<span>Game to predict</span>
-						<button className="picker" onClick={() => setPickerOpen(true)}>
+						<button className="picker" onClick={() => setPickerOpen(true)} disabled={running}>
 							<span>{labelFor(matchup)}</span>
 							<svg viewBox="0 0 16 16" {...ICON} width="13" height="13" aria-hidden="true">
 								<path d="M4 6l4 4 4-4" />
@@ -571,6 +610,51 @@ function AgentTab({ health }: { health: Health | null }) {
 							</div>
 						))}
 					</div>
+				</>
+			)}
+
+			{context && (
+				<>
+					<h2 className="sec">Run inspector</h2>
+					<p className="note">
+						This is the inspectable message context accumulated by the runtime—not hidden reasoning. It contains the exact assembled system instructions, user request, tool calls, full tool returns, and final response.
+					</p>
+					<div className="gate-receipt">
+						<div><span>Data as-of cutoff</span><strong>{context.as_of_date}</strong></div>
+						<div><span>Context messages</span><strong>{context.messages.length}</strong></div>
+						<div><span>Tokens processed</span><strong>{context.usage.total_tokens || "pending"}</strong></div>
+					</div>
+					<p className="note gate-note">
+						Game-specific historical records are checked against the run cutoff below; future schedule identities are allowed, but their outcomes are not. Static system instructions may include aggregate evaluation metrics, which are visible in the context transcript and are not game inputs.
+					</p>
+					{gateReceipts.length > 0 && (
+						<details className="context-window gate-checks" open={!running}>
+							<summary><Chevron /> Gate enforcement receipts · {gateReceipts.filter((receipt) => receipt.status === "passed").length} passed</summary>
+							<div className="gate-check-list">
+								{gateReceipts.map((receipt, i) => (
+									<div className={`gate-check ${receipt.status}`} key={`${receipt.tool}-${i}`}>
+										<strong>{receipt.tool}</strong>
+										<span>{receipt.status.replace("_", " ")}</span>
+										<code>cutoff {receipt.tool_cutoff ?? "n/a"} · latest checked {receipt.latest_historical_date ?? "n/a"} · post-cutoff {receipt.post_cutoff_records}</code>
+									</div>
+								))}
+							</div>
+						</details>
+					)}
+					<details className="context-window" open={!running}>
+						<summary><Chevron /> Actual run context · {context.messages.length} messages</summary>
+						<div className="context-messages">
+							{context.messages.map((message, i) => (
+								<div className={`context-message ${message.role}`} key={i}>
+									<div className="context-role">
+										{message.role}{message.name ? ` · ${message.name}` : ""}
+									</div>
+									{message.tool_calls && <pre>{JSON.stringify(message.tool_calls, null, 2)}</pre>}
+									{message.content && <pre>{message.content}</pre>}
+								</div>
+							))}
+						</div>
+					</details>
 				</>
 			)}
 
