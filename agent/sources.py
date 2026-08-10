@@ -63,6 +63,7 @@ ODDS_CSV = SAMPLE_DIR / "odds_only.csv"
 # keeps the box-score result in the same row as the features. Same hazard as the
 # odds file keeping score_home beside the line, handled the same way.
 PLAYER_FEATURES_CSV = SAMPLE_DIR / "player_features_2026.csv"
+PLAYER_STATS_CSV = DATA_ROOT / "exports" / "player_stats_engineered.csv"
 
 
 def parse_date(value: str) -> date:
@@ -183,6 +184,25 @@ def injuries_as_of(team_abbr: str, as_of: date) -> list[dict]:
 
     # importance is None for players with no prior season, so `or 0.0` not a default
     return sorted(active, key=lambda i: -(i.get("importance") or 0.0))
+
+
+def player_is_out(player_name: str, team_abbrs: tuple[str, ...], as_of: date) -> bool:
+    """Whether the gated injury log lists a matchup player as out.
+
+    Some transaction rows join multiple aliases with a slash. Keep that raw-data
+    detail inside the source boundary so every prediction path applies the same
+    name matching and cutoff.
+    """
+    requested = player_name.strip().casefold()
+    for team_abbr in team_abbrs:
+        for injury in injuries_as_of(team_abbr, as_of):
+            aliases = {
+                alias.strip().casefold()
+                for alias in str(injury.get("player", "")).split("/")
+            }
+            if requested in aliases:
+                return True
+    return False
 
 
 def player_importance(player_name: str, as_of: date) -> dict:
@@ -600,23 +620,26 @@ def slate_as_of(as_of: date, days_ahead: int = 1) -> dict:
 
 @lru_cache(maxsize=1)
 def _player_feature_rows() -> tuple[dict, ...]:
-    if not PLAYER_FEATURES_CSV.exists():
+    if not PLAYER_STATS_CSV.exists():
         return ()
-    with PLAYER_FEATURES_CSV.open(encoding="utf-8") as f:
+    with PLAYER_STATS_CSV.open(encoding="utf-8") as f:
         return tuple(csv.DictReader(f))
 
 
-def player_features_as_of(player_name: str, game_date: date, as_of: date) -> dict:
+def player_features_as_of(
+    player_name: str,
+    away: str,
+    home: str,
+    game_date: date,
+    as_of: date,
+) -> dict:
     """One player's as-of form for a specific game, gated at as_of.
 
-    THE GATE, precisely. The row for a game on date D carries rolling averages
-    computed with `shift(1)` -- over that player's games strictly BEFORE D. So the
-    row for the game being predicted is exactly "what was knowable going in", and
-    it is the only row that is safe to serve. We therefore take the player's first
-    game after as_of and require it to be the game we were asked about. If the
-    player's next appearance is later than the tip-off, they did not play, and the
-    honest answer is that there is no line to project -- not a projection built
-    from someone else's row.
+    THE GATE, precisely. Feature rows are box-score-derived, so the existence of a
+    row after ``as_of`` would itself reveal that the player appeared in a future
+    game. We therefore select only rows dated on or before ``as_of``. The latest
+    row matching the target venue supplies an observable historical snapshot; the
+    published team schedule supplies target-game rest and back-to-back context.
     """
     if as_of >= game_date:
         raise ValueError(
@@ -626,54 +649,107 @@ def player_features_as_of(player_name: str, game_date: date, as_of: date) -> dic
         )
 
     wanted = player_name.strip().casefold()
-    played = [
+    observed = [
         r
         for r in _player_feature_rows()
         if r.get("name", "").strip().casefold() == wanted
+        and parse_date(r["game_date"]) <= as_of
     ]
-    if not played:
+    observed.sort(key=lambda r: r["game_date"])
+    if not observed:
         return {
             "available": False,
-            "reason": f"No 2025-26 game rows for {player_name!r}.",
+            "reason": "No observable pregame feature snapshot is available.",
         }
 
-    upcoming = sorted(
-        (r for r in played if parse_date(r["game_date"]) > as_of),
-        key=lambda r: r["game_date"],
-    )
-    if not upcoming:
-        return {
-            "available": False,
-            "reason": (
-                f"{player_name} has no game after {as_of.isoformat()} in the data."
-            ),
-        }
-
-    row = upcoming[0]
-    if parse_date(row["game_date"]) != game_date:
+    latest = max(observed, key=lambda r: r["game_date"])
+    home_key = full_name(home).upper().replace(" ", "_")
+    away_key = full_name(away).upper().replace(" ", "_")
+    player_team = latest.get("team", "").strip().upper().replace(" ", "_")
+    if player_team == home_key:
+        is_home, player_abbr, opponent = 1, home, away_key
+    elif player_team == away_key:
+        is_home, player_abbr, opponent = 0, away, home_key
+    else:
         return {
             "available": False,
             "reason": (
-                f"{player_name} has no box score for {game_date.isoformat()} -- their "
-                f"next appearance is {row['game_date']}. They did not play; there is "
-                "no stat line to project."
+                f"{player_name}'s latest observable team is not part of this matchup."
             ),
         }
 
-    def num(key: str) -> float | None:
-        raw = row.get(key, "")
-        try:
-            return float(raw)
-        except (TypeError, ValueError):
-            return None
+    target_location = "HOME" if is_home else "AWAY"
+    venue_rows = [
+        r
+        for r in observed
+        if r.get("location", "").strip().upper() == target_location
+    ]
+    if not venue_rows:
+        return {
+            "available": False,
+            "reason": (
+                f"No {target_location.lower()} feature snapshot for {player_name} "
+                f"is available on or before {as_of.isoformat()}."
+            ),
+        }
+    row = latest
+
+    def mean(rows: list[dict], key: str) -> float | None:
+        values = []
+        for item in rows:
+            try:
+                values.append(float(item[key]))
+            except (KeyError, TypeError, ValueError):
+                pass
+        return sum(values) / len(values) if values else None
+
+    features: dict[str, float | None] = {}
+    for window in (5, 10):
+        recent = observed[-window:]
+        for source, stem in [
+            ("points", "pts"),
+            ("total_rebounds", "reb"),
+            ("assists", "ast"),
+            ("minutes", "min"),
+        ]:
+            features[f"rolling_{stem}_{window}"] = mean(recent, source)
+        if window != 5:
+            continue
+        for made, attempted, output in [
+            ("made_field_goals", "attempted_field_goals", f"rolling_fg_pct_{window}"),
+            (
+                "made_three_point_field_goals",
+                "attempted_three_point_field_goals",
+                f"rolling_3p_pct_{window}",
+            ),
+        ]:
+            made_sum = sum(float(r.get(made) or 0) for r in recent)
+            attempted_sum = sum(float(r.get(attempted) or 0) for r in recent)
+            features[output] = made_sum / attempted_sum if attempted_sum else None
+    features["home_away_pts_avg"] = mean(venue_rows, "points")
+    features["home_away_reb_avg"] = mean(venue_rows, "total_rebounds")
+    features["home_away_ast_avg"] = mean(venue_rows, "assists")
+    scheduled_dates = [
+        parse_date(g["game_date"])
+        for g in _game_logs(season_end_year(game_date))
+        if parse_date(g["game_date"]) < game_date
+        and player_abbr
+        in {normalize_abbr(g["home"]), normalize_abbr(g["away"])}
+    ]
+    if scheduled_dates:
+        rest_days = (game_date - max(scheduled_dates)).days
+        features["rest_days"] = float(rest_days)
+        features["is_back_to_back"] = 1.0 if rest_days == 1 else 0.0
+    features["is_home"] = float(is_home)
 
     return {
         "available": True,
         "player": row.get("name"),
-        "team": row.get("team"),
-        "opponent": row.get("opponent"),
-        "game_date": row["game_date"],
-        "features": {k: num(k) for k in STAT_LINE_FEATURE_KEYS},
+        "team": player_team,
+        "opponent": opponent,
+        "game_date": game_date.isoformat(),
+        "feature_snapshot_date": row["game_date"],
+        "features": features,
     }
 
 
@@ -920,8 +996,14 @@ class CsvSource:
         Note this is per-GAME, unlike `player_splits`, which serves prior-season
         averages. The two answer different questions and read different files.
         """
-        _, _, game_date = parse_matchup_id(matchup_id)
-        payload = player_features_as_of(player_name, game_date, parse_date(as_of_date))
+        away, home, game_date = parse_matchup_id(matchup_id)
+        payload = player_features_as_of(
+            player_name,
+            away,
+            home,
+            game_date,
+            parse_date(as_of_date),
+        )
         payload["source"] = self.name
         return payload
 

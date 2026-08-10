@@ -21,9 +21,8 @@ Run these in order. It builds an argument rather than touring features.
 python -m agent.run --status --source real
 ```
 
-Prints 5 of 7 tools returning real data, 2 reporting themselves as unbuilt, and who
-owes each missing input. **Generated from the code**, not a list maintained by hand.
-Opening with what does *not* work buys credibility for everything after it.
+Prints all 7 tools returning real data. **Generated from the code**, not a list
+maintained by hand, so the status cannot quietly drift from the implementation.
 
 ### 2. The date filter, showing its work — 2 seconds
 
@@ -58,7 +57,7 @@ python -m eval.betting
 
 ```
                       won      profit
-our predictor        66.4%    -$2,393
+our predictor        66.5%    -$2,135
 always the favourite 69.0%    -$4,628
 always the home team 55.5%    -$7,350
 ```
@@ -136,7 +135,7 @@ conversation turns to methodology.
 pytest
 ```
 
-73 tests, about 80 seconds. The mutation table in the report is the part worth
+95 tests, about 100 seconds. The mutation table in the report is the part worth
 mentioning: each leakage rule was broken deliberately to confirm the tests caught it.
 
 ---
@@ -147,7 +146,7 @@ mentioning: each leakage rule was broken deliberately to confirm the tests caugh
 least.
 
 **"Why is arm A up $993 on the 80-game sample?"** Because 80 games is not enough. The
-same predictor loses $2,393 over the full season. It is our own demonstration of the
+same predictor loses $2,135 over the full season. It is our own demonstration of the
 trap the report is about.
 
 **"How do you know the AI isn't just remembering?"** Gemma 4's cutoff is around January

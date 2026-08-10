@@ -10,11 +10,11 @@ games, so the row for a game on 2024-03-01 contains only what was knowable on th
 morning of 2024-03-01. The target (points, rebounds, assists) is that game's actual
 line. Training pairs the two; inference gets the features alone.
 
-WHY THE TARGET IS STRIPPED AT INFERENCE. `data/exports/player_stats_engineered.csv`
-keeps the features and the box-score result in the same row, exactly like the odds
-file keeps `score_home` next to the line. That is the single most likely way this
-tool could leak, so `build_features_only()` writes a file with the answer columns
-removed and `tests/test_stat_line.py` asserts they are gone.
+INFERENCE SAFETY. Runtime features are recomputed from outcome-history rows whose
+dates are explicitly capped at `as_of`. Structural snapshots apply the same cutoff
+physically before the agent starts, while query-time filtering enforces it again.
+`build_features_only()` remains a useful portable feature artifact, but it is not
+the runtime gate.
 """
 
 from __future__ import annotations

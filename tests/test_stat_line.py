@@ -2,10 +2,9 @@
 
 Two hazards, both of which have already bitten this project once in another form:
 
-1. The features and the answer live in the same row. `player_stats_engineered.csv`
-   carries `points` beside `rolling_pts_5`, exactly as the raw odds file carries
-   `score_home` beside the line. The agent reads a stripped copy, and
-   `test_inference_file_has_no_outcome_columns` is what keeps it stripped.
+1. Player outcomes are useful for recomputing form, but only rows dated on or
+   before `as_of` may be read. Snapshot tests physically remove later rows, while
+   these tests verify the query-time boundary.
 
 2. Trailing averages are only as-of if the game they trail is after as_of. Serving
    the row for a game that has already been played would hand the agent a window
@@ -14,62 +13,43 @@ Two hazards, both of which have already bitten this project once in another form
 
 from __future__ import annotations
 
-import csv
+from datetime import date
+import json
 
 import pytest
 
 from agent.sources import (
-    PLAYER_FEATURES_CSV,
+    PLAYER_STATS_CSV,
     STAT_LINE_FEATURE_KEYS,
     CsvSource,
     get_source,
+    parse_date,
 )
-
-pytestmark = pytest.mark.skipif(
-    not PLAYER_FEATURES_CSV.exists(),
-    reason="player_features_2026.csv not built; run python -m models.stat_line_features",
-)
-
-# Anything that reveals how the game actually went. Kept as a literal list rather
-# than imported from models/, so a change there cannot quietly relax this test.
-FORBIDDEN = {
-    "points",
-    "total_rebounds",
-    "assists",
-    "outcome",
-    "plus_minus",
-    "game_score",
-    "seconds_played",
-    "minutes",
-    "made_field_goals",
-    "made_three_point_field_goals",
-    "made_free_throws",
-    "offensive_rebounds",
-    "defensive_rebounds",
-    "steals",
-    "blocks",
-    "turnovers",
-}
+from agent.tools import build_tools
 
 
-def _header() -> list[str]:
-    with PLAYER_FEATURES_CSV.open(encoding="utf-8") as f:
-        return next(csv.reader(f))
+def test_stat_line_tool_suppresses_projection_for_player_known_out():
+    tools = {tool.name: tool for tool in build_tools(get_source("real"))}
 
-
-def test_inference_file_has_no_outcome_columns():
-    """The file the agent reads must not contain the thing it is predicting."""
-    leaked = sorted(FORBIDDEN.intersection(_header()))
-    assert not leaked, (
-        f"{PLAYER_FEATURES_CSV.name} contains outcome columns {leaked}. "
-        "Rebuild it with `python -m models.stat_line_features`."
+    payload = tools["predict_stat_line"].invoke(
+        {
+            "player_name": "Paolo Banchero",
+            "matchup_id": "CHI-ORL-2025-12-01",
+            "as_of_date": "2025-11-30",
+        }
     )
 
+    result = json.loads(payload)
+    assert result["status"] == "unavailable"
+    assert result["player"] == "Paolo Banchero"
+    assert "listed Out" in result["reason"]
+    assert "projection" not in result
 
-def test_inference_file_carries_every_feature():
-    missing = [k for k in STAT_LINE_FEATURE_KEYS if k not in _header()]
-    assert not missing, f"features absent from the inference file: {missing}"
 
+pytestmark = pytest.mark.skipif(
+    not PLAYER_STATS_CSV.exists(),
+    reason="player_stats_engineered.csv is missing",
+)
 
 def test_feature_lists_agree_between_data_and_model_layers():
     """Feature order is positional in stat_line.json. Divergence would mis-score."""
@@ -92,13 +72,33 @@ def test_mock_source_refuses_after_tip_off_identically():
         )
 
 
-def test_player_who_did_not_play_gets_a_reason_not_a_projection():
-    """A missing box score is 'they did not play', never someone else's numbers."""
+def test_player_features_use_a_snapshot_on_or_before_as_of():
+    """Projection availability must not depend on a future box-score row."""
     result = CsvSource().player_features(
         "Nikola Jokić", "LAL-DEN-2025-12-02", "2025-12-01"
     )
-    assert result["available"] is False
-    assert "did not play" in result["reason"]
+    assert result["available"] is True
+    assert result["game_date"] == "2025-12-02"
+    assert parse_date(result["feature_snapshot_date"]) <= date(2025, 12, 1)
+
+
+def test_early_as_of_cannot_use_an_intervening_game():
+    result = CsvSource().player_features(
+        "Nikola Jokić", "LAL-DEN-2025-12-05", "2025-12-02"
+    )
+    assert result["available"] is True
+    assert parse_date(result["feature_snapshot_date"]) <= date(2025, 12, 2)
+
+
+def test_no_snapshot_does_not_reveal_whether_player_appears_later():
+    source = CsvSource()
+    future_player = source.player_features(
+        "Precious Achiuwa", "HOU-OKC-2025-10-21", "2025-10-20"
+    )
+    absent_player = source.player_features(
+        "Definitely Not A Player", "HOU-OKC-2025-10-21", "2025-10-20"
+    )
+    assert future_player == absent_player
 
 
 def test_served_row_is_the_game_being_predicted():
@@ -107,4 +107,5 @@ def test_served_row_is_the_game_being_predicted():
     )
     assert result["available"] is True
     assert result["game_date"] == "2025-12-03"
+    assert parse_date(result["feature_snapshot_date"]) <= date(2025, 12, 2)
     assert set(result["features"]) == set(STAT_LINE_FEATURE_KEYS)

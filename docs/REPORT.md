@@ -50,7 +50,7 @@ predicting. That sounds obvious and is easy to get wrong, especially with an AI 
 simply remember who won.
 
 We also converted the results into money. Betting $100 a game on the predictor's picks
-across a season loses **$2,393**. That is a smaller loss than always backing the favourite,
+across a season loses **$2,135**. That is a smaller loss than always backing the favourite,
 which loses $4,628 while winning *more* games.
 
 ## 2. Introduction
@@ -231,10 +231,9 @@ The repository splits by job: `agent/` (tools and loop), `models/` (the predicto
 `eval/` (scoring), `scripts/` (data prep and the date filter), `skills/`, `ui/`, `tests/`.
 
 **The seven tools** are the agent's whole world: matchup context, team form, injuries,
-player splits, the predictor's number, the schedule, and projected player stats. Two
-return "not built yet", because we never finished them, and the agent reports that rather than
-inventing something. `python -m agent.run --status` prints what works, generated from the
-code rather than a list we maintain by hand.
+player splits, the predictor's number, the schedule, and projected player stats. All seven
+return real data. `python -m agent.run --status` prints what works, generated from the code
+rather than a list we maintain by hand.
 
 **Skills.** Each tool has a plain-English rules file saying when to use it and how to read
 the result. These load into the agent's instructions at startup, so a teammate can change
@@ -244,7 +243,7 @@ the agent's behaviour by editing a text file.
 for the same reason we removed the betting-line tool. An open query surface is how a system
 reaches data nobody meant it to have.
 
-**Testing.** 73 tests. Rather than just check a filter runs, we deliberately broke each
+**Testing.** 95 tests. Rather than just check a filter runs, we deliberately broke each
 rule and confirmed the tests noticed: feeding future data in early (3 tests caught it),
 letting two parts of the code drift apart (1), training on the test season (3). Another
 launches a separate process to confirm the agent really reads the filtered folder.
@@ -310,7 +309,7 @@ The house margin is measured from those same games (3.75%), not assumed.
 
 | approach | games won | profit | return |
 |---|---|---|---|
-| **the predictor** | 66.4% | **−$2,393** | −1.8% |
+| **the predictor** | 66.5% | **−$2,135** | −1.6% |
 | always bet the favourite | 69.0% | −$4,628 | −3.5% |
 | always bet the home team | 55.5% | −$7,350 | −5.6% |
 
@@ -318,13 +317,13 @@ Everything loses money. That's the correct result and the most useful number her
 house margin is the bar and none of our approaches clears it.
 
 But look at the top two rows. **Always backing the favourite wins more games (69.0% vs
-66.4%) and loses nearly twice as much money.** Favourites win often and pay badly. Our
+66.5%) and loses nearly twice as much money.** Favourites win often and pay badly. Our
 predictor picks more selectively, so it loses less. That gap is the whole argument for why
 accuracy alone is a poor way to judge a prediction system.
 
 On the 80 games where all three ran, A made +$993 and C went from −$832 to +$77 once
 constrained. **Do not read A's +$993 as a profitable system**. The same predictor loses
-$2,393 across the full season. Those 80 games flattered it, which is exactly the trap this
+$2,135 across the full season. Those 80 games flattered it, which is exactly the trap this
 report is about, and we'd rather demonstrate it on ourselves than claim an edge.
 
 ### 7.4 A measurement that changed our design
@@ -395,7 +394,7 @@ future, to measure what cheating is worth.
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-pytest                                 # 73 tests
+pytest                                 # 95 tests
 python -m models.train                 # §5.2 weights, §7.1 accuracy
 python -m eval.three_arms              # §7.1 predictor vs baselines
 python -m eval.betting                 # §7.3 the money

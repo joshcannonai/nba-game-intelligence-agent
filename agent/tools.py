@@ -51,7 +51,7 @@ import json
 
 from langchain_core.tools import tool
 
-from agent.sources import get_source
+from agent.sources import get_source, parse_date, parse_matchup_id, player_is_out
 from models.predict import model_available, predict
 from models.predict_stat_line import model_available as stat_line_available
 from models.predict_stat_line import predict_stat_line as run_stat_line
@@ -223,16 +223,33 @@ def build_tools(source, include_model: bool = True, without: tuple[str, ...] = (
         5- and 10-game form, rest, and home/away splits, fitted on 2023-24 and
         validated on 2024-25. It is never fitted on the season being replayed.
 
-        Returns `status: unavailable` with a reason when the player has no box
-        score for that game, which is the honest answer for someone who did not
-        play. Single-game lines are high variance; the payload carries the test
-        mean absolute error so the size of the error is visible next to the number.
+        Returns `status: unavailable` when the gated injury list already marks the
+        player out, or when observable pregame history is insufficient. Single-game
+        lines are high variance; the payload carries the test mean absolute error so
+        the size of the error is visible next to the number.
 
         Args:
             player_name: Full player name.
             matchup_id: AWAY-HOME-YYYY-MM-DD
             as_of_date: ISO date.
         """
+        away, home, _ = parse_matchup_id(matchup_id)
+        if player_is_out(player_name, (away, home), parse_date(as_of_date)):
+            return json.dumps(
+                {
+                    "status": "unavailable",
+                    "tool": "predict_stat_line",
+                    "player": player_name,
+                    "as_of_date": as_of_date,
+                    "reason": (
+                        f"{player_name} is listed Out as of {as_of_date}; "
+                        "the projection is suppressed rather than implying "
+                        "pregame participation."
+                    ),
+                },
+                indent=2,
+            )
+
         if not stat_line_available():
             return _todo(
                 "predict_stat_line",

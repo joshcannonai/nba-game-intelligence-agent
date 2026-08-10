@@ -122,13 +122,15 @@ def build_agent(
         raise ValueError(f"unknown model backend: {model_backend!r}")
 
     tools = build_tools(source, include_model=include_model, without=without)
-    base = SYSTEM if include_model else SYSTEM_NO_MODEL
-
-    # Skills are appended for exactly the tools this agent was given, so arm B
-    # never receives instructions for a tool it does not have. See agent/skills.py.
-    prompt = base + skills_block([t.name for t in tools])
+    prompt = system_prompt_for([t.name for t in tools], include_model)
 
     return create_agent(model, tools, system_prompt=prompt)
+
+
+def system_prompt_for(tool_names: list[str], include_model: bool = True) -> str:
+    """The exact system text supplied to an agent with this tool surface."""
+    base = SYSTEM if include_model else SYSTEM_NO_MODEL
+    return base + skills_block(tool_names)
 
 
 def run_matchup(

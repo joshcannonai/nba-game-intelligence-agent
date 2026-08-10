@@ -265,6 +265,41 @@ pre.out {
   color: var(--ink-2);
 }
 
+.gate-receipt {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 12px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.gate-receipt > div { background: var(--surface); padding: 14px 16px; }
+.gate-receipt span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 5px; }
+.gate-receipt strong { font-family: var(--mono); font-size: 15px; }
+.gate-note { margin-top: 12px; }
+.context-window { margin-top: 12px; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.context-window > summary { padding: 14px 16px; background: var(--surface); }
+.gate-check-list { border-top: 1px solid var(--rule); }
+.gate-check { display: grid; grid-template-columns: minmax(170px, 1fr) auto; gap: 5px 16px; padding: 11px 16px; border-bottom: 1px solid var(--rule); }
+.gate-check:last-child { border-bottom: none; }
+.gate-check > span { color: var(--live); font: 600 11px/1.4 var(--mono); text-transform: uppercase; }
+.gate-check.failed > span { color: var(--danger); }
+.gate-check.not_applicable > span { color: var(--muted); }
+.gate-check > code { grid-column: 1 / -1; color: var(--muted); font-size: 11px; }
+.context-messages { border-top: 1px solid var(--rule); }
+.context-message { padding: 14px 16px; border-bottom: 1px solid var(--rule); }
+.context-message:last-child { border-bottom: none; }
+.context-role { font: 600 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--accent); margin-bottom: 8px; }
+.context-message.tool .context-role { color: var(--live); }
+.context-message pre { margin: 0 0 8px; white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.55 var(--mono); color: var(--ink); }
+.context-message pre:last-child { margin-bottom: 0; }
+
+@media (max-width: 700px) {
+  .gate-receipt { grid-template-columns: 1fr; }
+}
+
 /* ---------- tools ---------- */
 
 .tools { border-top: 1px solid var(--rule); }

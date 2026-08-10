@@ -21,8 +21,9 @@ not part of the win-probability path — do not call it on every run.
 
 ## How to read it
 
-- `status: ok` means there is a projection. `status: unavailable` means the player
-  has no box score for that game, which almost always means they did not play.
+- `status: ok` means there is a projection. `status: unavailable` means either the
+  gated injury report lists the player as out or the gated history lacks enough
+  observable pregame inputs. It does not reveal any later participation.
 - A single game is high variance. The mean absolute error on points is a few points,
   which is a large fraction of a typical scoring line. The number is a central
   estimate, not a fact, and should be reported with that framing.
@@ -36,17 +37,20 @@ not part of the win-probability path — do not call it on every run.
   the answer. Do not fall back to `retrieve_player_splits` season averages and
   present them as a projection — that is the invented number this whole interface
   exists to prevent.
+- **Do not project a player listed out.** Check `retrieve_injuries` first when
+  availability matters. The tool also enforces this boundary and returns
+  `unavailable` if the gated injury report already lists the requested player out.
 - **Report the error alongside the number.** "About 26 points, give or take the
   model's ~5-point average error" is honest. A bare "26.3 points" implies a precision
   the model does not have.
-- `unavailable` with a "did not play" reason is a useful finding, not a failure.
-  A player being out is exactly what `retrieve_injuries` is for — say so and move on.
+- Never infer future participation from `unavailable`. Use `retrieve_injuries` for
+  availability information known by the as-of date.
 - One or two players, not a roster. The report is about a game.
 
 ## Provenance
 
 Model fitted by `python -m models.train_stat_line` from prior-season box scores in
 `data/raw/player_box_scores_prior/`. At inference the features come through
-`agent/sources.py` like every other read, from a stripped file that does not contain
-the box-score result. Weights live in `models/stat_line.json` and are readable in a
-diff.
+`agent/sources.py` like every other read. It recomputes them from outcome-history
+rows dated on or before `as_of`; structural snapshots physically remove later rows.
+Weights live in `models/stat_line.json` and are readable in a diff.

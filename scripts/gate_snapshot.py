@@ -36,6 +36,7 @@ from agent.sources import (  # noqa: E402
     INJURY_CSVS,
     ODDS_CSV,
     PLAYER_PER_GAME_CSV,
+    PLAYER_STATS_CSV,
     RAW_DIR,
     SAMPLE_DIR,
     TEAM_SUMMARY_CSV,
@@ -171,6 +172,20 @@ def gate_season_tables(as_of: date, out_root: Path) -> list[dict]:
     return stats
 
 
+def gate_player_history(as_of: date, out_root: Path) -> dict:
+    """Keep only completed player rows observable by the snapshot date."""
+    fieldnames, rows = _read(PLAYER_STATS_CSV)
+    kept = [r for r in rows if parse_date(r["game_date"]) <= as_of]
+    _write(out_root / "exports" / PLAYER_STATS_CSV.name, fieldnames, kept)
+    return {
+        "file": f"exports/{PLAYER_STATS_CSV.name}",
+        "rule": f"rows dropped where game_date > {as_of}",
+        "rows_in": len(rows),
+        "rows_out": len(kept),
+        "outcomes_cleared": 0,
+    }
+
+
 def build_snapshot(as_of: date, out_root: Path | None = None) -> Path:
     """Write a gated copy of the data directory and return where it landed."""
     out_root = out_root or SNAPSHOT_ROOT / as_of.isoformat()
@@ -183,6 +198,7 @@ def build_snapshot(as_of: date, out_root: Path | None = None) -> Path:
         gate_odds(as_of, out_root),
         *gate_injuries(as_of, out_root),
         *gate_season_tables(as_of, out_root),
+        gate_player_history(as_of, out_root),
     ]
 
     manifest = {

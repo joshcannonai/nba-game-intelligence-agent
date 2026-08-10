@@ -9,7 +9,7 @@ import schedule from "./data/games.json";
 // Same-origin when the bridge is serving this build (the demo path: the bridge
 // mounts ui/web/dist, so http://localhost:8000 is the whole app and there is no
 // cross-origin hop to fail). Falls back to the loopback address when the page came
-// from Vercel, which is the review path -- teammates get Tools and System, and the
+// from Vercel, which is the review path -- teammates get the System overview, and the
 // Agent tab tells them plainly that it only runs on the presenter's machine.
 const BRIDGE = location.port === "8000" ? "" : "http://localhost:8000";
 
@@ -19,11 +19,37 @@ type Health = {
 	models: string[];
 	source: string;
 };
+type TabId = "agent" | "compare" | "prompt" | "tools" | "data" | "system";
 type Step = {
 	kind: "call" | "back" | "err";
 	name: string;
 	detail: string;
 	t: number;
+};
+type ContextMessage = {
+	role: "system" | "user" | "assistant" | "tool";
+	content: string;
+	name?: string;
+	tool_call_id?: string;
+	tool_calls?: unknown[];
+};
+type RunContext = {
+	matchup_id: string;
+	as_of_date: string;
+	source: string;
+	messages: ContextMessage[];
+	usage: { input_tokens: number; output_tokens: number; total_tokens: number };
+};
+type GateReceipt = {
+	tool: string;
+	source: string;
+	requested_cutoff: string;
+	tool_cutoff?: string;
+	checked_historical_dates: number;
+	latest_historical_date?: string;
+	post_cutoff_records: number;
+	status: "passed" | "failed" | "not_applicable";
+	scope: string;
 };
 
 type Game = { id: string; d: string; a: string; h: string; asOf: string };
@@ -362,6 +388,8 @@ function AgentTab({ health }: { health: Health | null }) {
 	const [final, setFinal] = useState("");
 	const [running, setRunning] = useState(false);
 	const [elapsed, setElapsed] = useState(0);
+	const [context, setContext] = useState<RunContext | null>(null);
+	const [gateReceipts, setGateReceipts] = useState<GateReceipt[]>([]);
 	const logRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -376,6 +404,8 @@ function AgentTab({ health }: { health: Health | null }) {
 		setFinal("");
 		setRunning(true);
 		setElapsed(0);
+		setContext(null);
+		setGateReceipts([]);
 		try {
 			if (arm === "A") {
 				const r = await fetch(BRIDGE + "/api/predict", {
@@ -448,6 +478,15 @@ function AgentTab({ health }: { health: Health | null }) {
 								t: data.elapsed,
 							},
 						]);
+					else if (ev === "context_start") setContext(data);
+					else if (ev === "context_message")
+						setContext((current) =>
+							current
+								? { ...current, messages: [...current.messages, data.message], usage: data.usage }
+								: null,
+						);
+					else if (ev === "gate_receipt")
+						setGateReceipts((receipts) => [...receipts, data]);
 					else if (ev === "final") setFinal(data.content);
 				}
 			}
@@ -473,7 +512,7 @@ function AgentTab({ health }: { health: Health | null }) {
 					<strong>The agent is not reachable.</strong> It runs on the
 					presenter's machine, not in the cloud, so this tab only works on that
 					laptop. Start it with <code>python -m ui.serve</code> and reload.
-					Tools and System work without it.
+					System works without it.
 				</div>
 			)}
 
@@ -494,6 +533,7 @@ function AgentTab({ health }: { health: Health | null }) {
 									type="button"
 									aria-pressed={arm === k}
 									onClick={() => setArm(k)}
+									disabled={running}
 								>
 									{label}
 								</button>
@@ -502,7 +542,7 @@ function AgentTab({ health }: { health: Health | null }) {
 					</div>
 					<div className="field grow">
 						<span>Game to predict</span>
-						<button className="picker" onClick={() => setPickerOpen(true)}>
+						<button className="picker" onClick={() => setPickerOpen(true)} disabled={running}>
 							<span>{labelFor(matchup)}</span>
 							<svg viewBox="0 0 16 16" {...ICON} width="13" height="13" aria-hidden="true">
 								<path d="M4 6l4 4 4-4" />
@@ -515,19 +555,21 @@ function AgentTab({ health }: { health: Health | null }) {
 					</label>
 					<button className="run" onClick={run} disabled={running}>
 						{running
-							? "Thinking, " + elapsed.toFixed(0) + "s"
-							: "Run the agent"}
+							? (arm === "A" ? "Scoring" : "Thinking") +
+								", " +
+								elapsed.toFixed(0) +
+								"s"
+							: arm === "A"
+								? "Run the model"
+								: "Run the agent"}
 					</button>
 				</div>
 				<p className="note tight" style={{ marginTop: 16 }}>
 					{arm === "A"
-						? "The fitted model on its own, no language model involved. Returns instantly, because scoring a logistic regression is a dot product. "
+						? "The model on its own, with no language model involved. Each request fits logistic and linear regressions using rows on or before the as-of date, then scores the selected game using only explicitly allowed pregame features. The final score and actual player results are excluded."
 						: arm === "B"
-							? "The agent without the model tool. It has to reason its own way to a probability from the retrieval tools alone. "
-							: "The agent given the model's number as one input among several. "}
-					Every
-					call below is filtered to the as-of date before it returns, so the
-					agent cannot see the result it is being asked to predict.
+							? "The agent without the model tool. It has to reason its own way to a probability from the retrieval tools alone. Every tool call is filtered to the as-of date before it returns."
+							: "The agent receives the model's number as one input among several. Every tool call is filtered to the as-of date before it returns."}
 				</p>
 			</div>
 
@@ -572,12 +614,57 @@ function AgentTab({ health }: { health: Health | null }) {
 				</>
 			)}
 
+			{context && (
+				<>
+					<h2 className="sec">Run inspector</h2>
+					<p className="note">
+						This is the inspectable message context accumulated by the runtime—not hidden reasoning. It contains the exact assembled system instructions, user request, tool calls, full tool returns, and final response.
+					</p>
+					<div className="gate-receipt">
+						<div><span>Data as-of cutoff</span><strong>{context.as_of_date}</strong></div>
+						<div><span>Context messages</span><strong>{context.messages.length}</strong></div>
+						<div><span>Tokens processed</span><strong>{context.usage.total_tokens || "pending"}</strong></div>
+					</div>
+					<p className="note gate-note">
+						Game-specific historical records are checked against the run cutoff below; future schedule identities are allowed, but their outcomes are not. Static system instructions may include aggregate evaluation metrics, which are visible in the context transcript and are not game inputs.
+					</p>
+					{gateReceipts.length > 0 && (
+						<details className="context-window gate-checks" open={!running}>
+							<summary><Chevron /> Gate enforcement receipts · {gateReceipts.filter((receipt) => receipt.status === "passed").length} passed</summary>
+							<div className="gate-check-list">
+								{gateReceipts.map((receipt, i) => (
+									<div className={`gate-check ${receipt.status}`} key={`${receipt.tool}-${i}`}>
+										<strong>{receipt.tool}</strong>
+										<span>{receipt.status.replace("_", " ")}</span>
+										<code>cutoff {receipt.tool_cutoff ?? "n/a"} · latest checked {receipt.latest_historical_date ?? "n/a"} · post-cutoff {receipt.post_cutoff_records}</code>
+									</div>
+								))}
+							</div>
+						</details>
+					)}
+					<details className="context-window" open={!running}>
+						<summary><Chevron /> Actual run context · {context.messages.length} messages</summary>
+						<div className="context-messages">
+							{context.messages.map((message, i) => (
+								<div className={`context-message ${message.role}`} key={i}>
+									<div className="context-role">
+										{message.role}{message.name ? ` · ${message.name}` : ""}
+									</div>
+									{message.tool_calls && <pre>{JSON.stringify(message.tool_calls, null, 2)}</pre>}
+									{message.content && <pre>{message.content}</pre>}
+								</div>
+							))}
+						</div>
+					</details>
+				</>
+			)}
+
 			{final && (
 				<>
 					<h2 className="sec">{arm === "A" ? "What the model returned" : "What it concluded"}</h2>
 					<p className="note">
 						{arm === "A"
-							? "The eight features it used are in the payload, so the number can be checked by hand."
+							? "The payload reports the pregame feature count, training-row count, and resulting probabilities for inspection."
 							: "The agent must return valid JSON, including anything it could not find."}
 					</p>
 					<pre className="out">{final}</pre>
@@ -1039,8 +1126,21 @@ function SystemTab() {
 }
 
 export default function App() {
-	const [tab, setTab] = useState<"agent" | "compare" | "prompt" | "tools" | "data" | "system">("agent");
+	const [tab, setTab] = useState<TabId>("agent");
 	const [health, setHealth] = useState<Health | null>(null);
+	const showDetails = new URLSearchParams(location.search).get("details") === "1";
+	const navTabs: { id: TabId; label: string }[] = [
+		{ id: "agent", label: "Agent" },
+		{ id: "compare", label: "Compare" },
+		...(showDetails
+			? [
+					{ id: "prompt" as const, label: "Prompt" },
+					{ id: "tools" as const, label: "Tools" },
+					{ id: "data" as const, label: "Data" },
+				]
+			: []),
+		{ id: "system", label: "System" },
+	];
 
 	useEffect(() => {
 		// Timeout, not just catch. From the hosted copy this request crosses into a
@@ -1081,21 +1181,12 @@ export default function App() {
 			</header>
 
 			<nav className="tabs" role="tablist">
-				{(
-					[
-						["agent", "Agent"],
-						["compare", "Compare"],
-						["prompt", "Prompt"],
-						["tools", "Tools"],
-						["data", "Data"],
-						["system", "System"],
-					] as const
-				).map(([k, label]) => (
+				{navTabs.map(({ id, label }) => (
 					<button
-						key={k}
+						key={id}
 						role="tab"
-						aria-selected={tab === k}
-						onClick={() => setTab(k)}
+						aria-selected={tab === id}
+						onClick={() => setTab(id)}
 					>
 						{label}
 					</button>
