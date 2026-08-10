@@ -1,6 +1,6 @@
 # Agent skills — review copy
 
-**NBA Game Intelligence Agent · CECS 499 · generated 2026-08-03**
+**NBA Game Intelligence Agent · CECS 499 · generated 2026-08-10**
 
 Each of the agent's tools has a *skill*: a short set of rules telling it when to call
 that tool and what to do with the answer. The agent loads these at startup, so these
@@ -105,25 +105,29 @@ fatigue effect".
 
 ## What it gives you
 
-Currently nothing. It returns `status: awaiting_input` because the forward-looking
-schedule table has not been committed.
+The fixtures tipping off in the days after `as_of_date`: matchup id, date, away and
+home. Read from the season's game log, filtered to the window.
 
 ### When to call it
 
-Only if asked what else is on tonight. For rest and back-to-backs, use
-`retrieve_matchup_context` — that already carries them.
+Only if asked what else is on tonight, or when the slate itself is part of the
+answer. For rest and back-to-backs use `retrieve_matchup_context`, which already
+carries them. This is not part of the win-probability path.
+
+### How to read it
+
+- `count` is how many games are in the window, not how many exist in the season.
+- Teams and dates only. There are no tip-off times in the dataset, so if you are
+  asked when a game starts, say that is not available rather than guessing.
 
 ### Rules
 
-- `awaiting_input` is not an error and not an empty result. It means the data does
-  not exist yet. Report the gap and carry on; do not retry it, and do not substitute
-  a guess about the slate.
-
-### Note for whoever fills this in
-
-`data/pull_games.py` already writes `season_schedule_2026.csv`. It just has not been
-committed. `data/raw/` stopped being gitignored on 2026-07-21, so nothing is blocking
-it now.
+- **Never report a score or a winner from this tool.** It does not return them, and
+  that is deliberate: the rows it reads carry `home_pts`, `away_pts` and `winner`
+  right next to the fixture, and only the identity fields are copied out.
+- Knowing *who plays whom* on a future date is not leakage. The NBA publishes its
+  schedule in August, so a fixture is knowable on any as-of date. Knowing *how it
+  went* is leakage. Keep that line.
 
 
 ## `retrieve_team_form`
@@ -207,16 +211,55 @@ explain a prediction that hinges on availability.
 
 ## What it gives you
 
-Currently nothing — `status: awaiting_input`. The regression behind it was never
-built.
+Projected `points`, `rebounds` and `assists` for one player in one game, from ridge
+regressions on that player's trailing 5- and 10-game form, minutes, shooting
+percentages, home/away split and rest. Fitted on 2023-24, validated on 2024-25, and
+never fitted on the season being replayed.
+
+The payload also carries `points_mae` and `points_mae_trailing_5_baseline` — the
+model's average error and the error of simply using the player's last-5 average.
+
+### When to call it
+
+Only when a stat line is actually asked for, or when you are naming a player in the
+narrative and a projection makes the point better than a season average would. It is
+not part of the win-probability path — do not call it on every run.
+
+### How to read it
+
+- `status: ok` means there is a projection. `status: unavailable` means either the
+  gated injury report lists the player as out or the gated history lacks enough
+  observable pregame inputs. It does not reveal any later participation.
+- A single game is high variance. The mean absolute error on points is a few points,
+  which is a large fraction of a typical scoring line. The number is a central
+  estimate, not a fact, and should be reported with that framing.
+- Compare the projection to `points_mae_trailing_5_baseline` before leaning on it. If
+  the model barely beats the trailing-5 average, say the projection is roughly the
+  player's recent form rather than implying the model found something extra.
 
 ### Rules
 
-- Report it as missing. Never estimate a stat line yourself from season averages and
-  present it as a projection; that is exactly the invented number this whole
-  interface exists to prevent.
-- Projected stat lines were a stated deliverable in the proposal. Saying "not built"
-  is correct and expected. Saying "LeBron will score about 25" is not.
+- **Never estimate a stat line yourself.** If the tool returns `unavailable`, that is
+  the answer. Do not fall back to `retrieve_player_splits` season averages and
+  present them as a projection — that is the invented number this whole interface
+  exists to prevent.
+- **Do not project a player listed out.** Check `retrieve_injuries` first when
+  availability matters. The tool also enforces this boundary and returns
+  `unavailable` if the gated injury report already lists the requested player out.
+- **Report the error alongside the number.** "About 26 points, give or take the
+  model's ~5-point average error" is honest. A bare "26.3 points" implies a precision
+  the model does not have.
+- Never infer future participation from `unavailable`. Use `retrieve_injuries` for
+  availability information known by the as-of date.
+- One or two players, not a roster. The report is about a game.
+
+### Provenance
+
+Model fitted by `python -m models.train_stat_line` from prior-season box scores in
+`data/raw/player_box_scores_prior/`. At inference the features come through
+`agent/sources.py` like every other read. It recomputes them from outcome-history
+rows dated on or before `as_of`; structural snapshots physically remove later rows.
+Weights live in `models/stat_line.json` and are readable in a diff.
 
 
 ## `predict_win_probability`

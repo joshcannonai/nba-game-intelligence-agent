@@ -673,12 +673,12 @@ def build(path: Path) -> Path:
         (
             ("retrieve_schedule", {"font": MONO}),
             "Forward slate",
-            ("awaiting input", {"colour": SLATE}),
+            ("working", {"colour": GOOD, "bold": True}),
         ),
         (
             ("predict_stat_line", {"font": MONO}),
             "Projected pts / reb / ast",
-            ("not built", {"colour": SLATE}),
+            ("working", {"colour": GOOD, "bold": True}),
         ),
     ]
     table(s, ML, Inches(2.15), CW, rows, widths, size=13)
@@ -688,7 +688,7 @@ def build(path: Path) -> Path:
         [
             ("No database. No web. ", {}),
             ("No way to invent a number.", {"bold": True, "colour": INK}),
-            ("  The two unbuilt tools report their own gap rather than guessing.", {}),
+            ("  All seven tools return real, date-gated data.", {}),
         ],
         size=15,
     )
@@ -785,8 +785,8 @@ def build(path: Path) -> Path:
             ("Readable", "Weights can be argued with in a pull request"),
             ("Portable", "A few hundred bytes of named numbers, not a pickle"),
             (
-                "Dependency-free",
-                "Loads without sklearn — agent, UI and harness all run",
+                "Portable scoring",
+                "Win scoring loads readable JSON; UI adds sklearn for player lines",
             ),
         ]
     ):
@@ -1153,7 +1153,7 @@ def build(path: Path) -> Path:
     bar_chart(
         s, ML - Inches(0.2), Inches(2.5), Inches(7.2), Inches(4.0),
         ["Our predictor", "Always favourite", "Always home"],
-        [("profit, $", (-2393, -4628, -7350))],
+        [("profit, $", (-2135, -4628, -7350))],
         [ACCENT],
     )
     text(
@@ -1173,7 +1173,7 @@ def build(path: Path) -> Path:
             ("But look at the first two.\n", {"colour": INK, "bold": True}),
             ("Always backing the favourite wins ", {}),
             ("more games", {"colour": INK, "bold": True}),
-            (" (69.0% vs 66.4%) and loses nearly twice as much ", {}),
+            (" (69.0% vs 66.5%) and loses nearly twice as much ", {}),
             ("more money", {"colour": BAD, "bold": True}),
             (".\n", {}),
             ("Favourites win often and pay badly.", {"size": 13}),
@@ -1249,8 +1249,8 @@ def build(path: Path) -> Path:
     headline(s, Inches(1.3), "What we did not do", size=38)
     items = [
         (
-            "predict_stat_line was never built",
-            "a stated deliverable; the tool reports its own gap",
+            "predict_best_player was cut",
+            "stat lines shipped; the separate ranking tool did not",
         ),
         ("n = 80 across two samples", "better than 40, still small"),
         (
@@ -1387,7 +1387,7 @@ def build(path: Path) -> Path:
     lrows = [
         (
             ("pytest", {"font": MONO}),
-            "73 tests, incl. the mutation-tested leakage guards",
+            "95 tests, incl. the mutation-tested leakage guards",
         ),
         (
             ("python -m models.train", {"font": MONO}),
@@ -1410,8 +1410,8 @@ def build(path: Path) -> Path:
             "Materialises the gate, prints what it removed",
         ),
         (
-            ("streamlit run ui/app.py", {"font": MONO}),
-            "Report, tools, gating proof, build status",
+            ("python -m ui.serve", {"font": MONO}),
+            "Primary React site + FastAPI bridge",
         ),
     ]
     table(

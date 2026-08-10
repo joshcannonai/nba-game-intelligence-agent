@@ -201,11 +201,11 @@
     <tr><td class="mono">retrieve_injuries</td><td>Who was known out that morning</td><td class="win">working</td></tr>
     <tr><td class="mono">retrieve_player_splits</td><td>Season averages, fatigue split</td><td class="win">working</td></tr>
     <tr><td class="mono">predict_win_probability</td><td>The model's number</td><td class="win">working</td></tr>
-    <tr><td class="mono">retrieve_schedule</td><td>Forward slate</td><td class="mut">awaiting input</td></tr>
-    <tr><td class="mono">predict_stat_line</td><td>Projected pts / reb / ast</td><td class="mut">not built</td></tr>
+    <tr><td class="mono">retrieve_schedule</td><td>Forward slate</td><td class="win">working</td></tr>
+    <tr><td class="mono">predict_stat_line</td><td>Projected pts / reb / ast</td><td class="win">working</td></tr>
   </table>
   <p style="margin-top:1.2rem">No database. No web. <strong>No way to invent a number.</strong>
-  The two unbuilt tools report their own gap rather than guessing.</p>
+  All seven tools return real, date-gated data.</p>
 </section>
 
 <section class="slide">
@@ -230,7 +230,7 @@
   <div class="grid" style="margin-top:.4rem">
     <div class="card"><h3>Readable</h3><p>Weights can be argued with in a pull request, not just accepted</p></div>
     <div class="card"><h3>Portable</h3><p>A few hundred bytes of named numbers, not a pickle</p></div>
-    <div class="card"><h3>Dependency-free</h3><p>Loads without sklearn, so agent + UI + harness all run</p></div>
+    <div class="card"><h3>Portable</h3><p>Canonical win scoring loads readable JSON; the UI adds sklearn for player lines</p></div>
   </div>
   <table style="margin-top:1.2rem;max-width:620px">
     <tr><th>Top features</th><th>Weight</th></tr>
@@ -326,7 +326,7 @@
   <h2>Bet $100 a game.<br><em>Who ends up ahead?</em></h2>
   <table style="max-width:760px">
     <tr><th>Approach</th><th>Games won</th><th>Profit</th><th>Return</th></tr>
-    <tr><td class="big">Our predictor</td><td>66.4%</td><td class="lose">−$2,393</td><td class="lose">−1.8%</td></tr>
+    <tr><td class="big">Our predictor</td><td>66.5%</td><td class="lose">−$2,135</td><td class="lose">−1.6%</td></tr>
     <tr><td>Always the favourite</td><td>69.0%</td><td class="lose">−$4,628</td><td class="lose">−3.5%</td></tr>
     <tr><td>Always the home team</td><td>55.5%</td><td class="lose">−$7,350</td><td class="lose">−5.6%</td></tr>
   </table>
@@ -362,7 +362,7 @@
   <div class="kicker">Honest accounting</div>
   <h2>What we did not do</h2>
   <ul>
-    <li><strong>predict_stat_line was never built</strong> — a stated deliverable. The tool reports its own gap.</li>
+    <li><strong>predict_best_player was cut</strong> — stat lines shipped; the separate ranking tool did not.</li>
     <li><strong>n = 80</strong> across two samples for the LLM arms. Better than 40, still small.</li>
     <li><strong>Injury records are transaction dates</strong>, not news timestamps — a same-day placement can appear.</li>
     <li><strong>Star-to-team mapping is a season stale</strong>, so "injured" and "changed teams" are not cleanly separated.</li>
@@ -391,7 +391,7 @@
   <h2>It runs from a clean clone</h2>
   <table style="max-width:840px">
     <tr><th>Command</th><th>What you get</th></tr>
-    <tr><td class="mono">pytest</td><td>73 tests, incl. the mutation-tested leakage guards</td></tr>
+    <tr><td class="mono">pytest</td><td>95 tests, incl. the mutation-tested leakage guards</td></tr>
     <tr><td class="mono">python -m models.train</td><td>Refits, prints the weights (~7s)</td></tr>
     <tr><td class="mono">python -m eval.three_arms</td><td>Arm A + both baselines, 1,322 games (~3s)</td></tr>
     <tr><td class="mono">python -m eval.injury_impact</td><td>The confounding story, reproduced</td></tr>

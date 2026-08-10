@@ -1,7 +1,8 @@
-# models/ — the win-probability model
+# models/ — the canonical win-probability model
 
-**Sarvesh: this is the handoff. There is a working model here already, so nothing is
-blocked on you. Your job is to beat it, and swapping yours in is one file.**
+Every user-facing win prediction routes through `models/predict.py`. Model-only,
+Agent/Both, the evaluation harness, and the legacy views therefore use the same frozen
+weights and cannot silently become different experiments.
 
 ---
 
@@ -37,8 +38,9 @@ python -m eval.three_arms       # scores arm A against both baselines (~3s)
 | `predict.py` | `predict(home, away, as_of) -> dict`. Everything else calls this. |
 
 `win_probability.json` is committed on purpose — it is a few hundred bytes of named
-numbers rather than a pickle, so you can read the weights in a pull request and it
-loads without sklearn.
+numbers rather than a pickle, so you can read the weights in a pull request and
+canonical win scoring loads without sklearn. The primary UI also serves player
+stat-line projections, which do use sklearn.
 
 ## The interface — this is the contract
 
@@ -49,15 +51,16 @@ predict("BOS", "ORL", "2026-01-14")
 # {"status": "ok", "home_win_prob": 0.6402, "away_win_prob": 0.3598, ...}
 ```
 
-Three callers depend on this shape and nothing else:
+Four callers depend on this shape and nothing else:
 
 - `eval/three_arms.py` — arm A
 - `agent/tools.py` — hands it to the agent as arm C
+- `models/notebook_model_output.py` — model-only website response
 - `ui/app.py` — one game at a time
 
 **Keep `home_win_prob` as a float 0–1 and everything keeps working.**
 
-## Swapping in your model
+## Replacing the canonical model
 
 Easiest path, and the one that needs no changes anywhere else:
 

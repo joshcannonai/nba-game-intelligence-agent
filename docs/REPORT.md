@@ -223,7 +223,8 @@ model not to use something is a request; taking the tool away is a guarantee.
 ## 6. Implementation
 
 Python 3.11+. The agent uses **LangChain**; the predictor trains with **scikit-learn** and
-saves as plain JSON; data work uses **pandas**; the interface is **Streamlit**; tests use
+saves as plain JSON; data work uses **pandas**; the primary interface is a **React** site
+served by **FastAPI** (with Streamlit retained as a legacy diagnostic view); tests use
 **pytest**. Scored agent runs use **Gemma 4** through **Ollama**, locally, with no API key
 and no cost.
 
@@ -359,8 +360,8 @@ including flattering ones.
 **Limitations.** The AI comparisons rest on 80 games. Our injury data records when players
 were placed on the injured list, not when the news broke, so a same-day entry can slip in.
 We link players to teams using last season's rosters, so "injured" and "changed teams"
-aren't cleanly separated. Two data sources have no recorded origin. And projected player
-statistics, promised in the proposal, were never built.
+aren't cleanly separated. Two data sources have no recorded origin. Projected player
+statistics are now built, but the proposal's separate best-player selection was cut.
 
 **Future work.** The immediate step is reading the agent's own reasoning on the 19
 disagreements to test our theory that it over-weights injuries. Beyond that: adjusting for

@@ -3,14 +3,14 @@
     predict(home_abbr, away_abbr, as_of_date) -> dict with home_win_prob
 
 `eval/three_arms.py` calls it for arm A, `agent/tools.py` hands it to the agent
-for arm C, and the Streamlit report calls it for one game. None of them know or
-care what is behind it, which is the point: swapping the model is a change to
-this file and nothing else.
+for arm C, and the FastAPI/React site calls it for Model-only mode. None of them
+know or care what is behind it, which is the point: swapping the win model is a
+change to this file and nothing else.
 
 Deliberately no sklearn import. Scoring a logistic regression is a dot product,
-so the agent, the harness and the UI all load a few hundred bytes of JSON
-instead of a training stack. sklearn is needed to FIT the model
-(`python -m models.train`), never to USE it.
+so canonical win scoring loads a few hundred bytes of JSON instead of a training
+stack. sklearn is needed to fit the win model and to produce the separate player
+stat-line projections used by the primary UI.
 
 When `win_probability.json` is missing this returns the same
 `status: awaiting_input` envelope the placeholder tools use, rather than a

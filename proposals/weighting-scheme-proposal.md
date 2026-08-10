@@ -1,12 +1,13 @@
 # Proposal: weighting ideas for `predict_win_probability` (for Sarvesh's `models/` lane)
 
-**Status: ideas and one specific bug flag, not a patch. `agent/tools.py`'s
-`predict_win_probability` is explicitly Sarvesh's function to own -- this
-document exists so the handoff has more than "build a model," and so the
-current placeholder's known gaps are written down somewhere instead of
-living only in a code comment.**
+> Historical proposal. The current fitted model and its measured weights live in
+> `models/predict.py` and `models/win_probability.json`.
 
-## What the current placeholder (`stub_net_rating_v0`) does
+**Status: archived design history, not current implementation guidance. The
+placeholder discussed below was removed; current ownership and behavior are
+documented in `models/README.md` and `docs/tool-contracts.md`.**
+
+## What the historical placeholder (`stub_net_rating_v0`) did
 
 `net rating differential + home-court constant (+2.5) + rest edge`,
 squashed into a probability and clamped to [0.15, 0.85]. Its own docstring
@@ -15,29 +16,20 @@ prediction doesn't move when the injury list does -- a team missing its
 best player and a team at full health get the same number if their season
 ratings are equal.
 
-## A specific, small bug worth an easy fix first
+## A bug identified in that retired placeholder
 
-In `_stub_win_probability`, the real-data branch hardcodes
+The removed `_stub_win_probability` real-data branch hardcoded
 `rest_edge = 0.0` with the comment "real rest needs game logs; do not
 guess." That comment predates `scripts/fetch_game_logs.py` landing
 `data/samples/game_logs_2024.csv` / `game_logs_2025.csv` -- real rest data
 now exists and `agent/sources.py`'s `schedule_context()` already computes
 `home_days_rest` / `away_days_rest` / back-to-back flags from it. The stub
-just isn't calling it for the real-data path.
+did not call it for the real-data path.
 
-**Not literally two lines, checked before writing this down as "easy":**
-`_stub_win_probability(source, home_abbr, away_abbr, as_of_date)` doesn't
-receive a `game_date`, and `schedule_context()` needs one distinct from
-`as_of_date` (it isn't always the next day -- `as_of_date` can be any date
-before tip-off). The real fix either (a) takes `game_date` as a new
-parameter and updates the one call site in `predict_win_probability`, or
-(b) approximates `game_date = as_of_date + 1 day`, which matches how the
-CLI is used in practice (`--matchup ... --as-of <day before>`) but is an
-assumption, not a guarantee, and should be commented as one if taken. Small
-either way, just not a trivial two-liner -- a real decision for whoever
-picks it up, not a modeling decision.
+This is preserved as the design observation that motivated explicit schedule
+features. It is not an instruction to restore or edit the retired helper.
 
-## Signals available now that aren't in the stub
+## Signals that were available but absent from the stub
 
 All already retrievable through existing, tested tools -- this is a
 "what's sitting there unused" list, not a request for new data collection:
@@ -82,12 +74,9 @@ suggestion here is sequencing, not a substitute:
    point the "properly weighted" question has an actual, defensible
    answer: what the trained model learned, which you can show and explain
    (feature importances), not what a human guessed.
-3. Once that model exists, `proposals/sportsbook_backtest.py` is ready to
-   re-run against it immediately -- same script, just a better
-   `predict_win_probability` underneath it. See
-   `proposals/sportsbook-backtest-prototype.md` for what that currently
-   shows with the heuristic (short version: the heuristic does not beat
-   the market, which is expected and a fine baseline to improve on).
+3. Once that model exists, evaluate it through the maintained `eval/betting.py`
+   path. `proposals/sportsbook-backtest-prototype.md` preserves the historical
+   heuristic results without presenting the retired prototype as runnable.
 
 ## Not proposing
 

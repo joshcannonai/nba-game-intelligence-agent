@@ -5,8 +5,8 @@ nobody can explain later just looks like work that was abandoned:
 
     retrieve_news         No source was ever found. Highest effort of the ten,
                           least measurable contribution. Cut on merit.
-    predict_best_player   Depended entirely on predict_stat_line, which has not
-                          started. A placeholder behind a placeholder.
+    predict_best_player   Was cut before predict_stat_line landed. The current
+                          product reports individual player projections instead.
     retrieve_betting_line REMOVED FROM THE AGENT, kept for scoring. This one is
                           not scope, it is a leak. Watching the live agent run
                           on 2026-01-14, it pulled the closing line into its own
@@ -52,7 +52,7 @@ import json
 from langchain_core.tools import tool
 
 from agent.sources import get_source, parse_date, parse_matchup_id, player_is_out
-from models.predict import model_available, predict
+from models.predict import predict
 from models.predict_stat_line import model_available as stat_line_available
 from models.predict_stat_line import predict_stat_line as run_stat_line
 
@@ -195,24 +195,15 @@ def build_tools(source, include_model: bool = True, without: tuple[str, ...] = (
         accuracy on all 1,322 games of 2025-26 is 66.5%, against 55.5% for simply
         always picking the home team.
 
-        Falls back to a hand-tuned heuristic if models/win_probability.json is
-        missing, and says which one it used in the `model` field -- so a stale
-        checkout degrades loudly rather than silently changing what is being
-        measured.
+        If models/win_probability.json is missing, the canonical predictor returns
+        an explicit ``awaiting_input`` envelope. It never substitutes a heuristic.
 
         Args:
             home_abbr: Home team abbreviation.
             away_abbr: Away team abbreviation.
             as_of_date: ISO date for the prediction.
         """
-        if model_available():
-            return json.dumps(predict(home_abbr, away_abbr, as_of_date), indent=2)
-        payload = _stub_win_probability(source, home_abbr, away_abbr, as_of_date)
-        payload["warning"] = (
-            "models/win_probability.json is missing, so this is the fallback "
-            "heuristic, not the fitted model. Run `python -m models.train`."
-        )
-        return json.dumps(payload, indent=2)
+        return json.dumps(predict(home_abbr, away_abbr, as_of_date), indent=2)
 
     @tool
     def predict_stat_line(player_name: str, matchup_id: str, as_of_date: str) -> str:
@@ -280,115 +271,6 @@ def build_tools(source, include_model: bool = True, without: tuple[str, ...] = (
             raise ValueError(f"cannot withhold unknown tools: {sorted(unknown)}")
         tools = [t for t in tools if t.name not in without]
     return tools
-
-
-def _stub_win_probability(
-    source, home_abbr: str, away_abbr: str, as_of_date: str
-) -> dict:
-    """Net-rating + rest + injury heuristic. Placeholder until XGBoost lands.
-
-    Reads ratings through the same source the agent uses, so it inherits the same
-    date gating.
-    """
-    from agent.sources import (
-        injuries_as_of,
-        parse_date,
-        season_end_year,
-        team_form_as_of,
-        team_ratings,
-    )
-    from agent.teams import normalize_abbr
-
-    home_abbr, away_abbr = normalize_abbr(home_abbr), normalize_abbr(away_abbr)
-    strength_basis = "mock fixture"
-
-    if source.name == "real":
-        as_of = parse_date(as_of_date)
-        prior = season_end_year(as_of)
-        home = team_ratings(home_abbr, prior - 1)
-        away = team_ratings(away_abbr, prior - 1)
-        if not home or not away:
-            return {
-                "model": "stub_net_rating_v0",
-                "as_of_date": as_of_date,
-                "home": home_abbr,
-                "away": away_abbr,
-                "home_win_prob": None,
-                "away_win_prob": None,
-                "error": "No prior-season ratings for one or both teams.",
-            }
-
-        # Prefer CURRENT-season rolling form over stale prior-season ratings.
-        # avg_point_diff is a net-rating proxy that reflects who the team is now;
-        # prior-season o_rtg/d_rtg is wrong by December. Fall back per team when
-        # a team has no games yet (opening week).
-        def net(abbr: str, prior_row: dict) -> float:
-            form = team_form_as_of(abbr, as_of)
-            if form and form["games_played"] >= 5:
-                return form["avg_point_diff"]
-            return prior_row["off_rating"] - prior_row["def_rating"]
-
-        home_net, away_net = net(home_abbr, home), net(away_abbr, away)
-        hf = team_form_as_of(home_abbr, as_of)
-        strength_basis = (
-            f"current form ({hf['record']}, {hf['avg_point_diff']:+.1f} pt diff)"
-            if hf and hf["games_played"] >= 5
-            else home.get("basis", "prior season")
-        )
-        rest_edge = 0.0  # real rest needs game logs; do not guess
-    else:
-        ctx = source.matchup_context(f"{away_abbr}-{home_abbr}-2026-01-15", as_of_date)
-        home, away = ctx["home_team"], ctx["away_team"]
-        home_net = home["off_rating"] - home["def_rating"]
-        away_net = away["off_rating"] - away["def_rating"]
-        rest_edge = 3.0 if ctx["rest"].get("away_back_to_back") else 0.0
-
-    # Injury cost, weighted by who is actually out (advisor, 2026-07-21: a star
-    # and a bench player used to count the same). 6.0 = net-rating points a full
-    # replacement-level loss of one star is worth; deliberately a round number
-    # until the model is fit.
-    def injury_cost(abbr: str) -> tuple[float, list[dict]]:
-        try:
-            out = injuries_as_of(abbr, parse_date(as_of_date))
-        except Exception:
-            return 0.0, []
-        weight = sum(i.get("importance") or 0.0 for i in out)
-        return round(6.0 * weight, 2), out
-
-    home_inj_cost, home_out = injury_cost(home_abbr)
-    away_inj_cost, away_out = injury_cost(away_abbr)
-
-    edge = (
-        home_net
-        - away_net
-        + rest_edge
-        + 2.5  # league-average home edge
-        - home_inj_cost
-        + away_inj_cost
-    )
-    home_win_prob = max(0.15, min(0.85, 0.5 + edge / 40.0))
-
-    return {
-        "model": "stub_net_rating_v2",
-        "as_of_date": as_of_date,
-        "home": home_abbr,
-        "away": away_abbr,
-        "home_win_prob": round(home_win_prob, 3),
-        "away_win_prob": round(1.0 - home_win_prob, 3),
-        "basis": strength_basis,
-        "injury_impact": {
-            "home_cost_net_rating": home_inj_cost,
-            "away_cost_net_rating": away_inj_cost,
-            "home_out": [
-                {"player": i["player"], "tier": i.get("tier")} for i in home_out[:5]
-            ],
-            "away_out": [
-                {"player": i["player"], "tier": i.get("tier")} for i in away_out[:5]
-            ],
-        },
-        "warning": "Placeholder heuristic, not the XGBoost model. Injury weighting is "
-        "a minutes/points proxy, not a fitted coefficient.",
-    }
 
 
 # Default tool set (mock) so `from agent.tools import TOOLS` still works.

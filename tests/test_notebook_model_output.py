@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+import json
+
 import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
+from agent.sources import get_source
+from agent.tools import build_tools
 from models import notebook_model_output as model_output
+import models.predict as predict_module
+from models.predict import predict as canonical_win_prediction
 from ui.serve import app
 
 
@@ -39,6 +45,42 @@ def test_predict_api_returns_predictions_without_completed_game_answers():
     _assert_no_actual_results(payload)
 
 
+def test_predict_api_uses_the_same_canonical_win_model_as_the_agent():
+    response = TestClient(app).post(
+        "/api/predict",
+        json={"matchup_id": MATCHUP_ID, "as_of_date": PREGAME_AS_OF},
+    )
+    expected = canonical_win_prediction("ORL", "CHI", PREGAME_AS_OF)
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["home_win_prob"] == expected["home_win_prob"]
+    assert payload["away_win_prob"] == expected["away_win_prob"]
+    assert payload["win_prediction"] == expected
+
+
+def test_model_only_and_agent_report_the_same_missing_model_gap(tmp_path, monkeypatch):
+    monkeypatch.setattr(predict_module, "MODEL_PATH", tmp_path / "missing-model.json")
+    predict_module.load_model.cache_clear()
+    try:
+        api_payload = model_output.predict_model_only(MATCHUP_ID, PREGAME_AS_OF)
+        tools = {tool.name: tool for tool in build_tools(get_source("real"))}
+        agent_payload = json.loads(
+            tools["predict_win_probability"].invoke(
+                {
+                    "home_abbr": "ORL",
+                    "away_abbr": "CHI",
+                    "as_of_date": PREGAME_AS_OF,
+                }
+            )
+        )
+
+        assert api_payload["win_prediction"]["status"] == "awaiting_input"
+        assert agent_payload == api_payload["win_prediction"]
+    finally:
+        predict_module.load_model.cache_clear()
+
+
 def test_model_only_output_omits_players_known_out_before_tipoff():
     payload = model_output.predict_model_only(MATCHUP_ID, PREGAME_AS_OF)
 
@@ -62,59 +104,6 @@ def test_predict_api_rejects_as_of_on_or_after_the_game(as_of_date):
     assert "before the game" in payload["error"]
 
 
-def test_target_game_final_score_cannot_change_the_pregame_prediction(
-    tmp_path, monkeypatch
-):
-    source = pd.read_csv(model_output.TEAM_CSV)
-    target_date = pd.Timestamp("2025-12-01")
-    dates = pd.to_datetime(source["game_date"])
-    home = (dates == target_date) & (source["team"] == "ORLANDO_MAGIC")
-    away = (dates == target_date) & (source["team"] == "CHICAGO_BULLS")
-    assert home.sum() == 1
-    assert away.sum() == 1
-
-    def prediction_with_final_score(
-        filename: str,
-        *,
-        home_for: int,
-        home_against: int,
-        away_for: int,
-        away_against: int,
-    ) -> float:
-        changed = source.copy()
-        changed.loc[home, ["points_scored", "points_allowed"]] = [
-            home_for,
-            home_against,
-        ]
-        changed.loc[away, ["points_scored", "points_allowed"]] = [
-            away_for,
-            away_against,
-        ]
-        csv_path = tmp_path / filename
-        changed.to_csv(csv_path, index=False)
-        monkeypatch.setattr(model_output, "TEAM_CSV", csv_path)
-        return model_output.predict_model_only(MATCHUP_ID, PREGAME_AS_OF)[
-            "home_win_prob"
-        ]
-
-    home_loss = prediction_with_final_score(
-        "home-loss.csv",
-        home_for=0,
-        home_against=250,
-        away_for=250,
-        away_against=0,
-    )
-    home_win = prediction_with_final_score(
-        "home-win.csv",
-        home_for=250,
-        home_against=0,
-        away_for=0,
-        away_against=250,
-    )
-
-    assert home_loss == pytest.approx(home_win, abs=1e-12)
-
-
 def test_target_game_player_rows_cannot_change_pregame_stat_lines(
     tmp_path, monkeypatch
 ):
@@ -133,24 +122,3 @@ def test_target_game_player_rows_cannot_change_pregame_stat_lines(
     assert model_output.predict_model_only(MATCHUP_ID, PREGAME_AS_OF)[
         "player_stat_lines"
     ] == baseline
-
-
-def test_early_as_of_team_prediction_ignores_intervening_results(
-    tmp_path, monkeypatch
-):
-    source = pd.read_csv(model_output.TEAM_CSV)
-    early_as_of = "2025-11-20"
-    baseline = model_output.predict_model_only(MATCHUP_ID, early_as_of)[
-        "home_win_prob"
-    ]
-    dates = pd.to_datetime(source["game_date"])
-    future = dates > pd.Timestamp(early_as_of)
-    changed = source.copy()
-    changed.loc[future, ["points_scored", "points_allowed", "won"]] = [250, 0, 1]
-    csv_path = tmp_path / "mutated-intervening-results.csv"
-    changed.to_csv(csv_path, index=False)
-    monkeypatch.setattr(model_output, "TEAM_CSV", csv_path)
-
-    assert model_output.predict_model_only(MATCHUP_ID, early_as_of)[
-        "home_win_prob"
-    ] == pytest.approx(baseline, abs=1e-12)

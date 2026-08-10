@@ -112,9 +112,9 @@ what lets the site keep using the cutoff-pinned local model instead of an API mo
 that may have the 2025-26 results in its weights. No auth on it, and it dies when the
 laptop sleeps, so treat the link as semi-private and short-lived.
 
-Four tabs. The one to show is **Date-gating proof**: the same game at three different
-as-of dates, with the injury list changing between them. That is the whole thesis in
-one screen.
+Three presentation tabs are visible: **Agent**, **Compare**, and **System**. Run the
+example from Agent, then open its gate receipts and message context. Add `?details=1`
+only when someone asks to inspect the Prompt, Tools, or Data reference tabs.
 
 Tick **"Pre-gate data on disk"** in the sidebar first — the page then reports how many
 rows were dropped before anything ran.
@@ -135,7 +135,7 @@ conversation turns to methodology.
 pytest
 ```
 
-95 tests, about 100 seconds. The mutation table in the report is the part worth
+95 tests, about two minutes. The mutation table in the report is the part worth
 mentioning: each leakage rule was broken deliberately to confirm the tests caught it.
 
 ---

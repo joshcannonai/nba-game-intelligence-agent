@@ -95,7 +95,7 @@
   <details>
     <summary>What was fixed after the model integration</summary>
     <div class="detail">
-      <p>Pregame features are reconstructed only from information available by the selected date. The agent can run against a structural snapshot with later outcomes removed; the model-only path independently enforces the same cutoff against its exports.</p>
+      <p>Pregame features are reconstructed only from information available by the selected date. The agent can run against a structural snapshot with later outcomes removed. Model-only and Agent/Both now call the same frozen, season-validated win predictor.</p>
       <p>Stat-line output is also suppressed when the gated injury report already lists that player out. The agent tool returns an explicit unavailable result; model-only omits the player instead of implying participation.</p>
     </div>
   </details>
@@ -119,7 +119,7 @@
     <div class="detail">
       <p>The predictor was trained on 2023-24 and 2024-25 and tested on all 1,322 games of 2025-26. Train accuracy was 66.8% and test accuracy was 66.5%, a 0.3-point gap. On probability quality, it trails the closing market: log loss 0.6118 versus 0.5782 and Brier score 0.2116 versus 0.1977.</p>
       <p>A live local run produced seven passed gate receipts, zero post-cutoff records, 17 inspectable messages, and 57,106 cumulative tokens processed. The 80-game agent comparison is encouraging but small: the combined agent improved from 58.8% before skills to 66.2% after skills. Treat that as evidence the constraints help, not as a betting-performance claim.</p>
-      <p>The reproducible current betting command reports -$2,135 for the predictor. The repository docs are refreshed here; one shared team slide still shows the older figure and should be updated by its owner.</p>
+      <p>The reproducible current betting command reports -$2,135 for the predictor. Repository documentation and presentation figures are generated from the same current results.</p>
     </div>
   </details>
 

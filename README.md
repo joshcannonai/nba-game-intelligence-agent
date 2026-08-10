@@ -66,7 +66,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 python -m models.train        # fit the win model        (~7s)
-pytest                        # 84 tests                 (~75s)
+pytest                        # 95 tests                 (~2 min)
 
 # The site. The front end is built output, which is gitignored, so build it once.
 cd ui/web && bun install && bun run build && cd ../..
@@ -76,8 +76,9 @@ python -m ui.serve            # → localhost:8000
 Without the build step `python -m ui.serve` still runs, but it serves the API only and
 tells you so. Everything else in this README works without touching the front end.
 
-That is the whole setup. Verified from a clean clone of `main` on 2026-08-05: 84 tests
-pass and `python -m eval.three_arms` reproduces 66.49% without any further steps.
+That is the whole setup. Verified on this share-ready branch on 2026-08-10:
+95 tests pass, the frontend production build succeeds, and
+`python -m eval.three_arms` reproduces 66.49% without further configuration.
 
 **Windows note.** Fixed on 2026-08-04. If you are on a checkout older than that and see
 `UnicodeDecodeError: 'charmap' codec can't decode byte ...`, that is Python on Windows
@@ -144,15 +145,16 @@ hosted at https://nba-agent-cecs499.vercel.app -- everything works there except 
 tab, which needs a local model and says so, which means you do not need to build anything
 to look at the results.
 
-**Sharing it with someone else.** `pip install -r requirements.txt` then
-`python -m ui.serve` is the whole story — no API key, no database, no services. The
-model weights (`models/win_probability.json`) and the sample data are committed, so a
-fresh clone is immediately runnable. For a teammate on another machine,
-`streamlit run ui/app.py --server.address 0.0.0.0` serves it on the local network.
+**Sharing it with someone else.** Install the Python requirements, build `ui/web` once
+with Bun, then run `python -m ui.serve` — no API key or database. The model weights
+(`models/win_probability.json`) and sample data are committed. After the setup commands
+above, the deterministic model and evaluation paths need no external service. The hosted
+copy is the easiest read-only review path; a live agent run remains a same-machine local
+demo. The legacy Streamlit views are optional.
 
 The LLM paths are the only exception: `--model ollama` needs `ollama serve` running and
 `ollama pull gemma4` once; `--model anthropic` needs `ANTHROPIC_API_KEY` in a `.env`.
-Everything shown in the UI runs without either.
+Compare, System, and the reference tabs work without either; a live Agent run does not.
 </details>
 
 ---
@@ -260,23 +262,24 @@ truthfully reported a factor. The problem is that the tool made the shortcut *av
 is gone, `agent.sources.closing_line` remains for scoring only, and a test asserts the tool
 cannot come back.
 
-### 4. Placeholders report their gaps instead of guessing
+### 4. Unavailable inputs report their gaps instead of guessing
 
-A tool whose input does not exist returns
+A tool whose required input does not exist returns
 `{"status": "awaiting_input", "needs_from": ..., "needs": ...}`, and the agent is told to
 report the gap rather than fill it. Never zero — an unknown injury list is not "nobody is
-hurt."
+hurt." All seven current tools are live; this remains the contract for a missing model
+file or dataset in a fresh environment.
 
 The side effect is that the project's own blocking list is generated from the code:
-`python -m agent.run --status --source real` prints what is built, what is stubbed, and
-whose input each gap is waiting on.
+`python -m agent.run --status --source real` prints the live inventory and names any
+missing input directly from the running code.
 
 ### 5. Logistic regression, not a tree ensemble
 
 Chosen for three properties XGBoost would not have given us: the weights are readable in a
 pull request, it serialises to a few hundred bytes of named numbers instead of a pickle,
-and it loads without `sklearn` — so the agent, the harness and the UI all run without the
-training dependency installed.
+and canonical win scoring loads without `sklearn`. The primary UI also produces player
+stat lines, so its complete install includes the training dependency.
 
 It also keeps us honest. A fitted model with visible coefficients can be argued with. On
 raw accuracy it barely beat the hand-tuned heuristic it replaced (66.5% vs 66.3%); what it
@@ -436,7 +439,7 @@ That points at a concrete redesign rather than a vague conclusion — the agent 
 probably *annotate* the model's number rather than *replace* it.
 
 We are careful about scope: what we have shown is that **this** agent, with **these** seven
-tools, on **these** 79 paired games, degrades a good estimate. Not that LLM agents cannot
+tools, on **these** 80 paired games, degrades a good estimate. Not that LLM agents cannot
 help in general.
 
 ---
@@ -503,7 +506,7 @@ Input is three things: home team abbreviation, away team abbreviation, and an as
 
 **Q: Why logistic regression and not XGBoost?**
 
-Three reasons, and none of them is that it was easier. The weights are readable in a pull request, so anyone can argue with the model. It serialises to a few hundred bytes of named numbers instead of a pickle. And it loads without `sklearn`, so the agent, the eval harness and the UI all run without the training dependency installed. XGBoost was the plan and the interface is built so it drops straight in — `models/README.md` documents that swap.
+Three reasons, and none of them is that it was easier. The weights are readable in a pull request, so anyone can argue with the model. It serialises to a few hundred bytes of named numbers instead of a pickle. And canonical win scoring loads without `sklearn`; the primary UI still installs it for player stat-line projections. XGBoost was the plan and the interface is built so it drops straight in — `models/README.md` documents that swap.
 
 **Q: How did you split train and test, and why that way?**
 
@@ -555,7 +558,7 @@ Our leading hypothesis is that it over-weights the injury list it can see throug
 
 **Q: So should we conclude LLM agents don't help with prediction?**
 
-No, and I would not let the report say that. What we have shown is that **this** agent, with **these** seven tools, on **these** 79 paired games, degrades a good estimate. The useful reading is narrower and more actionable: the agent should probably *annotate* the model's number rather than be free to *replace* it. That is a concrete redesign the result points at.
+No, and I would not let the report say that. What we have shown is that **this** agent, with **these** seven tools, on **these** 80 paired games, degrades a good estimate. The useful reading is narrower and more actionable: the agent should probably *annotate* the model's number rather than be free to *replace* it. That is a concrete redesign the result points at.
 
 ### Evaluation methodology
 
@@ -569,9 +572,7 @@ We checked rather than assumed, because the whole baseline rests on it. `eval/cr
 
 **Q: Are you and Sarvesh predicting on the same games?**
 
-Not yet, and that was your ask on the 28th. Our arm A covers all 1,322 games of 2025-26. Reconciling to a shared game list — probably starting a few weeks into the season so the rolling features exist for everyone — is open, and it is the thing I would prioritise for the comparison section of the report.
-
-> **Weak spot:** A direct, dated instruction that is still outstanding. Do not dress it up; say it is open and name who is doing it and by when.
+Yes. The paired A/B/C evaluation scores every arm on the same 80 games. Arm A also has a separate season-wide result over all 1,322 games, which is why its 66.5% season accuracy—not the flattering 80-game subset—is the headline number. The live Model-only and Agent/Both paths now call the same frozen predictor in `models/predict.py`.
 
 ### Do you understand your own code?
 
@@ -597,15 +598,11 @@ Built as of 2026-08-04. `predict_stat_line` is backed by ridge regressions on a 
 
 **Q: You built the win model. Wasn't that Sarvesh's piece?**
 
-Yes, and I want to be straight about it. The model interface was mine to build either way, and I filled in a working baseline behind it so nothing downstream was blocked — the eval harness had nothing to score without one. `models/README.md` is written as a handoff to him, the swap is one file, and beating 66.5% is the open task. It was not meant to take his work over.
-
-> **Weak spot:** The most awkward question on this list. Answer it in one honest breath and move to what Sarvesh does next; do not over-explain, and do not disparage his progress.
+Sarvesh supplied the notebook-model integration in PR #22. The final integration preserves those commits, while the site and agent both route win probability through the frozen, season-validated model in `models/predict.py`. That keeps attribution visible and prevents two user-facing predictor paths from drifting.
 
 **Q: If I clone the repository right now, do I get what you just showed me?**
 
-Not from `main` — that is the one thing I need to fix before the final submission. The current work sits on a branch that is 21 commits ahead, and `main` has no `models/`, no eval harness, and no snapshot gate. Landing that PR is the top item on my list.
-
-> **Weak spot:** If he clones `main` before this is merged, he sees roughly half a project. Land it first.
+Yes. PRs #22 and #23 are merged into `main`, including the models, evaluation harness, structural snapshot gate, seven live tools, focused website, and Run Inspector. The Quick start at the top of this README is the supported clean-clone path.
 
 ### Ethics and AI use
 
@@ -623,7 +620,7 @@ Directly, and it is the reason §5.3 is written the way it is. The agent had a t
 
 Ranked by exposure, with how to handle each.
 
-1. **"Wasn't the model Sarvesh's job?"** — The most awkward, because the honest answer touches a teammate's delivery. One breath: the interface was mine, nothing downstream could be scored without a baseline behind it, `models/README.md` is the handoff, beating 66.5% is his task. Then move on. Do not editorialise about his progress.
+1. **"Wasn't the model Sarvesh's job?"** — Answer with the commit history, not a story: Sarvesh's integration landed in PR #22; PR #23 preserved it and hardened the shared interface. The final site and agent both call the canonical predictor in `models/predict.py`.
 
 2. **"Where are the projected stat lines?"** — Built. The honest framing is what it cost: the only player-level data in the repo covers the season being replayed, so it had to be fitted on two prior seasons scraped for the purpose, and it beats a trailing 5-game average by 0.061 points of MAE. Lead with the baseline, not the model.
 
@@ -631,9 +628,9 @@ Ranked by exposure, with how to handle each.
 
 4. **"One-sided or two-sided?"** — The headline finding rests on a sign test that the code prints one-sided while the pre-stated hypothesis pointed the other way. Volunteer the two-sided number (p ≈ 0.019) *before* he asks. Getting there second looks like p-hacking; getting there first looks rigorous.
 
-5. **"Are you and Sarvesh on the same games yet?"** — A direct instruction from 2026-07-28 that is still open. Answer with a plan and a date, not an explanation.
+5. **"Are every arm and live path using the same model and games?"** — The paired A/B/C experiment uses the same 80 games, and the live Model-only and Agent/Both paths use the same frozen predictor. Keep the separate 1,322-game season result distinct from the paired sample.
 
-**Two more worth rehearsing:** the `home_games_played` weight (concede it may be a schedule artifact), and whether `main` reflects what you demoed (land PR #17 first, or the answer is embarrassing).
+**Two more worth rehearsing:** the `home_games_played` weight (concede it may be a schedule artifact), and whether the shared branch is the exact commit used for the demo (show the commit and verification receipt).
 
 ---
 
@@ -648,7 +645,7 @@ Stated plainly, because the gaps we name are less dangerous than the ones we do 
 | 3 | **Why the agent overrules the model** — the most valuable open question. Needs error analysis of the 19 overrides' `key_factors`. | open |
 | 4 | **Larger n for arms B and C** — 40 games is a ±8% band. | open |
 | 5 | **The "let it cheat" ablation** — the advisor suggested deliberately un-gating the agent as a contrast condition. Never run. | open |
-| 6 | **Apples-to-apples with Sarvesh's model** — the advisor asked that both predict on the same game set. | Sarvesh |
+| 6 | ~~**One canonical predictor path**~~ — done. Model-only, Both/arm C, and evaluation call `models/predict.py`; Agent-only intentionally withholds it. Parity and missing-model behavior are contract-tested. | ~~Sarvesh / Josh~~ |
 
 Known weaknesses in what *is* built are documented in [`docs/REPORT.md` §11](docs/REPORT.md)
 and [`models/README.md`](models/README.md) — including that injury data are transaction
@@ -667,8 +664,8 @@ opponent-adjusted strength of schedule.
 | `models/` | Features, training, prediction, committed weights — see [`models/README.md`](models/README.md) |
 | `eval/` | Replay harness, three-arm experiment, odds cross-check, per-game results |
 | `scripts/` | Snapshot gate, test-set construction, odds allowlist, game-log fetch |
-| `tests/` | 84 tests — date gating, model contract, snapshot gate, skills, stat line |
-| `ui/` | Two Streamlit front ends |
+| `tests/` | 95 tests — date gating, model contract, snapshot gate, skills, stat line, site API |
+| `ui/` | Primary React presentation site and optional legacy Streamlit views |
 | `data/` | Collection scripts, feature engineering, raw and sample datasets |
 | `docs/` | [Report](docs/REPORT.md) · [Handoff](docs/HANDOFF.md) · [Tool contracts](docs/tool-contracts.md) · [Design notes](docs/agent-design-notes.md) |
 

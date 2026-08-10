@@ -21,9 +21,9 @@ basketball_reference_web_scraper>=4.21.0
 pandas>=2.0.0
 requests>=2.30.0
 
-# Model training (models/train.py). Only needed to FIT the model -- scoring it
-# reads models/win_probability.json and needs neither, so the agent, the eval
-# harness and the UI all run without sklearn installed.
+# Model fitting plus player stat-line projections. Canonical win scoring reads
+# models/win_probability.json without sklearn, but the primary UI also serves
+# player projections and therefore installs the training stack.
 scikit-learn>=1.4.0
 numpy>=1.26.0
 
@@ -37,3 +37,6 @@ streamlit>=1.45.0
 fastapi>=0.115.0
 uvicorn>=0.30.0
 httpx>=0.27.0
+
+# Presentation artifact generation (scripts/build_deck.py)
+python-pptx>=1.0.0

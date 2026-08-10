@@ -1,9 +1,13 @@
 # Agent design notes
 
+> Historical snapshot from the early implementation phase. Tool-status statements
+> below describe that moment and are intentionally preserved as design history.
+> See `README.md` and `docs/HANDOFF.md` for the current seven-tool system.
+
 Plain-language walkthrough of `agent/` for presenting to the team and Sadovnik.
 Written so any of this can be explained live, not just read off a slide.
 
-## What it does today
+## What it did at this snapshot
 
 Given a matchup (`LAL-BOS-2024-12-25`) and an as-of date, the CLI produces a
 structured pregame report using only data that would have been knowable on
@@ -73,7 +77,7 @@ Three rules, all enforced in `agent/sources.py` and locked by
 Anything that can't be computed comes back `null` with a reason, never a
 zero and never a guess.
 
-## Current status (2026-07-15)
+## Historical status (2026-07-15)
 
 Verified by running the commands myself, not asserted from memory:
 
@@ -98,7 +102,7 @@ Verified by running the commands myself, not asserted from memory:
   `ANTHROPIC_API_KEY` set in `.env` on this machine. Both backends share
   the same tools and system prompt, so this isn't two different agents.
 
-## What's proposed, not built, for Tuesday
+## What was proposed, not built, for Tuesday
 
 Two ideas came up in review that are genuinely good for the course's
 "measurable results" bar, but aren't my lane per the role split locked at
@@ -111,9 +115,9 @@ or not:
 - `proposals/weighting-scheme-proposal.md` -- for Sarvesh: how injuries,
   rest, and H2H could factor into `predict_win_probability` beyond net
   rating, and what the current stub is missing.
-- `proposals/sportsbook-backtest-prototype.md` +
-  `proposals/sportsbook_backtest.py` -- for Kirtan's `eval/` lane: a working
-  prototype (using historical odds data already sitting locally,
+- `proposals/sportsbook-backtest-prototype.md` -- for Kirtan's `eval/` lane:
+  the recorded design and results from a prototype that was later retired
+  (using historical odds data already sitting locally,
   `data/raw/odds/`, ungitignored and not yet part of the shared data layer)
   testing whether following a model's predictions through a past season
   would have beaten the sportsbook line. Connects directly to the

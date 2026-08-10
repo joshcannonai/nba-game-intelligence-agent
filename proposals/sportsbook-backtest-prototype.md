@@ -1,5 +1,8 @@
 # Proposal: sportsbook backtest (for Kirtan's `eval/` lane)
 
+> Historical proposal. The implemented, reproducible evaluation now lives in
+> `eval/betting.py`; use that module for current results.
+
 **Status: prototype, not a final result. Written to show the idea works and
 is worth building for real -- not to claim the current model beats Vegas.**
 
@@ -34,23 +37,13 @@ cannot backtest last season or the upcoming one. It's a real dataset for
 need a live or more recent odds source (many exist, several free) to
 backtest anything from the last two seasons.
 
-## The prototype: `proposals/sportsbook_backtest.py`
+## The retired prototype
 
-Runnable now:
-
-```
-python proposals/sportsbook_backtest.py --season 2022 --playoffs-only
-python proposals/sportsbook_backtest.py --season 2022
-python proposals/sportsbook_backtest.py --season 2019 --playoffs-only
-```
-
-It imports and calls the **real, unmodified** `predict_win_probability`
-stub from `agent/tools.py` -- it does not reimplement or fake the
-prediction. For each game: convert the market's moneyline to an implied
-probability, compare to the model's probability, and if the edge clears a
-threshold (default 5 points), place a flat 1-unit bet. Reports accuracy,
-Brier score (calibration), bet count, and ROI, against a baseline of
-"always back the market favorite."
+The original `proposals/sportsbook_backtest.py` was removed when the fallback
+heuristic it imported was retired. Keeping a broken executable beside the current
+evaluation would imply it was supported. The prototype's question, method, and
+recorded results remain here as design history; the maintained implementation is
+`eval/betting.py` and the canonical predictor is `models/predict.py`.
 
 ## Actual results (real runs, not illustrative)
 
@@ -89,6 +82,5 @@ Brier score (calibration), bet count, and ROI, against a baseline of
    land there under his design, not get merged from `proposals/` as-is.
 2. Source odds data that actually covers 2024-25 and 2025-26 before trying
    to backtest anything recent.
-3. Re-run this exact script once `predict_win_probability` is Sarvesh's
-   real model instead of the net-rating stub -- that's the test that
-   actually matters for the "measurable results" rubric bar.
+3. Extend the maintained `eval/betting.py` path if a future experiment needs
+   threshold-based ROI simulation against the canonical predictor.
