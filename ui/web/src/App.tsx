@@ -9,7 +9,7 @@ import schedule from "./data/games.json";
 // Same-origin when the bridge is serving this build (the demo path: the bridge
 // mounts ui/web/dist, so http://localhost:8000 is the whole app and there is no
 // cross-origin hop to fail). Falls back to the loopback address when the page came
-// from Vercel, which is the review path -- teammates get Tools and System, and the
+// from Vercel, which is the review path -- teammates get the System overview, and the
 // Agent tab tells them plainly that it only runs on the presenter's machine.
 const BRIDGE = location.port === "8000" ? "" : "http://localhost:8000";
 
@@ -19,6 +19,7 @@ type Health = {
 	models: string[];
 	source: string;
 };
+type TabId = "agent" | "compare" | "prompt" | "tools" | "data" | "system";
 type Step = {
 	kind: "call" | "back" | "err";
 	name: string;
@@ -511,7 +512,7 @@ function AgentTab({ health }: { health: Health | null }) {
 					<strong>The agent is not reachable.</strong> It runs on the
 					presenter's machine, not in the cloud, so this tab only works on that
 					laptop. Start it with <code>python -m ui.serve</code> and reload.
-					Tools and System work without it.
+					System works without it.
 				</div>
 			)}
 
@@ -1125,8 +1126,21 @@ function SystemTab() {
 }
 
 export default function App() {
-	const [tab, setTab] = useState<"agent" | "compare" | "prompt" | "tools" | "data" | "system">("agent");
+	const [tab, setTab] = useState<TabId>("agent");
 	const [health, setHealth] = useState<Health | null>(null);
+	const showDetails = new URLSearchParams(location.search).get("details") === "1";
+	const navTabs: { id: TabId; label: string }[] = [
+		{ id: "agent", label: "Agent" },
+		{ id: "compare", label: "Compare" },
+		...(showDetails
+			? [
+					{ id: "prompt" as const, label: "Prompt" },
+					{ id: "tools" as const, label: "Tools" },
+					{ id: "data" as const, label: "Data" },
+				]
+			: []),
+		{ id: "system", label: "System" },
+	];
 
 	useEffect(() => {
 		// Timeout, not just catch. From the hosted copy this request crosses into a
@@ -1167,21 +1181,12 @@ export default function App() {
 			</header>
 
 			<nav className="tabs" role="tablist">
-				{(
-					[
-						["agent", "Agent"],
-						["compare", "Compare"],
-						["prompt", "Prompt"],
-						["tools", "Tools"],
-						["data", "Data"],
-						["system", "System"],
-					] as const
-				).map(([k, label]) => (
+				{navTabs.map(({ id, label }) => (
 					<button
-						key={k}
+						key={id}
 						role="tab"
-						aria-selected={tab === k}
-						onClick={() => setTab(k)}
+						aria-selected={tab === id}
+						onClick={() => setTab(id)}
 					>
 						{label}
 					</button>

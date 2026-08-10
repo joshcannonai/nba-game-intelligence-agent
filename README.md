@@ -106,7 +106,7 @@ python -m scripts.gate_snapshot --as-of 2026-01-14
 # Confirm the odds file really holds CLOSING lines, not opening lines
 python eval/crosscheck_odds.py
 
-# The site: agent, three-arm comparison, the prompt, the tools, the data
+# The presentation site: agent, three-arm comparison, and system evidence
 python -m ui.serve                       # → localhost:8000
 
 # Remove one tool and re-run the same games -- what was that tool worth?
@@ -136,9 +136,10 @@ matching what the repo produces. Retrain a model or rerun an arm, then regenerat
 `bun run build`.
 
 **The site.** `python -m ui.serve` serves the built front end and the agent from one
-process at `localhost:8000`. Six tabs: run any of the three arms on any of the 1,322
-games, the measured three-arm comparison, the exact prompt the model receives, all seven
-tools with their rule files, every dataset, and the model details. A read-only copy is
+process at `localhost:8000`. The presentation view has three tabs: run any of the three
+arms on any of the 1,322 games, inspect the measured three-arm comparison, and review the
+system details. Add `?details=1` to expose the Prompt, Tools, and Data reference tabs for
+deeper review without cluttering the live presentation. A read-only copy is
 hosted at https://nba-agent-cecs499.vercel.app -- everything works there except the Agent
 tab, which needs a local model and says so, which means you do not need to build anything
 to look at the results.
