@@ -20,6 +20,7 @@
   --live: #4ade80;
   --pending: #fbbf24;
   --bad: #fb7185;
+  --diagram-red: #f05252;
 
   --sans: "IBM Plex Sans Variable", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -411,6 +412,139 @@ td.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; color: v
 td.win { color: var(--live); }
 tbody tr:last-child td { border-bottom: none; }
 
+/* ---------- A / B / C architecture ---------- */
+
+.architecture-diagram {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--rule);
+  border-radius: 6px 9px 7px 5px;
+  overflow: hidden;
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(rgba(115, 127, 140, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(115, 127, 140, 0.055) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.architecture-arm {
+  display: grid;
+  grid-template-columns: 154px minmax(0, 1fr) 174px;
+  gap: 18px;
+  align-items: center;
+  min-height: 148px;
+  padding: 24px 22px;
+  border-bottom: 1px dashed var(--rule);
+}
+.architecture-arm:last-child { border-bottom: 0; }
+.architecture-arm-label {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.architecture-arm-label > span {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border: 2px solid var(--ink);
+  border-radius: 48% 52% 46% 54%;
+  font: 600 20px/1 var(--mono);
+  transform: rotate(-2deg);
+}
+.architecture-arm:nth-child(2) .architecture-arm-label > span { transform: rotate(2deg); }
+.architecture-arm:nth-child(3) .architecture-arm-label > span { transform: rotate(-1deg); }
+.architecture-arm-label strong,
+.architecture-arm-label small { display: block; }
+.architecture-arm-label strong { font-size: 14px; font-weight: 600; }
+.architecture-arm-label small { margin-top: 2px; color: var(--ink-3); font-size: 11.5px; }
+.architecture-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+.architecture-node {
+  flex: 1 1 110px;
+  min-width: 0;
+  max-width: 140px;
+  padding: 11px 12px 10px;
+  border: 1.5px solid var(--ink-3);
+  border-radius: 4px 7px 5px 6px;
+  background: var(--bg);
+  text-align: center;
+  transform: rotate(-0.3deg);
+}
+.architecture-node:nth-of-type(even) { transform: rotate(0.35deg); }
+.architecture-node strong,
+.architecture-node span { display: block; }
+.architecture-node strong { font: 500 11.5px/1.35 var(--mono); color: var(--ink); }
+.architecture-node span { margin-top: 4px; font-size: 10.5px; line-height: 1.35; color: var(--ink-3); }
+.architecture-node.is-difference {
+  border: 2px solid var(--diagram-red);
+  color: var(--diagram-red);
+  box-shadow: 2px 2px 0 rgba(239, 68, 68, 0.22);
+}
+.architecture-node.is-difference strong { color: var(--diagram-red); }
+.architecture-arrow {
+  width: 28px;
+  min-width: 22px;
+  height: 18px;
+  margin: 0 3px;
+  overflow: visible;
+}
+.architecture-arrow path {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.architecture-arrow.is-difference path {
+  stroke: var(--diagram-red);
+  stroke-width: 2;
+}
+.architecture-difference {
+  justify-self: start;
+  padding: 7px 9px;
+  border: 1.5px solid var(--diagram-red);
+  border-radius: 5px 7px 4px 6px;
+  color: var(--diagram-red);
+  background: color-mix(in srgb, var(--diagram-red) 7%, var(--surface));
+  font: 600 10.5px/1.35 var(--mono);
+  transform: rotate(-1deg);
+}
+.architecture-arm:nth-child(2) .architecture-difference { transform: rotate(1deg); }
+
+@media (max-width: 960px) {
+  .architecture-arm {
+    grid-template-columns: 140px minmax(0, 1fr);
+  }
+  .architecture-difference {
+    grid-column: 2;
+    margin-top: -6px;
+  }
+  .architecture-flow { justify-content: flex-start; overflow-x: auto; padding-bottom: 4px; }
+}
+
+@media (max-width: 760px) {
+  .architecture-arm {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 22px 18px;
+  }
+  .architecture-flow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+    overflow: visible;
+  }
+  .architecture-node { width: 100%; max-width: none; }
+  .architecture-arrow { width: 28px; height: 24px; margin: 2px auto; transform: rotate(90deg); }
+  .architecture-difference { grid-column: 1; margin-top: 0; }
+}
+
 /* ---------- searchable picker ---------- */
 .field.grow { flex: 1 1 260px; }
 input[type="search"] {
@@ -536,6 +670,7 @@ select:disabled { opacity: 0.5; }
     --live: #15803d;
     --pending: #a16207;
     --bad: #be123c;
+    --diagram-red: #b91c1c;
   }
 }
 
@@ -554,6 +689,7 @@ select:disabled { opacity: 0.5; }
   --live: #15803d;
   --pending: #a16207;
   --bad: #be123c;
+  --diagram-red: #b91c1c;
 }
 
 :root[data-theme="light"] button.run,

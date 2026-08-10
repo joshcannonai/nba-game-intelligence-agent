@@ -1017,12 +1017,125 @@ function CompareTab() {
 	);
 }
 
+function DiagramArrow({ difference = false }: { difference?: boolean }) {
+	return (
+		<svg
+			className={"architecture-arrow" + (difference ? " is-difference" : "")}
+			viewBox="0 0 52 18"
+			aria-hidden="true"
+		>
+			<path d="M2 9 C14 7, 31 11, 45 9" />
+			<path d="M39 4 L46 9 L39 14" />
+		</svg>
+	);
+}
+
+function DiagramNode({
+	title,
+	detail,
+	difference = false,
+}: {
+	title: string;
+	detail: string;
+	difference?: boolean;
+}) {
+	return (
+		<div className={"architecture-node" + (difference ? " is-difference" : "")}>
+			<strong>{title}</strong>
+			<span>{detail}</span>
+		</div>
+	);
+}
+
+function ArchitectureDiagram() {
+	return (
+		<div
+			className="architecture-diagram"
+			role="img"
+			aria-label="Three stacked architecture flows. A sends gated data directly through the canonical predictor with no agent. B gives retrieval tools to the agent while withholding the predictor. C adds the canonical predictor to the same agent context."
+		>
+			<section className="architecture-arm">
+				<header className="architecture-arm-label">
+					<span>A</span>
+					<div>
+						<strong>Model only</strong>
+						<small>Direct baseline</small>
+					</div>
+				</header>
+				<div className="architecture-flow">
+					<DiagramNode title="Gated data" detail="pregame features" />
+					<DiagramArrow />
+					<DiagramNode title="Canonical predictor" detail="logistic regression" />
+					<DiagramArrow />
+					<DiagramNode title="Win probability" detail="direct model output" />
+				</div>
+				<div className="architecture-difference">No language model</div>
+			</section>
+
+			<section className="architecture-arm">
+				<header className="architecture-arm-label">
+					<span>B</span>
+					<div>
+						<strong>Agent only</strong>
+						<small>Independent judgment</small>
+					</div>
+				</header>
+				<div className="architecture-flow">
+					<DiagramNode title="Gated data" detail="pregame evidence" />
+					<DiagramArrow difference />
+					<DiagramNode
+						title="Retrieval tools only"
+						detail="form, rest, injuries"
+						difference
+					/>
+					<DiagramArrow difference />
+					<DiagramNode title="Gemma 4 agent" detail="reason + decide" />
+					<DiagramArrow />
+					<DiagramNode title="Agent report" detail="pick + explanation" />
+				</div>
+				<div className="architecture-difference">Predictor withheld</div>
+			</section>
+
+			<section className="architecture-arm">
+				<header className="architecture-arm-label">
+					<span>C</span>
+					<div>
+						<strong>Both</strong>
+						<small>Model-assisted agent</small>
+					</div>
+				</header>
+				<div className="architecture-flow">
+					<DiagramNode title="Gated data" detail="pregame evidence" />
+					<DiagramArrow difference />
+					<DiagramNode
+						title="Retrieval + predictor"
+						detail="same data + model probability"
+						difference
+					/>
+					<DiagramArrow difference />
+					<DiagramNode title="Gemma 4 agent" detail="reason + decide" />
+					<DiagramArrow />
+					<DiagramNode title="Agent report" detail="pick + explanation" />
+				</div>
+				<div className="architecture-difference">Model enters agent context</div>
+			</section>
+		</div>
+	);
+}
+
 function SystemTab() {
 	const { llm, win_model, stat_model, baselines, gate_rules } = system;
 	const pct = (n: number) => (n * 100).toFixed(1) + "%";
 	return (
 		<div className="panel">
-			<h2 className="sec first">The language model</h2>
+			<h2 className="sec first">How the three approaches differ</h2>
+			<p className="note">
+				The data gate stays fixed. Red marks the one architectural change made
+				between each experimental arm.
+			</p>
+			<ArchitectureDiagram />
+
+			<h2 className="sec">The language model</h2>
 			<p className="note">{llm.why_cutoff_matters}</p>
 			<dl className="readout">
 				<Row term="Model">
