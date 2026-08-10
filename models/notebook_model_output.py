@@ -11,6 +11,12 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from agent.sources import (
+    parse_date,
+    parse_matchup_id as parse_source_matchup_id,
+    player_is_out,
+)
+
 ROOT = Path(__file__).resolve().parents[1]
 PLAYER_CSV = ROOT / "data" / "exports" / "player_stats_engineered.csv"
 TEAM_CSV = ROOT / "data" / "exports" / "team_game_stats_engineered.csv"
@@ -175,6 +181,7 @@ def _predict_player_stat_lines(
     home_key: str,
     away_key: str,
     as_of_date: str,
+    injury_team_abbrs: tuple[str, str],
     min_minutes: float = 10.0,
 ) -> list[dict]:
     df = _read_player_data()
@@ -192,7 +199,16 @@ def _predict_player_stat_lines(
     )
     roster = latest_observed[
         latest_observed["team_key"].isin([home_key, away_key])
-    ][["slug", "team_key"]]
+    ][["slug", "name", "team_key"]]
+    roster = roster[
+        ~roster["name"].map(
+            lambda player: player_is_out(
+                str(player),
+                injury_team_abbrs,
+                parse_date(as_of_date),
+            )
+        )
+    ]
 
     team_data = _read_team_data()
     snapshots = []
@@ -461,6 +477,7 @@ def predict_model_only(matchup_id: str, as_of_date: str) -> dict:
     """
     try:
         away_key, home_key, game_date = _parse_matchup_id(matchup_id)
+        injury_away, injury_home, _ = parse_source_matchup_id(matchup_id)
         as_of = pd.to_datetime(as_of_date).normalize()
         if as_of >= game_date.normalize():
             raise ValueError("as_of_date must be before the game date")
@@ -477,6 +494,7 @@ def predict_model_only(matchup_id: str, as_of_date: str) -> dict:
             home_key=home_key,
             away_key=away_key,
             as_of_date=as_of_date,
+            injury_team_abbrs=(injury_away, injury_home),
         )
 
         status = "ok" if win.get("status") == "ok" else "partial"

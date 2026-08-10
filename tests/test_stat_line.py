@@ -14,6 +14,7 @@ Two hazards, both of which have already bitten this project once in another form
 from __future__ import annotations
 
 from datetime import date
+import json
 
 import pytest
 
@@ -24,6 +25,26 @@ from agent.sources import (
     get_source,
     parse_date,
 )
+from agent.tools import build_tools
+
+
+def test_stat_line_tool_suppresses_projection_for_player_known_out():
+    tools = {tool.name: tool for tool in build_tools(get_source("real"))}
+
+    payload = tools["predict_stat_line"].invoke(
+        {
+            "player_name": "Paolo Banchero",
+            "matchup_id": "CHI-ORL-2025-12-01",
+            "as_of_date": "2025-11-30",
+        }
+    )
+
+    result = json.loads(payload)
+    assert result["status"] == "unavailable"
+    assert result["player"] == "Paolo Banchero"
+    assert "listed Out" in result["reason"]
+    assert "projection" not in result
+
 
 pytestmark = pytest.mark.skipif(
     not PLAYER_STATS_CSV.exists(),

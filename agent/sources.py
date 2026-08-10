@@ -186,6 +186,25 @@ def injuries_as_of(team_abbr: str, as_of: date) -> list[dict]:
     return sorted(active, key=lambda i: -(i.get("importance") or 0.0))
 
 
+def player_is_out(player_name: str, team_abbrs: tuple[str, ...], as_of: date) -> bool:
+    """Whether the gated injury log lists a matchup player as out.
+
+    Some transaction rows join multiple aliases with a slash. Keep that raw-data
+    detail inside the source boundary so every prediction path applies the same
+    name matching and cutoff.
+    """
+    requested = player_name.strip().casefold()
+    for team_abbr in team_abbrs:
+        for injury in injuries_as_of(team_abbr, as_of):
+            aliases = {
+                alias.strip().casefold()
+                for alias in str(injury.get("player", "")).split("/")
+            }
+            if requested in aliases:
+                return True
+    return False
+
+
 def player_importance(player_name: str, as_of: date) -> dict:
     """How much this player actually matters, from the PRIOR completed season.
 

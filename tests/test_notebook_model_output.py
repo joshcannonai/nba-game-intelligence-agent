@@ -39,6 +39,16 @@ def test_predict_api_returns_predictions_without_completed_game_answers():
     _assert_no_actual_results(payload)
 
 
+def test_model_only_output_omits_players_known_out_before_tipoff():
+    payload = model_output.predict_model_only(MATCHUP_ID, PREGAME_AS_OF)
+
+    projected_names = {
+        str(player.get("name", "")).casefold()
+        for player in payload["player_stat_lines"]
+    }
+    assert "paolo banchero" not in projected_names
+
+
 @pytest.mark.parametrize("as_of_date", ["2025-12-01", "2025-12-02"])
 def test_predict_api_rejects_as_of_on_or_after_the_game(as_of_date):
     response = TestClient(app).post(

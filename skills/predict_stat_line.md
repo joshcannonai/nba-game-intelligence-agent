@@ -21,9 +21,9 @@ not part of the win-probability path — do not call it on every run.
 
 ## How to read it
 
-- `status: ok` means there is a projection. `status: unavailable` means the gated
-  history lacks enough observable pregame inputs; it says nothing about whether the
-  player later appeared in the game.
+- `status: ok` means there is a projection. `status: unavailable` means either the
+  gated injury report lists the player as out or the gated history lacks enough
+  observable pregame inputs. It does not reveal any later participation.
 - A single game is high variance. The mean absolute error on points is a few points,
   which is a large fraction of a typical scoring line. The number is a central
   estimate, not a fact, and should be reported with that framing.
@@ -37,6 +37,9 @@ not part of the win-probability path — do not call it on every run.
   the answer. Do not fall back to `retrieve_player_splits` season averages and
   present them as a projection — that is the invented number this whole interface
   exists to prevent.
+- **Do not project a player listed out.** Check `retrieve_injuries` first when
+  availability matters. The tool also enforces this boundary and returns
+  `unavailable` if the gated injury report already lists the requested player out.
 - **Report the error alongside the number.** "About 26 points, give or take the
   model's ~5-point average error" is honest. A bare "26.3 points" implies a precision
   the model does not have.

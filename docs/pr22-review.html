@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PR 22 review: model output you can inspect</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111318;
+      --line: #30343c;
+      --ink: #f1f1ef;
+      --muted: #b4b6bb;
+      --accent: #8bd5ad;
+      --warn: #d8b66a;
+      --max: 820px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 16px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main { width: min(calc(100% - 36px), var(--max)); margin: 0 auto; padding: 48px 0 72px; }
+    a { color: var(--accent); }
+    .eyebrow { color: var(--muted); font-size: 13px; }
+    h1 { max-width: 680px; margin: 8px 0 12px; font-size: clamp(28px, 4vw, 34px); line-height: 1.15; letter-spacing: -.015em; }
+    .lead { max-width: 700px; margin: 0 0 28px; color: var(--muted); font-size: 18px; }
+    .summary { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .summary div { display: grid; grid-template-columns: 130px 1fr; gap: 16px; padding: 11px 0; }
+    .summary strong { font-size: 14px; }
+    .summary span { color: var(--muted); font-size: 14px; }
+    h2 { margin: 38px 0 14px; font-size: 21px; letter-spacing: -.01em; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 13px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+    th:first-child, td:first-child { padding-left: 0; text-align: left; }
+    th { color: var(--muted); font-size: 12px; letter-spacing: .05em; text-transform: uppercase; }
+    td strong { color: var(--accent); }
+    .note { margin: 16px 0 0; padding-left: 14px; border-left: 3px solid var(--warn); color: var(--muted); }
+    details { border-top: 1px solid var(--line); }
+    details:last-child { border-bottom: 1px solid var(--line); }
+    summary { padding: 18px 4px; cursor: pointer; font-weight: 700; list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; float: right; color: var(--accent); }
+    details[open] summary::after { content: "-"; }
+    .detail { max-width: 760px; padding: 0 4px 20px; color: var(--muted); }
+    .detail p:first-child { margin-top: 0; }
+    code { padding: 2px 5px; background: #1a2130; border-radius: 4px; color: #d9f8e8; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    footer { margin-top: 42px; color: var(--muted); font-size: 13px; }
+    @media (max-width: 680px) {
+      main { padding-top: 36px; }
+      .summary div { display: block; padding: 12px 0; }
+      .summary strong { display: block; margin-bottom: 3px; }
+      th:nth-child(3), td:nth-child(3) { display: none; }
+    }
+    @media print {
+      :root { color-scheme: light; --bg: white; --ink: #111; --muted: #444; --line: #ccc; --accent: #087344; }
+      main { padding: 0; }
+      details .detail { display: block; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">CECS 499 · PR 22 follow-up</div>
+  <h1>Make the model output trustworthy and inspectable.</h1>
+  <p class="lead">This change preserves Sarvesh's model integration, closes the remaining pregame-data leaks, and lets a reviewer see exactly what the agent was allowed to know on every run.</p>
+
+  <section class="summary" aria-label="Pull request summary">
+    <div><strong>What changes</strong><span>Leakage guards, three focused demo tabs, and a Run Inspector.</span></div>
+    <div><strong>Why it matters</strong><span>A prediction is only meaningful if future results never reach the model or agent.</span></div>
+    <div><strong>How to review</strong><span>Run one matchup, then inspect seven gate receipts and the full message context.</span></div>
+  </section>
+
+  <h2>What the output actually proves</h2>
+  <table>
+    <thead><tr><th>Method</th><th>Accuracy</th><th>$100/game result</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Our predictor</strong></td><td>66.5%</td><td>-$2,135</td></tr>
+      <tr><td>Closing-line favourite</td><td>69.0%</td><td>-$4,628</td></tr>
+      <tr><td>Always home</td><td>55.5%</td><td>-$7,350</td></tr>
+    </tbody>
+  </table>
+  <p class="note"><strong>Bottom line:</strong> the model is meaningfully better than a naive home-team rule and loses less than blindly taking favourites. It is not yet a profitable betting strategy and does not beat the closing market.</p>
+
+  <h2>Open for more detail</h2>
+  <details open>
+    <summary>What reviewers will see on the site</summary>
+    <div class="detail">
+      <p><strong>Agent</strong> runs the local model; <strong>Compare</strong> shows model-only, agent-only, and combined results; <strong>System</strong> explains the architecture. A <code>?details=1</code> URL exposes the Prompt, Tools, and Data reference tabs when needed.</p>
+      <p>The Run Inspector shows the system, user, assistant, and tool messages; cumulative token usage; and a scoped date-check receipt for every tool. These receipts make the checked cutoff fields visible; the structural snapshots and regression tests provide the stronger leakage guarantee. The inspector exposes model context, not hidden chain-of-thought.</p>
+    </div>
+  </details>
+  <details>
+    <summary>What was fixed after the model integration</summary>
+    <div class="detail">
+      <p>Pregame features are reconstructed only from information available by the selected date. The agent can run against a structural snapshot with later outcomes removed; the model-only path independently enforces the same cutoff against its exports.</p>
+      <p>Stat-line output is also suppressed when the gated injury report already lists that player out. The agent tool returns an explicit unavailable result; model-only omits the player instead of implying participation.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Why winning 66.5% can still lose money</summary>
+    <div class="detail">
+      <p>Accuracy ignores price. If the market's fair probability is <code>p</code> and the measured sportsbook margin is <code>h = 3.75%</code>, the evaluation approximates offered decimal odds as <code>1 / [p(1+h)]</code>. If our true win estimate is <code>q</code>, expected return per dollar is <code>q / [p(1+h)] - 1</code>.</p>
+      <p>That means a 60% market favourite needs our estimate to exceed 62.25% just to clear the modeled margin. Picking the right winner is not enough; the probability edge must also beat the price. The reconstructed prices were checked against 19,807 quoted games: correlation 0.9959, 2.93 percentage-point mean absolute error, and a measured 3.75% average margin.</p>
+    </div>
+  </details>
+  <details>
+    <summary>How Polymarket changes the comparison</summary>
+    <div class="detail">
+      <p>Polymarket is a peer-to-peer central-limit-order-book market. A YES share bought at the executable ask <code>a</code> pays $1 if it wins, so the basic edge is <code>q - a</code>, not an assumed sportsbook hold. The real hurdle is the ask plus spread, slippage, and any taker fee.</p>
+      <p>For sports, Polymarket documents a taker fee of <code>0.03 × p × (1-p)</code> per share. At a 60-cent price that is 0.72 cents, so a taker needs roughly 60.72% belief to break even before spread and slippage. Maker orders have no trading fee but may not fill. Availability and liquidity vary, and sports orders are cancelled automatically once the game begins.</p>
+      <p>Sources: <a href="https://docs.polymarket.com/polymarket-101">market model</a>, <a href="https://docs.polymarket.com/concepts/prices-orderbook">prices and order book</a>, <a href="https://docs.polymarket.com/trading/fees">fees</a>, and <a href="https://docs.polymarket.com/concepts/markets-events">sports-market behavior</a>.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Evidence and limits</summary>
+    <div class="detail">
+      <p>The predictor was trained on 2023-24 and 2024-25 and tested on all 1,322 games of 2025-26. Train accuracy was 66.8% and test accuracy was 66.5%, a 0.3-point gap. On probability quality, it trails the closing market: log loss 0.6118 versus 0.5782 and Brier score 0.2116 versus 0.1977.</p>
+      <p>A live local run produced seven passed gate receipts, zero post-cutoff records, 17 inspectable messages, and 57,106 cumulative tokens processed. The 80-game agent comparison is encouraging but small: the combined agent improved from 58.8% before skills to 66.2% after skills. Treat that as evidence the constraints help, not as a betting-performance claim.</p>
+      <p>The reproducible current betting command reports -$2,135 for the predictor. The repository docs are refreshed here; one shared team slide still shows the older figure and should be updated by its owner.</p>
+    </div>
+  </details>
+
+  <footer>Suggested review path: System overview, one Agent run, gate receipts, message context, then Compare. The local model is required only for a live Agent run; the static review surfaces work without it.</footer>
+</main>
+</body>
+</html>
