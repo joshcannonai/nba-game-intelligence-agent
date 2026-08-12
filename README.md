@@ -515,6 +515,22 @@ No. The experiment measures this prompt, this local model, these tools, and this
 
 ### Evaluation methodology
 
+#### Verified actual-UI workbook
+
+[`NBA-Actual-UI-Agent-Evaluation-Shared-10-Games.xlsx`](docs/evaluation/NBA-Actual-UI-Agent-Evaluation-Shared-10-Games.xlsx)
+is the current manually assembled professor-review workbook. It records the
+same 10 games for all three models using the fixed 2026-04-05 cutoff. Model A ran through
+`POST /api/predict`; Models B and C ran through the website's `POST /api/run`
+SSE path with `gemma4:latest` via Ollama. The workbook contains formula-linked
+Summary, Model A, Model B, Model C, UI Trace, and Methodology sheets. Its 30
+model rows are also committed as a [Git-diffable CSV](docs/evaluation/verified-actual-ui-results.csv),
+with the artifact checksum and contract in the [manifest](docs/evaluation/manifest.json).
+
+The verified sample result is A 5/10, B 4/10, and C 6/10. Every required B/C
+gate receipt passed. This is a shared classroom comparison, not a claim of
+season-level B/C accuracy. The older full-season workbook is not included
+because its B/C rows predated the corrected actual-UI evaluation contract.
+
 **Q: Who is doing the scoring? Not the LLM, I hope.**
 
 No — `eval/three_arms.py` is plain Python. Each arm produces a probability, and the script compares it against ground truth read from a file no agent tool can reach. An unparseable LLM answer is recorded as a skip, never coerced to 0.5, because coercing would drag an arm toward the baseline and flatter it.
@@ -525,9 +541,10 @@ We checked rather than assumed, because the whole baseline rests on it. `eval/cr
 
 **Q: Are you and Sarvesh predicting on the same games?**
 
-Not yet, and that was your ask on the 28th. Our arm A covers all 1,322 games of 2025-26. Reconciling to a shared game list — probably starting a few weeks into the season so the rolling features exist for everyone — is open, and it is the thing I would prioritise for the comparison section of the report.
-
-> **Weak spot:** A direct, dated instruction that is still outstanding. Do not dress it up; say it is open and name who is doing it and by when.
+Yes for the verified shared comparison. All three models ran the same 10 games
+provided by Sarvesh with the same fixed 2026-04-05 cutoff. The committed
+workbook and CSV show that exact list. The separate full-season actual-UI run
+is still incomplete, so we do not claim full-season Model B or C accuracy.
 
 ### Do you understand your own code?
 
@@ -602,7 +619,7 @@ Stated plainly, because the gaps we name are less dangerous than the ones we do 
 | 1 | ~~**`predict_stat_line`**~~ | Built. Fitted on 2023-24, validated on 2024-25. |
 | 2 | ~~**`retrieve_schedule`**~~ | Built from the season game log. |
 | 3 | **Complete the actual-UI full-season runs for Models B and C** | Evaluator is built and resumable; results are intentionally not claimed until every row finishes. |
-| 4 | **Build the formula-linked workbook from the completed actual-UI CSV** | Pending the B and C rows. |
+| 4 | **Build the full-season formula-linked workbook from the completed actual-UI CSV** | The verified shared 10-game workbook is included. The full-season workbook remains pending the B and C rows. |
 | 5 | **The "let it cheat" ablation** | Suggested by the advisor, not run. |
 
 Known weaknesses in what *is* built are documented in [`docs/REPORT.md` §11](docs/REPORT.md)
@@ -625,7 +642,7 @@ opponent-adjusted strength of schedule.
 | `tests/` | Date gating, model contract, snapshot gate, skills, stat line, UI evaluation contract |
 | `ui/` | Two Streamlit front ends |
 | `data/` | Collection scripts, feature engineering, raw and sample datasets |
-| `docs/` | [Report](docs/REPORT.md) · [Handoff](docs/HANDOFF.md) · [Tool contracts](docs/tool-contracts.md) · [Design notes](docs/agent-design-notes.md) |
+| `docs/` | [Verified evaluation workbook](docs/evaluation/NBA-Actual-UI-Agent-Evaluation-Shared-10-Games.xlsx) · [Report](docs/REPORT.md) · [Handoff](docs/HANDOFF.md) · [Tool contracts](docs/tool-contracts.md) · [Design notes](docs/agent-design-notes.md) |
 
 ---
 
