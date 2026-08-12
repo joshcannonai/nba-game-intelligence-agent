@@ -29,3 +29,7 @@ tools are follow-ups on what it shows.
   not know", which is different from "nobody is hurt".
 - If `h2h_last_5` is empty, the teams have not met yet this season. Say so; do not
   reach for last season's meetings as though they were this season's.
+- Head-to-head is descriptive context, not a primary prediction signal. A few games
+  between changing rosters should not outweigh current rolling form.
+- Rest and back-to-backs are tie-breakers. Do not let a one-day rest edge overwhelm
+  a clear difference in rolling point differential and current record.

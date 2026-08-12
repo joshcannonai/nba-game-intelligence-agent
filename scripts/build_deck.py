@@ -257,6 +257,7 @@ def bar_chart(slide, x, y, w, h, cats, series, colours, *, maximum=None):
 
 
 def build(path: Path) -> Path:
+    """Build the archived historical deck, not current submission evidence."""
     prs = deck()
     n = 0
 
@@ -265,6 +266,22 @@ def build(path: Path) -> Path:
         n += 1
         s = blank(prs)
         bg(s, paper)
+        banner = s.shapes.add_textbox(
+            Inches(0), Inches(0), prs.slide_width, Inches(0.32)
+        )
+        banner.fill.solid()
+        banner.fill.fore_color.rgb = BAD
+        banner.line.fill.background()
+        paragraph = banner.text_frame.paragraphs[0]
+        paragraph.text = (
+            "ARCHIVED DECK. Results below are superseded. "
+            "Use the current README and live System tab."
+        )
+        paragraph.font.name = FONT
+        paragraph.font.size = Pt(8)
+        paragraph.font.bold = True
+        paragraph.font.color.rgb = PAPER
+        paragraph.alignment = PP_ALIGN.CENTER
         if label:
             eyebrow(s, label)
         return s

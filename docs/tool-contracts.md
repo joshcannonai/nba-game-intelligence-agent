@@ -44,7 +44,7 @@ JSON string with:
 
 Raises `ValueError` if `as_of_date` is after tip-off — that would leak the result being predicted.
 
-### `retrieve_player_splits(player_name: str, back_to_back: bool = False) -> str`
+### `retrieve_player_splits(player_name: str, as_of_date: str, back_to_back: bool = False) -> str`
 JSON string with season averages (`pts_avg`, `reb_avg`, `ast_avg`, `min_avg`, `games`, `basis`). When `back_to_back=True`, include `b2b_pts_avg` — or `null` plus `b2b_unavailable` if the source cannot compute a fatigue split (the real source cannot yet; that needs per-game logs).
 
 Suggested follow-ons (not stubbed yet):

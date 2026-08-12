@@ -19,7 +19,7 @@ type Health = {
 	models: string[];
 	source: string;
 };
-type TabId = "agent" | "compare" | "prompt" | "tools" | "data" | "system";
+type TabId = "agent" | "prompt" | "tools" | "data" | "system";
 type Step = {
 	kind: "call" | "back" | "err";
 	name: string;
@@ -522,10 +522,10 @@ function AgentTab({ health }: { health: Health | null }) {
 						<span>Which approach</span>
 						<div className="segmented" role="group" aria-label="Which approach">
 							{(
-								[
-									["A", "Model only"],
-									["B", "Agent only"],
-									["C", "Both"],
+									[
+										["A", "Model A - Predictor"],
+										["B", "Model B - Agent with skill.md"],
+										["C", "Model C - Same agent + predictor tool"],
 								] as const
 							).map(([k, label]) => (
 								<button
@@ -566,10 +566,10 @@ function AgentTab({ health }: { health: Health | null }) {
 				</div>
 				<p className="note tight" style={{ marginTop: 16 }}>
 					{arm === "A"
-						? "The model on its own, with no language model involved. Each request fits logistic and linear regressions using rows on or before the as-of date, then scores the selected game using only explicitly allowed pregame features. The final score and actual player results are excluded."
+						? "The fitted logistic predictor on its own, with no language model involved. It scores the selected game from pregame features available by the cutoff. The final score and actual result are excluded."
 						: arm === "B"
-							? "The agent without the model tool. It has to reason its own way to a probability from the retrieval tools alone. Every tool call is filtered to the as-of date before it returns."
-							: "The agent receives the model's number as one input among several. Every tool call is filtered to the as-of date before it returns."}
+							? "Gemma 4 receives the shared skill instructions and gated retrieval tools, but no Model A output. It reasons to its own probability from the retrieved evidence."
+							: "The same Gemma 4 agent, reasoning core, and retrieval instructions as Model B, plus one predictor tool and its matching skill instructions. Model C may agree or disagree after considering the complete gated evidence."}
 				</p>
 			</div>
 
@@ -626,7 +626,7 @@ function AgentTab({ health }: { health: Health | null }) {
 						<div><span>Tokens processed</span><strong>{context.usage.total_tokens || "pending"}</strong></div>
 					</div>
 					<p className="note gate-note">
-						Game-specific historical records are checked against the run cutoff below; future schedule identities are allowed, but their outcomes are not. Static system instructions may include aggregate evaluation metrics, which are visible in the context transcript and are not game inputs.
+							Game-specific historical records are checked against the run cutoff below. Future schedule identities are allowed, but their outcomes are not.
 					</p>
 					{gateReceipts.length > 0 && (
 						<details className="context-window gate-checks" open={!running}>
@@ -760,7 +760,7 @@ function PromptTab() {
 					{p.arm_b_total.toLocaleString()} characters
 					<span className="after">
 						the {(p.total_chars - p.arm_b_total).toLocaleString()} character
-						difference is the entire experiment
+							difference is Model C's predictor tool and matching instructions
 					</span>
 				</Row>
 			</dl>
@@ -835,191 +835,8 @@ function DataTab() {
 }
 
 
-type ArmStat = { n: number; accuracy: number; log_loss: number; brier: number };
-const LABELS: Record<string, string> = {
-	arm_A: "A. Model only",
-	arm_B: "B. Agent only",
-	arm_C: "C. Agent + model",
-	vegas: "Vegas closing line",
-	always_home: "Always pick home",
-};
-
-function pct(n: number) {
-	return (n * 100).toFixed(1) + "%";
-}
-
-function ArmTable({
-	title,
-	note,
-	data,
-	order,
-}: {
-	title: string;
-	note: string;
-	data: Record<string, ArmStat>;
-	order: string[];
-}) {
-	const rows = order.filter((k) => data[k]);
-	const best = rows.reduce((a, b) => (data[b].accuracy > data[a].accuracy ? b : a), rows[0]);
-	return (
-		<>
-			<h2 className="sec">{title}</h2>
-			<p className="note">{note}</p>
-			<div className="tablewrap">
-				<table>
-					<thead>
-						<tr>
-							<th>Approach</th>
-							<th>Accuracy</th>
-							<th>Log loss</th>
-							<th>Brier</th>
-							<th>Games</th>
-						</tr>
-					</thead>
-					<tbody>
-						{rows.map((k) => (
-							<tr key={k}>
-								<td>{LABELS[k] ?? k}</td>
-								{/* Only the leader is coloured. Tinting every arm made a losing
-								    arm read as a good result, which is the opposite of the finding. */}
-								<td className={"mono" + (k === best ? " win" : "")}>
-									{pct(data[k].accuracy)}
-								</td>
-								{/* Always-pick-home predicts a hard 1.0, so its log loss is a
-								    divide-by-epsilon artefact rather than a measurement. */}
-								<td className="mono">
-									{k === "always_home" ? "n/a" : data[k].log_loss.toFixed(3)}
-								</td>
-								<td className="mono">
-									{k === "always_home" ? "n/a" : data[k].brier.toFixed(3)}
-								</td>
-								<td className="mono">{data[k].n.toLocaleString()}</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-			</div>
-		</>
-	);
-}
-
-
-function AblationSection() {
-	const a = (system as any).ablation;
-	if (!a) return null;
-	return (
-		<>
-			<h2 className="sec">What each tool is actually worth</h2>
-			<p className="note">
-				Remove one tool, run the identical {a.n} games again, and the change in
-				accuracy is that tool's contribution. Run on the agent-only arm: with the
-				model tool present the agent defers to the model, and removing a retrieval
-				tool changed the output not at all.
-			</p>
-			<div className="tablewrap">
-				<table>
-					<thead>
-						<tr>
-							<th>Tools given</th>
-							<th>Accuracy</th>
-							<th>Log loss</th>
-							<th>Cost of removing it</th>
-						</tr>
-					</thead>
-					<tbody>
-						{a.rows.map((r: any) => (
-							<tr key={r.label}>
-								<td>{r.is_baseline ? "everything" : r.label.replace("without ", "no ")}</td>
-								<td
-									className={
-										"mono" +
-										(r.accuracy < a.always_home ? " bad" : r.is_baseline ? " win" : "")
-									}
-								>
-									{(r.accuracy * 100).toFixed(1)}%
-								</td>
-								<td className="mono">{r.log_loss.toFixed(3)}</td>
-								<td className="mono">
-									{r.is_baseline ? "" : (r.delta * 100).toFixed(1) + " pts"}
-								</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-			</div>
-			<p className="note" style={{ marginTop: 16 }}>
-				Current form is load-bearing: without it the agent falls to 52%, which is
-				below the {(a.always_home * 100).toFixed(1)}% you get from blindly picking
-				the home team. It is carrying negative information at that point. The injury
-				tool costs nothing to remove, which independently replicates the within-team
-				measurement that found no effect for a missing 20-point scorer. Two unrelated
-				methods, same answer. n = {a.n}, so roughly a plus or minus 7 point band.
-			</p>
-		</>
-	);
-}
-
-function CompareTab() {
-	const a = system.arms as any;
-	return (
-		<div className="panel">
-			<h2 className="sec first">Three ways to predict the same games</h2>
-			<p className="note">
-				The project's actual question. Every number below was produced by the replay
-				harness and is reproducible from the CSVs in the repo.
-			</p>
-			<dl className="readout">
-				{Object.entries(a.definitions as Record<string, string>).map(([k, v]) => (
-					<Row key={k} term={LABELS[k] ?? k}>
-						<span style={{ fontFamily: "var(--sans)", fontSize: 14, color: "var(--ink-2)" }}>
-							{v}
-						</span>
-					</Row>
-				))}
-			</dl>
-
-			<ArmTable
-				title="The full season"
-				note="Every game of 2025-26. Only the model can be run at this scale: the agent takes about 40 seconds a game locally, which is 15 hours for the season."
-				data={a.season}
-				order={["arm_A", "vegas", "always_home"]}
-			/>
-
-			<ArmTable
-				title="All three arms, 40 games"
-				note="The same 40 games given to each approach. This is the comparison the report is built around, and the result was negative: handing the agent the model's number made it worse than the model alone."
-				data={a.sample40}
-				order={["arm_A", "arm_B", "arm_C", "vegas", "always_home"]}
-			/>
-
-			<ArmTable
-				title="A second sample, different seed"
-				note="A different 40 games, to check the first sample was not a fluke. It was not."
-				data={a.sample40_seed1}
-				order={["arm_A", "arm_B", "arm_C", "vegas", "always_home"]}
-			/>
-
-			<ArmTable
-				title="After the skills layer was added"
-				note="The same 40 games as the first sample, with nothing changed but the written rules the agent is given. Arm C recovered most of the gap without a line of code changing."
-				data={a.skills_after}
-				order={["arm_A", "arm_C", "vegas"]}
-			/>
-
-			<AblationSection />
-
-			<p className="note" style={{ marginTop: 22 }}>
-				Forty games is a small sample and these are single runs, so treat the
-				direction as the finding and not the decimal. The season row is the one with
-				statistical weight behind it.
-			</p>
-		</div>
-	);
-}
-
 function SystemTab() {
-	const { llm, win_model, stat_model, baselines, gate_rules } = system;
-	const pct = (n: number) => (n * 100).toFixed(1) + "%";
+	const { llm, win_model, gate_rules } = system;
 	return (
 		<div className="panel">
 			<h2 className="sec first">The language model</h2>
@@ -1042,62 +859,25 @@ function SystemTab() {
 			</dl>
 
 			<h2 className="sec">The win-probability model</h2>
-			<p className="note">
-				{win_model.kind.replace(/_/g, " ")} over {win_model.features} features,
-				trained on {win_model.train_seasons.join(" and ")} and tested on a
-				season it never saw.
-			</p>
-			<dl className="readout">
-				<Row term="Accuracy on 2025-26">
-					<em>{pct(win_model.accuracy)}</em>
-					<span className="after">
-						across {win_model.n.toLocaleString()} games
-					</span>
-				</Row>
-				<Row term="Always pick the home team">
-					{pct(baselines.always_home)}
-					<span className="after">the floor worth beating</span>
-				</Row>
-				<Row term="Vegas closing line">
-					{pct(baselines.vegas_closing)}
-					<span className="after">the ceiling we measure against</span>
-				</Row>
-				<Row term="Log loss / Brier">
-					{win_model.log_loss} / {win_model.brier}
-					<span className="after">calibration, lower is better</span>
-				</Row>
-			</dl>
-
-			<h2 className="sec">The stat-line model</h2>
-			<p className="note">
-				Trained on {stat_model.train_seasons.join(", ")} and validated on{" "}
-				{stat_model.test_season}, never fitted on the season being replayed. It
-				beats simply using a player's last five games, but only just, and the
-				agent is told to say so rather than imply the model found something
-				extra.
-			</p>
-			<div className="tablewrap">
-				<table>
-					<thead>
-						<tr>
-							<th>Projecting</th>
-							<th>Model error</th>
-							<th>Their last 5 games</th>
-							<th>R squared</th>
-						</tr>
-					</thead>
-					<tbody>
-						{Object.entries(stat_model.targets).map(([k, v]) => (
-							<tr key={k}>
-								<td>{k.replace("total_", "")}</td>
-								<td className="mono win">{v.mae.toFixed(3)}</td>
-								<td className="mono">{v.baseline_mae.toFixed(3)}</td>
-								<td className="mono">{v.r2.toFixed(3)}</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-			</div>
+				<p className="note">
+					{win_model.kind.replace(/_/g, " ")} over {win_model.features} features,
+					trained on {win_model.train_seasons.join(" and ")}. Model A calls this
+					directly. Model C gets the same output through its extra predictor tool.
+				</p>
+				<dl className="readout">
+					<Row term="Model A">
+						Predictor only
+						<span className="after">no language model and no tools</span>
+					</Row>
+					<Row term="Model B">
+						Gemma 4 plus skills
+						<span className="after">gated retrieval tools, no predictor output</span>
+					</Row>
+					<Row term="Model C">
+						Same agent plus predictor
+						<span className="after">may agree or disagree with Model A</span>
+					</Row>
+				</dl>
 
 			<h2 className="sec">How the future is kept out</h2>
 			<p className="note">
@@ -1129,9 +909,8 @@ export default function App() {
 	const [tab, setTab] = useState<TabId>("agent");
 	const [health, setHealth] = useState<Health | null>(null);
 	const showDetails = new URLSearchParams(location.search).get("details") === "1";
-	const navTabs: { id: TabId; label: string }[] = [
-		{ id: "agent", label: "Agent" },
-		{ id: "compare", label: "Compare" },
+		const navTabs: { id: TabId; label: string }[] = [
+			{ id: "agent", label: "Agent" },
 		...(showDetails
 			? [
 					{ id: "prompt" as const, label: "Prompt" },
@@ -1194,7 +973,6 @@ export default function App() {
 			</nav>
 
 			{tab === "agent" && <AgentTab health={health} />}
-			{tab === "compare" && <CompareTab />}
 			{tab === "prompt" && <PromptTab />}
 			{tab === "tools" && <ToolsTab />}
 			{tab === "data" && <DataTab />}

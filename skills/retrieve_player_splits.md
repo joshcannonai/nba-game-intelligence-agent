@@ -5,12 +5,13 @@ use_when: A specific player's production is load-bearing in your explanation.
 
 ## What it gives you
 
-Season averages for one player, and optionally their back-to-back split.
+Season averages for one player from a season completed before `as_of_date`, and
+optionally their back-to-back split.
 
 ## When to call it
 
-Sparingly. Only when you are naming a player in the narrative and need their actual
-numbers, or when a team is on a back-to-back and you want the fatigue split.
+Only for an explicit player question. Do not call it for the team-level winner
+prediction. Always pass the authorized run cutoff as `as_of_date`.
 
 ## How to read it
 

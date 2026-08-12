@@ -1,5 +1,9 @@
 # Session handoff — 2026-08-03
 
+> **Superseded snapshot.** This file preserves the state on 2026-08-03. Its model
+> metrics, prompts, and B/C sample results are not current. See the repository README
+> and `eval/ui_agent_eval.py` for the submission contract.
+
 State of the agent lane, for whoever picks this up next (a teammate, the advisor,
 or an agent joining cold).
 

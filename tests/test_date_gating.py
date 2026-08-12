@@ -35,6 +35,8 @@ from agent.tools import build_tools
 # A real matchup inside the injury log's coverage (log ends 2025-01-12).
 REAL_MATCHUP = "LAL-BOS-2024-12-25"
 REAL_AS_OF = "2024-12-24"
+PREDICTOR_MATCHUP = "CHO-BOS-2026-04-07"
+PREDICTOR_AS_OF = "2026-04-05"
 
 # Everything in the raw odds file that describes how the game turned out.
 # scripts/odds_only.py must never select these into the sample.
@@ -217,18 +219,160 @@ def test_tools_return_valid_json(kind):
 
     pred = json.loads(
         tools["predict_win_probability"].invoke(
-            {"home_abbr": "BOS", "away_abbr": "LAL", "as_of_date": as_of}
+            {"matchup_id": PREDICTOR_MATCHUP, "as_of_date": PREDICTOR_AS_OF}
         )
     )
     assert 0.0 <= pred["home_win_prob"] <= 1.0
     assert pred["home_win_prob"] + pred["away_win_prob"] == pytest.approx(1.0)
 
 
+def test_model_c_tool_is_the_same_predictor_as_ui_model_a():
+    """The experiment is invalid if A's endpoint and C's tool diverge."""
+    from fastapi.testclient import TestClient
+
+    from ui.serve import app
+
+    response = TestClient(app).post(
+        "/api/predict",
+        json={"matchup_id": PREDICTOR_MATCHUP, "as_of_date": PREDICTOR_AS_OF},
+    )
+    assert response.status_code == 200
+    expected = response.json()
+    tool = {t.name: t for t in build_tools(get_source("real"))}[
+        "predict_win_probability"
+    ]
+    actual = json.loads(
+        tool.invoke({"matchup_id": PREDICTOR_MATCHUP, "as_of_date": PREDICTOR_AS_OF})
+    )
+    assert actual["home_win_prob"] == expected["home_win_prob"]
+    assert actual["away_win_prob"] == expected["away_win_prob"]
+    assert actual["provenance"] == "same models.predict path as UI Model A"
+
+
+class _SourceThatMustNotBeRead:
+    name = "spy"
+
+    def matchup_context(self, *_args, **_kwargs):
+        raise AssertionError("unauthorized request reached the data source")
+
+    def team_form(self, *_args, **_kwargs):
+        raise AssertionError("unauthorized request reached the data source")
+
+
+class _AuthorizedTeamSource:
+    name = "spy"
+
+    def team_form(self, team_abbr, as_of_date, last_n):
+        return {
+            "team": team_abbr,
+            "as_of": as_of_date,
+            "last_n": last_n,
+            "record": "0-0",
+        }
+
+    def injuries(self, team_abbr, as_of_date):
+        return {
+            "team": team_abbr,
+            "as_of_date": as_of_date,
+            "injuries": [],
+        }
+
+
+def test_bound_team_tools_accept_the_authorized_teams_and_cutoff():
+    tools = {
+        tool.name: tool
+        for tool in build_tools(
+            _AuthorizedTeamSource(),
+            include_model=False,
+            required_as_of_date="2025-10-20",
+            required_matchup_id="HOU-OKC-2025-10-21",
+        )
+    }
+    form = json.loads(
+        tools["retrieve_team_form"].invoke(
+            {"team_abbr": "HOU", "as_of_date": "2025-10-20", "last_n": 10}
+        )
+    )
+    injuries = json.loads(
+        tools["retrieve_injuries"].invoke(
+            {"team_abbr": "OKC", "as_of_date": "2025-10-20"}
+        )
+    )
+    assert form["team"] == "HOU"
+    assert injuries["team"] == "OKC"
+
+
+def test_bound_tools_block_a_later_cutoff_before_reading_the_source():
+    tools = {
+        tool.name: tool
+        for tool in build_tools(
+            _SourceThatMustNotBeRead(),
+            include_model=False,
+            required_as_of_date="2025-10-20",
+            required_matchup_id="HOU-OKC-2025-10-21",
+        )
+    }
+    payload = json.loads(
+        tools["retrieve_team_form"].invoke(
+            {"team_abbr": "HOU", "as_of_date": "2025-10-21", "last_n": 10}
+        )
+    )
+    assert payload["status"] == "error"
+    assert payload["data_source_read"] is False
+
+
+def test_bound_tools_block_a_different_matchup_before_reading_the_source():
+    tools = {
+        tool.name: tool
+        for tool in build_tools(
+            _SourceThatMustNotBeRead(),
+            include_model=False,
+            required_as_of_date="2025-10-20",
+            required_matchup_id="HOU-OKC-2025-10-21",
+        )
+    }
+    payload = json.loads(
+        tools["retrieve_matchup_context"].invoke(
+            {
+                "matchup_id": "GSW-LAL-2025-10-21",
+                "as_of_date": "2025-10-20",
+            }
+        )
+    )
+    assert payload["status"] == "error"
+    assert payload["data_source_read"] is False
+
+
+def test_bound_tools_block_a_third_team_before_reading_the_source():
+    tools = {
+        tool.name: tool
+        for tool in build_tools(
+            _SourceThatMustNotBeRead(),
+            include_model=False,
+            required_as_of_date="2025-10-20",
+            required_matchup_id="HOU-OKC-2025-10-21",
+        )
+    }
+    payload = json.loads(
+        tools["retrieve_injuries"].invoke(
+            {"team_abbr": "LAL", "as_of_date": "2025-10-20"}
+        )
+    )
+    assert payload["status"] == "error"
+    assert payload["data_source_read"] is False
+
+
 def test_real_player_splits_admit_missing_b2b_instead_of_inventing():
-    out = CsvSource().player_splits("LeBron James", back_to_back=True)
+    out = CsvSource().player_splits("LeBron James", "2025-10-20", back_to_back=True)
     assert out["pts_avg"] is not None
     assert out["b2b_pts_avg"] is None
     assert "b2b_unavailable" in out
+
+
+def test_player_splits_choose_a_season_completed_before_the_cutoff():
+    out = CsvSource().player_splits("LeBron James", "2025-10-20")
+    assert out["as_of_date"] == "2025-10-20"
+    assert out["season_basis"] == "2024-25 completed"
 
 
 # --- the tool interface is the contract with the team -----------------------
@@ -497,7 +641,7 @@ def _scrub_results(rows, cutoff):
     out = []
     for g in rows:
         g = dict(g)
-        if parse_date(g["game_date"]) >= cutoff:
+        if parse_date(g["game_date"]) > cutoff:
             g["home_pts"] = g["away_pts"] = "0"
             g["winner"] = "SCRUBBED"
         out.append(g)
@@ -517,8 +661,8 @@ def test_no_future_outcome_reaches_the_report(monkeypatch, matchup, as_of):
     """The leakage claim in its strongest form: destroy the future, expect no change.
 
     Every other test here checks that a particular field is filtered. This one
-    makes no assumption about which field: it erases every result dated on or
-    after as_of -- scores and winner -- and re-runs. If any code path consumes
+    makes no assumption about which field: it erases every result dated after
+    as_of -- scores and winner -- and re-runs. If any code path consumes
     an outcome it should not see, the two reports differ.
 
     Schedule DATES are deliberately left intact. Rest is not gated on purpose

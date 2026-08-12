@@ -91,12 +91,10 @@ def skills_block(tool_names: list[str]) -> str:
 
     parts = [
         "\n\n=== TOOL SKILLS ===",
-        "One entry per tool you have. These are operating rules, not background "
-        "reading: where a skill states a rule, follow it.",
+        "One complete SKILL.md file per tool you have. The YAML frontmatter states "
+        "when the skill applies; the Markdown body states how to use the result.",
     ]
     for skill in chosen:
-        parts.append(f"\n--- {skill.tool} ---")
-        if skill.use_when:
-            parts.append(f"Use when: {skill.use_when}")
-        parts.append(skill.body)
+        parts.append(f"\n--- SKILL FILE: skills/{skill.path.name} ---")
+        parts.append(skill.path.read_text(encoding="utf-8").strip())
     return "\n".join(parts)

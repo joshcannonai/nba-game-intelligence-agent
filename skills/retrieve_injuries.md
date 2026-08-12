@@ -24,22 +24,7 @@ explain a prediction that hinges on availability.
 
 ## Rules
 
-- **Do not apply your own injury penalty on top of the model's number.** This is the
-  most important rule in this directory, and it is measured, not a preference.
-
-  We tested the obvious rule — "a player averaging over 20 ppg is out, so drop the
-  odds by N%" — and could not find an N that the data supports. Comparing each team
-  against **itself**, with its top scorer versus without, the difference in win rate
-  is **+0.0% (standard error 3.3%, n = 21 teams)**. The spread across teams runs from
-  −32% to +36%. A pooled comparison across teams looks significant (+5.6%, z = 2.6)
-  and points the wrong way, because having a 20 ppg scorer is a property of good
-  teams. Reproduce with `python -m eval.injury_impact`.
-
-  The fitted model already carries an injury term (`injury_weight_diff`, standardised
-  weight −0.246) learned over two seasons. Your job is to *report* the injury list,
-  not to re-price it.
-
-- This matters because we measured the cost of ignoring it. When the agent overruled
-  the model, it was wrong **15 times out of 19** (`docs/REPORT.md` §9.6), and
-  over-weighting the injury list is our leading explanation.
+- **Do not invent a numeric injury penalty.** Current form already reflects established
+  absences, and Model C's predictor has its own learned injury-load feature. Use the
+  list to explain availability and uncertainty, not to apply an unsupported formula.
 - Report who is out and how much they played. Stop there.

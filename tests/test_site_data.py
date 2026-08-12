@@ -61,17 +61,13 @@ def test_every_tool_on_the_site_carries_its_skill_file():
     assert not missing, f"tools shown with no skill file: {missing}"
 
 
-def test_site_accuracy_agrees_with_the_model_file():
-    """The System and Compare tabs must not disagree, which they once did by a game."""
+def test_site_model_contract_agrees_with_the_model_file():
+    """The System tab must describe the fitted model actually called by A and C."""
     site = json.loads((DATA / "system.json").read_text(encoding="utf-8"))
     model = json.loads(
         (ROOT / "models" / "win_probability.json").read_text(encoding="utf-8")
     )
     assert site["win_model"]["accuracy"] == model["metrics"]["test"]["accuracy"]
-    assert (
-        site["arms"]["season"]["arm_A"]["accuracy"]
-        == model["metrics"]["test"]["accuracy"]
-    ), (
-        "The season replay and the model file disagree on accuracy. Last time this "
-        "happened it was 4-decimal rounding flipping one game at the 0.5 boundary."
-    )
+    assert site["win_model"]["n"] == model["metrics"]["test"]["n"]
+    assert "arms" not in site
+    assert "ablation" not in site

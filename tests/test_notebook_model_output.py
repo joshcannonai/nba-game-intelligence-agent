@@ -35,8 +35,14 @@ def test_predict_api_returns_predictions_without_completed_game_answers():
     assert payload["status"] == "ok"
     assert 0.0 < payload["home_win_prob"] < 1.0
     assert payload["home_win_prob"] + payload["away_win_prob"] == pytest.approx(1.0)
-    assert payload["player_stat_lines"]
+    assert payload["trained_on_seasons"] == [2024, 2025]
     _assert_no_actual_results(payload)
+
+
+def test_clippers_abbreviation_matches_the_exported_team_key():
+    payload = model_output.predict_model_only("GSW-LAC-2026-04-15", "2026-04-05")
+    assert payload["status"] == "ok"
+    assert payload["home"] == "LOS_ANGELES_CLIPPERS"
 
 
 def test_model_only_output_omits_players_known_out_before_tipoff():
@@ -130,19 +136,16 @@ def test_target_game_player_rows_cannot_change_pregame_stat_lines(
     without_target_results.to_csv(csv_path, index=False)
     monkeypatch.setattr(model_output, "PLAYER_CSV", csv_path)
 
-    assert model_output.predict_model_only(MATCHUP_ID, PREGAME_AS_OF)[
-        "player_stat_lines"
-    ] == baseline
+    assert (
+        model_output.predict_model_only(MATCHUP_ID, PREGAME_AS_OF)["player_stat_lines"]
+        == baseline
+    )
 
 
-def test_early_as_of_team_prediction_ignores_intervening_results(
-    tmp_path, monkeypatch
-):
+def test_early_as_of_team_prediction_ignores_intervening_results(tmp_path, monkeypatch):
     source = pd.read_csv(model_output.TEAM_CSV)
     early_as_of = "2025-11-20"
-    baseline = model_output.predict_model_only(MATCHUP_ID, early_as_of)[
-        "home_win_prob"
-    ]
+    baseline = model_output.predict_model_only(MATCHUP_ID, early_as_of)["home_win_prob"]
     dates = pd.to_datetime(source["game_date"])
     future = dates > pd.Timestamp(early_as_of)
     changed = source.copy()

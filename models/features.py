@@ -36,7 +36,8 @@ from __future__ import annotations
 import csv
 from collections import defaultdict, deque
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
+from functools import lru_cache
 
 from agent.sources import SAMPLE_DIR, injuries_as_of, parse_date
 from agent.teams import normalize_abbr
@@ -131,12 +132,20 @@ def _injury_weight(abbr: str, as_of: date, cache: dict) -> float:
     return cache[key]
 
 
+def _replay_injury_cutoff(game_date: date) -> date:
+    """Last safe day for a date-only injury source in a historical replay."""
+    return game_date - timedelta(days=1)
+
+
+@lru_cache(maxsize=8)
 def build_season(
     season: int, *, with_injuries: bool = True
 ) -> tuple[list[GameRow], dict]:
     """Walk one season forward, emitting a feature row per game before scoring it.
 
-    Returns the rows plus a small report, so a caller can tell the difference
+    Results are cached by season and injury mode because the historical files
+    are immutable during a UI/evaluation process. Returns the rows plus a small
+    report, so a caller can tell the difference
     between "no injuries that day" and "the injury log does not cover this
     season" without reading the log itself.
     """
@@ -169,8 +178,14 @@ def build_season(
         a_rest_f = 2.0 if a_rest is None else float(a_rest)
 
         if with_injuries:
-            h_inj = _injury_weight(home, gd, injury_cache)
-            a_inj = _injury_weight(away, gd, injury_cache)
+            # The historical injury source records a calendar date, not a
+            # publication timestamp.  A transaction dated on game day might
+            # have been posted after tip-off, so it is not safe in a replay.
+            # Stop at the previous calendar day unless/until the source is
+            # replaced by timestamped official injury reports.
+            injury_cutoff = _replay_injury_cutoff(gd)
+            h_inj = _injury_weight(home, injury_cutoff, injury_cache)
+            a_inj = _injury_weight(away, injury_cutoff, injury_cache)
             if h_inj or a_inj:
                 injury_hits += 1
         else:
@@ -223,7 +238,12 @@ def build_season(
     }
 
 
-def live_features(home_abbr: str, away_abbr: str, as_of: date) -> tuple[float, ...]:
+def live_features(
+    home_abbr: str,
+    away_abbr: str,
+    as_of: date,
+    game_date: date | None = None,
+) -> tuple[float, ...]:
     """Features for a game that is not in the logs yet -- the UI's path.
 
     Replays the season up to as_of and reads the two teams' accumulators. Slower
@@ -233,7 +253,10 @@ def live_features(home_abbr: str, away_abbr: str, as_of: date) -> tuple[float, .
     from agent.sources import season_end_year
 
     home, away = normalize_abbr(home_abbr), normalize_abbr(away_abbr)
-    season = season_end_year(as_of)
+    target_date = game_date or (as_of + timedelta(days=1))
+    if as_of >= target_date:
+        raise ValueError("as_of must be before game_date")
+    season = season_end_year(target_date)
 
     try:
         rows, _ = build_season(season)
@@ -241,20 +264,22 @@ def live_features(home_abbr: str, away_abbr: str, as_of: date) -> tuple[float, .
         rows = []
 
     state: dict[str, _TeamState] = defaultdict(_TeamState)
+    scheduled_last: dict[str, date] = {}
     for r in rows:
-        if r.game_date >= as_of or r.home_won is None:
-            continue
-        # Re-derive the margin from the row's own outcome rather than re-reading
-        # the CSV: build_season already gated it.
-        hs, as_s = state[r.home], state[r.away]
-        hs.last_game_date = as_s.last_game_date = r.game_date
-        hs.played += 1
-        as_s.played += 1
-        hs.wins += r.home_won == 1
-        as_s.wins += r.home_won == 0
+        if r.game_date < target_date:
+            scheduled_last[r.home] = r.game_date
+            scheduled_last[r.away] = r.game_date
+        if r.game_date <= as_of and r.home_won is not None:
+            hs, as_s = state[r.home], state[r.away]
+            hs.played += 1
+            as_s.played += 1
+            hs.wins += r.home_won == 1
+            as_s.wins += r.home_won == 0
 
     hs, as_s = state[home], state[away]
-    h_rest, a_rest = hs.rest_days(as_of), as_s.rest_days(as_of)
+    h_last, a_last = scheduled_last.get(home), scheduled_last.get(away)
+    h_rest = (target_date - h_last).days - 1 if h_last else None
+    a_rest = (target_date - a_last).days - 1 if a_last else None
     h_rest_f = 2.0 if h_rest is None else float(h_rest)
     a_rest_f = 2.0 if a_rest is None else float(a_rest)
 

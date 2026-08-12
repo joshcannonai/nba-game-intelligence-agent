@@ -42,9 +42,16 @@ load_dotenv(REPO_ROOT / ".env")
 
 _SHARED_RULES = """
 - Always call retrieve_matchup_context first.
-- If either team is on a back-to-back, call retrieve_player_splits with
-  back_to_back=true for that team's key players.
 - Call retrieve_team_form for BOTH teams and retrieve_injuries for both.
+- After retrieve_matchup_context returns, request both team-form calls and both
+  injury calls together in one assistant turn. They are independent reads and
+  the UI should execute them in parallel rather than spending four model turns
+  asking for them one at a time.
+- A run is complete only after it has one matchup-context result, two team-form
+  results, and two injury results. Check that all five are present before writing
+  the final JSON. Model C must also have one predict_win_probability result.
+- Do not call retrieve_player_splits or predict_stat_line for a team-level winner
+  prediction. Those optional tools are reserved for an explicit player question.
 - SOME TOOLS HAVE NO DATA YET. A tool may return {"status": "awaiting_input",
   "needs_from": ..., "needs": ...}. That is not an error and not an empty result.
   It means the data layer for it does not exist. When that happens, add a line to
@@ -63,34 +70,35 @@ _SHARED_RULES = """
 - Do not invent stats that tools did not return.
 """
 
-# Arm C: the agent gets the fitted model's number as one input among several.
-SYSTEM = (
-    """You are the NBA Game Intelligence analyst agent.
-Given a matchup_id and as_of_date, use your tools to gather context and a win
-probability, then write a short structured pregame report.
+_AGENT_REASONING_CORE = """You are the NBA Game Intelligence analyst agent.
+Given a matchup_id and as_of_date, use your tools to gather context, reason to a
+win probability, and write a short structured pregame report.
 
 Rules:
-- Always call predict_win_probability. Treat its number as strong evidence, not
-  as gospel: it is a logistic regression on form, rest and injury load, and it
-  cannot see anything your other tools do not also show you. If the retrieval
-  tools reveal something it plainly missed, you may move off its number -- say
-  so explicitly in key_factors when you do."""
-    + _SHARED_RULES
-)
+- Build the estimate from the complete gated evidence returned by the tools.
+  Start from the 55% NBA home-team base rate. Use rolling point differential as
+  the primary team-strength signal and current win percentage as corroboration.
+  Rest and back-to-backs are small tie-breakers. Current form already reflects
+  established absences, so use the injury report as context rather than applying
+  an unmeasured numeric penalty. Treat head-to-head as descriptive, not predictive.
+- Keep probabilities calibrated: close matchups should stay near 50-55%; use
+  60-70% only when the gated form and record agree strongly; exceed 75% only when
+  every available signal points the same way.
+"""
 
-# Arm B: no model. The agent has to get there on the retrieval tools alone.
-SYSTEM_NO_MODEL = (
-    """You are the NBA Game Intelligence analyst agent.
-Given a matchup_id and as_of_date, use your tools to gather context, then reason
-your own way to a win probability and write a short structured pregame report.
+_MODEL_C_PREDICTOR_ADDITION = """
+- Always call predict_win_probability with the requested matchup_id and cutoff.
+  Its Model A output is one additional data point alongside the matchup, team-form,
+  injury, and rest evidence. Compare it with the independent evidence and synthesize
+  the final probability from the full set. The final prediction may agree or
+  disagree with Model A. State a material agreement or disagreement in key_factors.
+"""
 
-Rules:
-- You have NO win-probability model. Derive home_win_prob yourself from what the
-  retrieval tools return -- recent form, point differential, rest, injuries,
-  head-to-head. Show the reasoning in key_factors.
-- Home teams win about 55% of NBA games. That is the base rate to reason from."""
-    + _SHARED_RULES
-)
+# Arm C: the same Gemma agent and reasoning contract as B, plus Model A as a tool.
+SYSTEM = _AGENT_REASONING_CORE + _MODEL_C_PREDICTOR_ADDITION + _SHARED_RULES
+
+# Arm B: the same agent and reasoning contract, without the Model A tool/output.
+SYSTEM_NO_MODEL = _AGENT_REASONING_CORE + _SHARED_RULES
 
 
 def build_agent(
@@ -98,6 +106,9 @@ def build_agent(
     model_backend: str = "anthropic",
     include_model: bool = True,
     without: tuple[str, ...] = (),
+    *,
+    required_as_of_date: str | None = None,
+    required_matchup_id: str | None = None,
 ):
     from langchain.agents import create_agent
 
@@ -117,11 +128,17 @@ def build_agent(
 
         # Local, free, and -- the actual point -- a training cutoff we can
         # verify predates the games we're testing on. See module docstring.
-        model = ChatOllama(model="gemma4", temperature=0)
+        model = ChatOllama(model="gemma4", temperature=0, reasoning=False)
     else:
         raise ValueError(f"unknown model backend: {model_backend!r}")
 
-    tools = build_tools(source, include_model=include_model, without=without)
+    tools = build_tools(
+        source,
+        include_model=include_model,
+        without=without,
+        required_as_of_date=required_as_of_date,
+        required_matchup_id=required_matchup_id,
+    )
     prompt = system_prompt_for([t.name for t in tools], include_model)
 
     return create_agent(model, tools, system_prompt=prompt)
@@ -141,7 +158,14 @@ def run_matchup(
     include_model: bool = True,
     without: tuple[str, ...] = (),
 ) -> str:
-    agent = build_agent(source, model_backend, include_model, without)
+    agent = build_agent(
+        source,
+        model_backend,
+        include_model,
+        without,
+        required_as_of_date=as_of_date,
+        required_matchup_id=matchup_id,
+    )
     user = (
         f"Produce a pregame report for matchup_id={matchup_id} as_of_date={as_of_date}."
     )
@@ -158,14 +182,18 @@ def run_matchup(
 
 def _probe_args(matchup_id: str, as_of_date: str) -> dict[str, dict]:
     """Representative arguments for every tool, so each one can be called once."""
-    away, home = matchup_id.split("-")[0], matchup_id.split("-")[1]
+    home = matchup_id.split("-")[1]
     player = "LeBron James"
     return {
         "retrieve_matchup_context": {
             "matchup_id": matchup_id,
             "as_of_date": as_of_date,
         },
-        "retrieve_player_splits": {"player_name": player, "back_to_back": True},
+        "retrieve_player_splits": {
+            "player_name": player,
+            "as_of_date": as_of_date,
+            "back_to_back": True,
+        },
         "retrieve_schedule": {"as_of_date": as_of_date, "days_ahead": 1},
         "retrieve_team_form": {
             "team_abbr": home,
@@ -174,8 +202,7 @@ def _probe_args(matchup_id: str, as_of_date: str) -> dict[str, dict]:
         },
         "retrieve_injuries": {"team_abbr": home, "as_of_date": as_of_date},
         "predict_win_probability": {
-            "home_abbr": home,
-            "away_abbr": away,
+            "matchup_id": matchup_id,
             "as_of_date": as_of_date,
         },
         "predict_stat_line": {
@@ -273,8 +300,7 @@ def dry_run(matchup_id: str, as_of_date: str, source) -> str:
     pred = json.loads(
         tools["predict_win_probability"].invoke(
             {
-                "home_abbr": ctx["home_team"]["abbr"],
-                "away_abbr": ctx["away_team"]["abbr"],
+                "matchup_id": matchup_id,
                 "as_of_date": as_of_date,
             }
         )

@@ -12,9 +12,11 @@ Repository: `github.com/joshcannonai/nba-game-intelligence-agent`
 
 ---
 
-> **Draft, 2026-08-03.** The models in §5.2 and the per-member breakdown in §6 are
-> marked for their owners. Every number came from running the code on 2026-08-03;
-> Appendix A lists the command for each one.
+> **Superseded draft, 2026-08-03.** This document records an earlier prompt and
+> evaluation. Its B/C sample results and Model A metrics are historical and must not
+> be cited for the current submission. The current contract and verified numbers are
+> in the repository README; the actual-UI full-season evaluator is
+> `eval/ui_agent_eval.py`.
 
 ---
 

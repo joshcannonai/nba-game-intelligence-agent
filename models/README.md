@@ -13,12 +13,12 @@ A logistic regression trained on the 2023-24 and 2024-25 seasons and scored on
 | | accuracy | log loss | Brier |
 |---|---|---|---|
 | always pick home | 55.5% | 0.6871 | 0.2470 |
-| **this model** | **66.5%** | **0.6118** | **0.2116** |
+| **this model** | **65.9%** | **0.6150** | **0.2130** |
 | Vegas closing line | 69.0% | 0.5782 | 0.1977 |
 
-*All 1,322 games of 2025-26. Train/test accuracy gap is +0.3%, so it is not overfit.*
+*All 1,322 games of 2025-26. Train/test accuracy gap is 0.7 points.*
 
-Vegas is the bar, and we are 2.5 points off it. Closing that gap is the interesting
+Vegas is the bar, and we are 3.1 points off it. Closing that gap is the interesting
 problem — the market has injury beat reporters and real money, and we have a laptop.
 
 ## Run it

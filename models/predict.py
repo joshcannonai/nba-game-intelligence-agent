@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import math
+from datetime import timedelta
 from functools import lru_cache
 from pathlib import Path
 
@@ -74,7 +75,12 @@ def score_features(features) -> float:
     return 1.0 / (1.0 + math.exp(-z))
 
 
-def predict(home_abbr: str, away_abbr: str, as_of_date: str) -> dict:
+def predict(
+    home_abbr: str,
+    away_abbr: str,
+    as_of_date: str,
+    game_date: str | None = None,
+) -> dict:
     """Win probability for one game, using only what was known on as_of_date.
 
     Args:
@@ -115,7 +121,8 @@ def predict(home_abbr: str, away_abbr: str, as_of_date: str) -> dict:
         }
 
     as_of = parse_date(as_of_date)
-    features = live_features(home, away, as_of)
+    target_date = parse_date(game_date) if game_date else as_of + timedelta(days=1)
+    features = live_features(home, away, as_of, target_date)
     p = score_features(features)
 
     return {
