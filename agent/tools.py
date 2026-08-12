@@ -52,7 +52,7 @@ import json
 from langchain_core.tools import tool
 
 from agent.sources import get_source, parse_date, parse_matchup_id, player_is_out
-from models.predict import model_available, predict
+from models.predict import predict as predict_win_model
 from models.predict_stat_line import model_available as stat_line_available
 from models.predict_stat_line import predict_stat_line as run_stat_line
 
@@ -79,7 +79,14 @@ def _todo(tool_name: str, needs_from: str, needs: str, **ctx) -> str:
     )
 
 
-def build_tools(source, include_model: bool = True, without: tuple[str, ...] = ()):
+def build_tools(
+    source,
+    include_model: bool = True,
+    without: tuple[str, ...] = (),
+    *,
+    required_as_of_date: str | None = None,
+    required_matchup_id: str | None = None,
+):
     """Bind a data source into the tool set the agent gets.
 
     include_model=False withholds predict_win_probability. That is not a debug
@@ -93,6 +100,66 @@ def build_tools(source, include_model: bool = True, without: tuple[str, ...] = (
     goes through the same path as include_model, so the skills block shrinks with
     it and the agent is never told about a tool it does not have.
     """
+
+    authorized_teams: set[str] | None = None
+    if required_matchup_id is not None:
+        away, home, game_date = parse_matchup_id(required_matchup_id)
+        authorized_teams = {away, home}
+        if (
+            required_as_of_date is not None
+            and parse_date(required_as_of_date) >= game_date
+        ):
+            raise ValueError("authorized as_of_date must be before the game date")
+
+    def reject_unbound_request(
+        tool_name: str,
+        *,
+        as_of_date: str | None = None,
+        matchup_id: str | None = None,
+        team_abbr: str | None = None,
+    ) -> str | None:
+        """Stop an agent from changing the server-authorized evaluation request.
+
+        The UI binds every run to one matchup and one cutoff before the model is
+        invoked. A model-selected argument is untrusted: returning this error
+        before touching ``source`` guarantees that a later date or different game
+        cannot reach the context window, even transiently.
+        """
+        problems = []
+        if required_as_of_date is not None and as_of_date != required_as_of_date:
+            problems.append(
+                f"as_of_date must equal the authorized cutoff {required_as_of_date}"
+            )
+        if (
+            required_matchup_id is not None
+            and matchup_id is not None
+            and matchup_id != required_matchup_id
+        ):
+            problems.append(
+                f"matchup_id must equal the authorized matchup {required_matchup_id}"
+            )
+        if (
+            team_abbr is not None
+            and authorized_teams is not None
+            and team_abbr not in authorized_teams
+        ):
+            problems.append(
+                f"team_abbr must be one of the authorized teams {sorted(authorized_teams)}"
+            )
+        if not problems:
+            return None
+        return json.dumps(
+            {
+                "status": "error",
+                "tool": tool_name,
+                "error": "; ".join(problems),
+                "requested_as_of_date": as_of_date,
+                "requested_matchup_id": matchup_id,
+                "requested_team_abbr": team_abbr,
+                "data_source_read": False,
+            },
+            indent=2,
+        )
 
     # ---------------------------------------------------------------- WORKING
 
@@ -108,17 +175,39 @@ def build_tools(source, include_model: bool = True, without: tuple[str, ...] = (
             matchup_id: AWAY-HOME-YYYY-MM-DD, e.g. LAL-BOS-2024-12-25
             as_of_date: ISO date. Nothing published after this date is read.
         """
+        rejected = reject_unbound_request(
+            "retrieve_matchup_context",
+            as_of_date=as_of_date,
+            matchup_id=matchup_id,
+        )
+        if rejected:
+            return rejected
         return json.dumps(source.matchup_context(matchup_id, as_of_date), indent=2)
 
     @tool
-    def retrieve_player_splits(player_name: str, back_to_back: bool = False) -> str:
+    def retrieve_player_splits(
+        player_name: str, as_of_date: str, back_to_back: bool = False
+    ) -> str:
         """A player's season averages, optionally their back-to-back (fatigue) split.
 
         Args:
             player_name: Full player name.
+            as_of_date: ISO cutoff used to select the prior completed season.
             back_to_back: If true, include the fatigue split when the source has one.
         """
-        return json.dumps(source.player_splits(player_name, back_to_back), indent=2)
+        rejected = reject_unbound_request(
+            "retrieve_player_splits", as_of_date=as_of_date
+        )
+        if rejected:
+            return rejected
+        return json.dumps(
+            source.player_splits(
+                player_name,
+                as_of_date=as_of_date,
+                back_to_back=back_to_back,
+            ),
+            indent=2,
+        )
 
     # ------------------------------------------------- DATA LAYER (P + K) TODO
 
@@ -133,9 +222,10 @@ def build_tools(source, include_model: bool = True, without: tuple[str, ...] = (
             as_of_date: ISO date the user is asking from.
             days_ahead: How many days of upcoming games to return.
         """
-        return json.dumps(
-            source.schedule(as_of_date, days_ahead=days_ahead), indent=2
-        )
+        rejected = reject_unbound_request("retrieve_schedule", as_of_date=as_of_date)
+        if rejected:
+            return rejected
+        return json.dumps(source.schedule(as_of_date, days_ahead=days_ahead), indent=2)
 
     @tool
     def retrieve_team_form(team_abbr: str, as_of_date: str, last_n: int = 10) -> str:
@@ -147,9 +237,16 @@ def build_tools(source, include_model: bool = True, without: tuple[str, ...] = (
 
         Args:
             team_abbr: Team abbreviation, e.g. BOS.
-            as_of_date: ISO date. Only games played before this date may be used.
+            as_of_date: ISO date. Only games played on or before this date may be used.
             last_n: Window for rolling form.
         """
+        rejected = reject_unbound_request(
+            "retrieve_team_form",
+            as_of_date=as_of_date,
+            team_abbr=team_abbr,
+        )
+        if rejected:
+            return rejected
         if hasattr(source, "team_form"):
             form = source.team_form(team_abbr, as_of_date, last_n)
             if not form.get("unavailable"):
@@ -157,7 +254,7 @@ def build_tools(source, include_model: bool = True, without: tuple[str, ...] = (
         return _todo(
             "retrieve_team_form",
             "Josh (built for 2025-26; other seasons need game logs)",
-            "A rolling, as-of team rating from games played BEFORE as_of_date. Built "
+            "A rolling, as-of team rating from games played THROUGH as_of_date. Built "
             "from data/samples/game_logs_*.csv. Returns awaiting_input only when no "
             "in-season games exist yet (opening week) or that season's logs are "
             "absent -- then the caller uses prior-season ratings instead of guessing.",
@@ -174,45 +271,81 @@ def build_tools(source, include_model: bool = True, without: tuple[str, ...] = (
         The log now runs to 2026-05-29, so the 2025-26 replay window is covered.
 
         Known limit: these are transaction dates -- when a player was placed on or
-        activated from the injured list -- not the moment the news broke. An as-of
-        query on the morning of a game can therefore see a same-day placement.
+        activated from the injured list -- not the moment the news broke. The season
+        replay therefore stops at the previous calendar day. An interactive query
+        uses the explicit as_of_date and should describe the source as date-granular.
 
         Args:
             team_abbr: Team abbreviation.
             as_of_date: ISO date.
         """
+        rejected = reject_unbound_request(
+            "retrieve_injuries",
+            as_of_date=as_of_date,
+            team_abbr=team_abbr,
+        )
+        if rejected:
+            return rejected
         return json.dumps(source.injuries(team_abbr, as_of_date), indent=2)
 
     # ---------------------------------------------------------------- MODELS
 
     @tool
-    def predict_win_probability(home_abbr: str, away_abbr: str, as_of_date: str) -> str:
-        """Probability the home team wins, from a model fitted on prior seasons.
+    def predict_win_probability(matchup_id: str, as_of_date: str) -> str:
+        """The same Model A win probability shown by the UI.
 
-        Backed by models/predict.py -- a logistic regression trained on 2023-24 and
-        2024-25 and never on the season being replayed. It reads form, rest,
-        back-to-backs and injury load, all as of the morning of the game. Holdout
-        accuracy on all 1,322 games of 2025-26 is 66.5%, against 55.5% for simply
-        always picking the home team.
-
-        Falls back to a hand-tuned heuristic if models/win_probability.json is
-        missing, and says which one it used in the `model` field -- so a stale
-        checkout degrades loudly rather than silently changing what is being
-        measured.
+        Backed by the committed logistic model in ``models.predict``. This exact
+        path also powers ``POST /api/predict`` for Model A, so Model C receives the
+        same predictor being evaluated rather than a second implementation. The
+        model was fitted on 2023-24 and 2024-25; its live features are rebuilt only
+        from records observable by ``as_of_date``.
 
         Args:
-            home_abbr: Home team abbreviation.
-            away_abbr: Away team abbreviation.
+            matchup_id: AWAY-HOME-YYYY-MM-DD.
             as_of_date: ISO date for the prediction.
         """
-        if model_available():
-            return json.dumps(predict(home_abbr, away_abbr, as_of_date), indent=2)
-        payload = _stub_win_probability(source, home_abbr, away_abbr, as_of_date)
-        payload["warning"] = (
-            "models/win_probability.json is missing, so this is the fallback "
-            "heuristic, not the fitted model. Run `python -m models.train`."
+        rejected = reject_unbound_request(
+            "predict_win_probability",
+            as_of_date=as_of_date,
+            matchup_id=matchup_id,
         )
-        return json.dumps(payload, indent=2)
+        if rejected:
+            return rejected
+        away, home, game_date = parse_matchup_id(matchup_id)
+        if parse_date(as_of_date) >= game_date:
+            return json.dumps(
+                {
+                    "status": "error",
+                    "matchup_id": matchup_id,
+                    "as_of_date": as_of_date,
+                    "error": "as_of_date must be before the game date",
+                },
+                indent=2,
+            )
+        win = predict_win_model(home, away, as_of_date, game_date.isoformat())
+        home_probability = win.get("home_win_prob")
+        predicted_winner = None
+        if win.get("status") == "ok" and home_probability is not None:
+            predicted_winner = home if float(home_probability) >= 0.5 else away
+        return json.dumps(
+            {
+                "status": win.get("status"),
+                "model": win.get("model"),
+                "matchup_id": matchup_id,
+                "as_of_date": as_of_date,
+                "home_team": home,
+                "away_team": away,
+                "home_win_prob": win.get("home_win_prob"),
+                "away_win_prob": win.get("away_win_prob"),
+                "predicted_winner": predicted_winner,
+                "features": win.get("features"),
+                "trained_on_seasons": win.get("trained_on_seasons"),
+                "holdout_accuracy": win.get("holdout_accuracy"),
+                "error": win.get("error"),
+                "provenance": "same models.predict path as UI Model A",
+            },
+            indent=2,
+        )
 
     @tool
     def predict_stat_line(player_name: str, matchup_id: str, as_of_date: str) -> str:
@@ -233,6 +366,13 @@ def build_tools(source, include_model: bool = True, without: tuple[str, ...] = (
             matchup_id: AWAY-HOME-YYYY-MM-DD
             as_of_date: ISO date.
         """
+        rejected = reject_unbound_request(
+            "predict_stat_line",
+            as_of_date=as_of_date,
+            matchup_id=matchup_id,
+        )
+        if rejected:
+            return rejected
         away, home, _ = parse_matchup_id(matchup_id)
         if player_is_out(player_name, (away, home), parse_date(as_of_date)):
             return json.dumps(

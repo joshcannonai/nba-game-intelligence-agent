@@ -60,6 +60,19 @@ STAKE = 100.0  # flat, every game
 # (seasons 2008-2023). Run `python -m eval.betting --validate` to reproduce.
 HOLD = 0.0375
 
+# ESPN-style codes in the odds file vs Basketball-Reference codes in ours.
+TEAM_ALIASES = {
+    "brk": "bkn",
+    "cho": "cha",
+    "gsw": "gs",
+    "nop": "no",
+    "nyk": "ny",
+    "pho": "phx",
+    "sas": "sa",
+    "uta": "utah",
+    "was": "wsh",
+}
+
 
 def fair_home_prob(row: dict) -> float | None:
     """Home win probability implied by the closing spread."""
@@ -105,6 +118,22 @@ def load_odds() -> dict:
     return out
 
 
+def odds_for_game(game_id: str, odds: dict) -> dict | None:
+    """Return the project's pre-tip closing line for one canonical game id."""
+    from agent.sources import parse_matchup_id
+    from agent.teams import normalize_abbr
+
+    away, home, game_date = parse_matchup_id(game_id)
+    away = normalize_abbr(away).lower()
+    home = normalize_abbr(home).lower()
+    for away_key in (away, TEAM_ALIASES.get(away, away)):
+        for home_key in (home, TEAM_ALIASES.get(home, home)):
+            row = odds.get((game_date.isoformat(), away_key, home_key))
+            if row:
+                return row
+    return None
+
+
 def load_predictions(path: Path, arms: list[str]) -> list[dict]:
     if not path.exists():
         return []
@@ -115,39 +144,13 @@ def load_predictions(path: Path, arms: list[str]) -> list[dict]:
 
 def simulate(rows: list[dict], arms: list[str], odds: dict) -> dict:
     """Bet STAKE on each arm's pick, every game, at reconstructed prices."""
-    from agent.sources import parse_matchup_id
-    from agent.teams import normalize_abbr
-
-    # ESPN-style codes in the odds file vs Basketball-Reference codes in ours.
-    alias = {
-        "brk": "bkn",
-        "cho": "cha",
-        "gsw": "gs",
-        "nop": "no",
-        "nyk": "ny",
-        "pho": "phx",
-        "sas": "sa",
-        "uta": "utah",
-        "was": "wsh",
-    }
-
-    def find(game_id: str):
-        away, home, d = parse_matchup_id(game_id)
-        a, h = normalize_abbr(away).lower(), normalize_abbr(home).lower()
-        for aa in (a, alias.get(a, a)):
-            for hh in (h, alias.get(h, h)):
-                row = odds.get((d.isoformat(), aa, hh))
-                if row:
-                    return row
-        return None
-
     books = {a: {"pnl": 0.0, "n": 0, "won": 0} for a in arms}
     books["always home"] = {"pnl": 0.0, "n": 0, "won": 0}
     books["always favorite"] = {"pnl": 0.0, "n": 0, "won": 0}
     skipped = 0
 
     for r in rows:
-        odds_row = find(r["game_id"])
+        odds_row = odds_for_game(r["game_id"], odds)
         if not odds_row:
             skipped += 1
             continue
@@ -251,9 +254,11 @@ def validate() -> None:
     print(f"  mean absolute error     {statistics.mean(errs) * 100:.2f} pp")
     print(f"  median absolute error   {statistics.median(errs) * 100:.2f} pp")
     print(f"  within 5 pp             {sum(e <= 0.05 for e in errs) / n * 100:.1f}%")
-    print(f"\n  bookmaker margin actually charged: "
-          f"mean {statistics.mean(holds) * 100:.2f}%, "
-          f"median {statistics.median(holds) * 100:.2f}%")
+    print(
+        f"\n  bookmaker margin actually charged: "
+        f"mean {statistics.mean(holds) * 100:.2f}%, "
+        f"median {statistics.median(holds) * 100:.2f}%"
+    )
     print(f"  this module uses {HOLD * 100:.2f}%")
 
 
@@ -261,8 +266,11 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     global STAKE
     ap.add_argument("--stake", type=float, default=STAKE)
-    ap.add_argument("--validate", action="store_true",
-                    help="Check reconstructed prices against real quoted moneylines")
+    ap.add_argument(
+        "--validate",
+        action="store_true",
+        help="Check reconstructed prices against real quoted moneylines",
+    )
     args = ap.parse_args()
     STAKE = args.stake
 

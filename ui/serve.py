@@ -22,23 +22,100 @@ and the same `CsvSource` the CLI and the eval harness use.
 from __future__ import annotations
 
 import json
+import hashlib
 import pathlib
 import queue
 import threading
 import time
 from datetime import date
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from agent.run import build_agent, system_prompt_for
-from agent.sources import get_source
+from agent.sources import get_source, parse_date, parse_matchup_id
 from agent.tools import build_tools
 
 app = FastAPI(title="NBA Agent local bridge")
+
+
+def _hash_files(paths: list[pathlib.Path]) -> str:
+    digest = hashlib.sha256()
+    root = pathlib.Path(__file__).resolve().parents[1]
+    for path in sorted(paths):
+        try:
+            identity = path.relative_to(root)
+        except ValueError:
+            identity = path.resolve()
+        digest.update(str(identity).encode())
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def runtime_fingerprint(model_backend: str = "ollama") -> dict:
+    """Server-side identity for the code, data, model artifact, and local LLM."""
+    from agent import sources
+
+    root = pathlib.Path(__file__).resolve().parents[1]
+    data_files = [
+        sources.TEAM_SUMMARY_CSV,
+        sources.PLAYER_PER_GAME_CSV,
+        sources.ODDS_CSV,
+        *sources.INJURY_CSVS,
+        *sorted(sources.SAMPLE_DIR.glob("game_logs_*.csv")),
+    ]
+    data_files = [path for path in data_files if path.exists()]
+    implementation = [
+        root / "ui" / "serve.py",
+        root / "agent" / "run.py",
+        root / "agent" / "skills.py",
+        root / "agent" / "sources.py",
+        root / "agent" / "tools.py",
+        root / "models" / "features.py",
+        root / "models" / "predict.py",
+        root / "models" / "win_probability.json",
+        *sorted((root / "skills").glob("*.md")),
+    ]
+    llm = {"name": "not_applicable", "digest": "not_applicable"}
+    if model_backend == "ollama":
+        import urllib.error
+        import urllib.request
+
+        try:
+            request = urllib.request.Request(
+                "http://127.0.0.1:11434/api/show",
+                data=json.dumps({"model": "gemma4"}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(request, timeout=5) as response:
+                shown = json.load(response)
+            llm = {
+                "name": "gemma4",
+                "digest": shown.get("digest")
+                or shown.get("details", {}).get("digest")
+                or hashlib.sha256(
+                    json.dumps(shown, sort_keys=True).encode()
+                ).hexdigest(),
+            }
+        except (urllib.error.URLError, OSError, ValueError, json.JSONDecodeError):
+            llm = {"name": "gemma4", "digest": "unavailable"}
+    payload = {
+        "implementation_sha256": _hash_files(implementation),
+        "datasets_sha256": _hash_files(data_files),
+        "data_root": str(sources.DATA_ROOT.resolve()),
+        "llm": llm,
+    }
+    payload["sha256"] = hashlib.sha256(
+        json.dumps(payload, sort_keys=True).encode()
+    ).hexdigest()
+    return payload
+
 
 # The deployed origin is not known until `vercel deploy` prints it, and a demo is
 # not the place to discover a CORS failure. Any origin may call this: it serves
@@ -105,8 +182,8 @@ def health() -> dict:
         "models": models,
         "tools": [t.name for t in build_tools(source, include_model=True)],
         "source": source.name,
+        "runtime_fingerprint": runtime_fingerprint(),
     }
-
 
 
 class PredictRequest(BaseModel):
@@ -122,11 +199,32 @@ def predict_only(req: PredictRequest) -> dict:
     next to the agent is the point of the comparison: the same game, the same
     as-of date, one answer from a model and one from a model plus an agent.
     """
-    from models.notebook_model_output import predict_model_only
+    from agent.sources import parse_date, parse_matchup_id
+    from models.predict import predict
 
-    out = predict_model_only(req.matchup_id, req.as_of_date)
-    out["arm"] = "A"
-    return out
+    away, home, game_date = parse_matchup_id(req.matchup_id)
+    if parse_date(req.as_of_date) >= game_date:
+        return {
+            "status": "error",
+            "arm": "A",
+            "matchup_id": req.matchup_id,
+            "game_date": game_date.isoformat(),
+            "as_of_date": req.as_of_date,
+            "error": "as_of_date must be before the game date",
+        }
+    out = predict(home, away, req.as_of_date, game_date.isoformat())
+    home_prob = out.get("home_win_prob")
+    predicted_winner = None
+    if out.get("status") == "ok" and home_prob is not None:
+        predicted_winner = home if float(home_prob) >= 0.5 else away
+    return {
+        **out,
+        "arm": "A",
+        "matchup_id": req.matchup_id,
+        "game_date": game_date.isoformat(),
+        "as_of_date": req.as_of_date,
+        "predicted_winner": predicted_winner,
+    }
 
 
 def _sse(event: str, data: dict) -> str:
@@ -160,7 +258,13 @@ def _context_message(message) -> dict:
     return entry
 
 
-_HISTORICAL_DATE_FIELDS = {"as_of", "as_of_date", "date", "published", "feature_snapshot_date"}
+_HISTORICAL_DATE_FIELDS = {
+    "as_of",
+    "as_of_date",
+    "date",
+    "published",
+    "feature_snapshot_date",
+}
 
 
 def _historical_dates(value, tool_name: str) -> list[date]:
@@ -187,7 +291,9 @@ def _historical_dates(value, tool_name: str) -> list[date]:
     return found
 
 
-def _gate_receipt(message, requested_cutoff: str, source_name: str, call: dict | None) -> dict:
+def _gate_receipt(
+    message, requested_cutoff: str, source_name: str, call: dict | None
+) -> dict:
     """Build professor-facing, server-derived evidence for one tool return."""
     tool_name = getattr(message, "name", None) or "unknown"
     args = (call or {}).get("args", {})
@@ -231,13 +337,26 @@ def run(req: RunRequest) -> StreamingResponse:
     at a blank panel.
     """
 
+    try:
+        _, _, game_date = parse_matchup_id(req.matchup_id)
+        if parse_date(req.as_of_date) >= game_date:
+            raise ValueError("as_of_date must be before the game date")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
     def generate():
         events: queue.Queue = queue.Queue()
 
         def work():
             try:
                 source = get_source("real")
-                agent = build_agent(source, req.model_backend, req.include_model)
+                agent = build_agent(
+                    source,
+                    req.model_backend,
+                    req.include_model,
+                    required_as_of_date=req.as_of_date,
+                    required_matchup_id=req.matchup_id,
+                )
                 prompt = runtime_system_prompt(source, req.include_model)
                 events.put(
                     (
@@ -247,6 +366,9 @@ def run(req: RunRequest) -> StreamingResponse:
                             "as_of_date": req.as_of_date,
                             "model": req.model_backend,
                             "arm": "C" if req.include_model else "B",
+                            "runtime_fingerprint": runtime_fingerprint(
+                                req.model_backend
+                            ),
                         },
                     )
                 )
@@ -280,10 +402,18 @@ def run(req: RunRequest) -> StreamingResponse:
                     for node, update in chunk.items():
                         for message in update.get("messages", []) or []:
                             context_messages.append(_context_message(message))
-                            message_usage = getattr(message, "usage_metadata", None) or {}
-                            usage["input_tokens"] += int(message_usage.get("input_tokens", 0) or 0)
-                            usage["output_tokens"] += int(message_usage.get("output_tokens", 0) or 0)
-                            usage["total_tokens"] = usage["input_tokens"] + usage["output_tokens"]
+                            message_usage = (
+                                getattr(message, "usage_metadata", None) or {}
+                            )
+                            usage["input_tokens"] += int(
+                                message_usage.get("input_tokens", 0) or 0
+                            )
+                            usage["output_tokens"] += int(
+                                message_usage.get("output_tokens", 0) or 0
+                            )
+                            usage["total_tokens"] = (
+                                usage["input_tokens"] + usage["output_tokens"]
+                            )
                             events.put(
                                 (
                                     "context_message",
@@ -309,13 +439,28 @@ def run(req: RunRequest) -> StreamingResponse:
                                     message,
                                     req.as_of_date,
                                     source.name,
-                                    calls_by_id.get(getattr(message, "tool_call_id", None)),
+                                    calls_by_id.get(
+                                        getattr(message, "tool_call_id", None)
+                                    ),
                                 )
                                 events.put(("gate_receipt", receipt))
+                                try:
+                                    tool_payload = json.loads(str(content))
+                                    payload_status = (
+                                        tool_payload.get("status", "ok")
+                                        if isinstance(tool_payload, dict)
+                                        else "ok"
+                                    )
+                                except (TypeError, json.JSONDecodeError):
+                                    payload_status = "invalid_json"
                                 events.put(
                                     (
                                         "tool_result",
-                                        {"name": name, "content": str(content)[:4000]},
+                                        {
+                                            "name": name,
+                                            "status": payload_status,
+                                            "content": str(content)[:4000],
+                                        },
                                     )
                                 )
                             elif content and not getattr(message, "tool_calls", None):

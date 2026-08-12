@@ -12,23 +12,23 @@
     "away_games_played"
   ],
   "coefficients": [
-    0.37797,
-    0.395666,
-    0.003071,
-    -0.146612,
-    0.121099,
-    -0.245721,
-    0.179077,
-    -0.273089
+    0.379354,
+    0.39063,
+    0.002402,
+    -0.151153,
+    0.132842,
+    -0.23998,
+    0.197901,
+    -0.292729
   ],
-  "intercept": 0.202221,
+  "intercept": 0.202387,
   "scaler_mean": [
     -0.14825,
     -0.002058,
     0.046436,
     0.172709,
     0.182485,
-    0.023647,
+    0.054619,
     40.438289,
     40.397556
   ],
@@ -38,7 +38,7 @@
     1.027267,
     0.377995,
     0.386244,
-    1.343814,
+    1.354355,
     23.616422,
     23.630833
   ],
@@ -50,15 +50,15 @@
   "metrics": {
     "train": {
       "n": 2455,
-      "accuracy": 0.6684,
-      "log_loss": 0.6156,
-      "brier": 0.2129
+      "accuracy": 0.6664,
+      "log_loss": 0.616,
+      "brier": 0.213
     },
     "test": {
       "n": 1322,
-      "accuracy": 0.6649,
-      "log_loss": 0.6118,
-      "brier": 0.2116
+      "accuracy": 0.6589,
+      "log_loss": 0.615,
+      "brier": 0.213
     }
   },
   "note": "Trained on seasons strictly before the test season. Features are as-of by construction (models/features.py). Replace this file to swap in a different model -- see models/README.md."

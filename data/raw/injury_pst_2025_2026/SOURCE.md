@@ -29,7 +29,8 @@ here yet.
 
 These are transaction dates — when a player was placed on or activated from the
 injured list — not the moment news broke. A player ruled out on the morning of
-a game may appear in the log dated that day. `injuries_as_of` filters to
-`published <= as_of_date`, so an as-of query on the morning of the game can see
-a same-day placement. That is the correct reading of this source, but it is
-looser than the official pre-game injury report would be.
+a game may appear in the log dated that day, but a same-day row has no timestamp
+proving it existed before tip-off. The season replay therefore stops injury
+knowledge at the previous calendar day. Interactive queries may use the user's
+explicit `as_of_date`, but must describe this source as date-granular. A future
+replacement should use timestamped official pre-game injury reports.

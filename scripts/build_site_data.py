@@ -3,9 +3,8 @@
     python -m scripts.build_site_data          # write
     python -m scripts.build_site_data --check  # fail if the committed files are stale
 
-Everything the site displays is derived here: the tool list and their skill files,
-the composed system prompt, the datasets with their row counts, the model metrics,
-and the arm and ablation results read out of `eval/*.csv`.
+Everything the site displays is derived here: the tool list and skill files, the
+composed system prompt, the datasets with row counts, and the fitted model contract.
 
 WHY THIS EXISTS. `ui/web/src/data/*.json` is committed, because the front end is a
 static build and cannot read the repo at run time. Committed derived data goes
@@ -28,7 +27,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import math
 import sys
 from datetime import date, timedelta
 from pathlib import Path
@@ -154,50 +152,6 @@ GATE_RULES = [
     },
 ]
 
-ARM_DEFINITIONS = {
-    "arm_A": "The fitted model alone. No language model involved.",
-    "arm_B": "The agent with the retrieval tools only. It has to reason its own way to a probability.",
-    "arm_C": "The agent given the model's number as one input among several.",
-    "vegas": "The closing line, converted to a probability. Never available to the agent.",
-    "always_home": "Pick the home team every time.",
-}
-
-
-def metrics(pairs: list[tuple[float, int]]) -> dict:
-    n = len(pairs)
-    eps = 1e-15
-    acc = sum(1 for p, y in pairs if (p >= 0.5) == bool(y)) / n
-    ll = (
-        -sum(
-            y * math.log(max(min(p, 1 - eps), eps))
-            + (1 - y) * math.log(max(min(1 - p, 1 - eps), eps))
-            for p, y in pairs
-        )
-        / n
-    )
-    brier = sum((p - y) ** 2 for p, y in pairs) / n
-    return {
-        "n": n,
-        "accuracy": round(acc, 4),
-        "log_loss": round(ll, 4),
-        "brier": round(brier, 4),
-    }
-
-
-def score_csv(path: Path, cols: list[str]) -> dict:
-    rows = list(csv.DictReader(path.open(encoding="utf-8")))
-    out = {}
-    for c in cols:
-        pairs = [
-            (float(r[c]), int(r["actual_home_win"]))
-            for r in rows
-            if r.get(c) not in (None, "", "nan")
-        ]
-        if pairs:
-            out[c] = metrics(pairs)
-    out["always_home"] = metrics([(1.0, int(r["actual_home_win"])) for r in rows])
-    return out
-
 
 def row_count(path: Path) -> int | None:
     try:
@@ -245,47 +199,6 @@ def build_system() -> dict:
     wp = json.loads(
         (ROOT / "models" / "win_probability.json").read_text(encoding="utf-8")
     )
-    sl = json.loads((ROOT / "models" / "stat_line.json").read_text(encoding="utf-8"))
-
-    season = score_csv(ROOT / "eval/results_three_arms_season.csv", ["arm_A", "vegas"])
-    arms = {
-        "season": season,
-        "sample40": score_csv(
-            ROOT / "eval/results_three_arms_sample40_rerun.csv",
-            ["arm_A", "arm_B", "arm_C", "vegas"],
-        ),
-        "sample40_seed1": score_csv(
-            ROOT / "eval/results_three_arms_sample40_seed1.csv",
-            ["arm_A", "arm_B", "arm_C", "vegas"],
-        ),
-        "skills_after": score_csv(
-            ROOT / "eval/results_skills_sample40.csv", ["arm_A", "arm_C", "vegas"]
-        ),
-        "sample40_note": "Re-run 2026-08-04 on the current build, all seven tools live.",
-        "definitions": ARM_DEFINITIONS,
-    }
-
-    abl_rows = list(
-        csv.DictReader((ROOT / "eval/results_ablation.csv").open(encoding="utf-8"))
-    )
-    base_acc = float(abl_rows[0]["accuracy"])
-    ablation = {
-        "arm": "B",
-        "n": int(abl_rows[0]["n"]),
-        "seed": 0,
-        "always_home": season["always_home"]["accuracy"],
-        "rows": [
-            {
-                "label": r["arm"],
-                "accuracy": float(r["accuracy"]),
-                "log_loss": float(r["log_loss"]),
-                "delta": round(float(r["accuracy"]) - base_acc, 4),
-                "is_baseline": i == 0,
-            }
-            for i, r in enumerate(abl_rows)
-        ],
-    }
-
     base_c = SYSTEM
     block_c = skills_block(names)
     block_b = skills_block([n for n in names if n != "predict_win_probability"])
@@ -304,23 +217,6 @@ def build_system() -> dict:
             "brier": wp["metrics"]["test"]["brier"],
             "feature_names": wp["feature_names"],
             "coefficients": wp["coefficients"],
-        },
-        "stat_model": {
-            "kind": sl["model"],
-            "train_seasons": sl["train_seasons"],
-            "test_season": sl["test_season"],
-            "targets": {
-                k: {
-                    "mae": v["metrics"]["test"]["mae"],
-                    "baseline_mae": v["metrics"]["test_trailing_5_baseline"]["mae"],
-                    "r2": v["metrics"]["test"]["r2"],
-                }
-                for k, v in sl["targets"].items()
-            },
-        },
-        "baselines": {
-            "always_home": season["always_home"]["accuracy"],
-            "vegas_closing": season["vegas"]["accuracy"],
         },
         "gate_rules": GATE_RULES,
         "prompt": {
@@ -345,8 +241,6 @@ def build_system() -> dict:
             for path, what, who in DATASETS
             if (ROOT / path).exists()
         ],
-        "arms": arms,
-        "ablation": ablation,
     }
 
 
@@ -424,7 +318,7 @@ def main() -> None:
     d = targets[OUT_DIR / "system.json"][0]
     print(f"\n  {len(d['tools'])} tools, all live")
     print(f"  prompt {d['prompt']['total_chars']} chars")
-    print(f"  season arm A {d['arms']['season']['arm_A']['accuracy']:.4f}")
+    print(f"  fitted Model A {d['win_model']['accuracy']:.4f}")
     print(f"  {len(targets[OUT_DIR / 'games.json'][0]['games'])} games in the picker")
     print("\nRebuild the front end after this: cd ui/web && bun run build")
 

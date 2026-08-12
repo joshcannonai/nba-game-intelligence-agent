@@ -59,6 +59,12 @@ def test_block_contains_only_requested_tools():
     assert "predict_win_probability" not in block
 
 
+def test_block_sends_each_skill_yaml_frontmatter_to_the_model():
+    block = skills_block(["retrieve_injuries"])
+    assert "--- SKILL FILE: skills/retrieve_injuries.md ---" in block
+    assert "---\ntool: retrieve_injuries\nuse_when:" in block
+
+
 def test_empty_tool_list_yields_no_block():
     """No tools means no skills section at all, not an empty header."""
     assert skills_block([]) == ""
@@ -80,7 +86,10 @@ def test_arm_b_and_arm_c_skill_blocks_differ_by_one_skill():
     # Strip each section: whichever skill lands last has no trailing newline, so
     # an unstripped compare reports a spurious second difference.
     def sections(block: str) -> set[str]:
-        return {s.strip() for s in re.split(r"\n--- \w+ ---\n", block)[1:]}
+        return {
+            s.strip()
+            for s in re.split(r"\n--- SKILL FILE: skills/[^\n]+ ---\n", block)[1:]
+        }
 
     only_in_c = sections(block_c) - sections(block_b)
     assert len(only_in_c) == 1, (
@@ -90,19 +99,40 @@ def test_arm_b_and_arm_c_skill_blocks_differ_by_one_skill():
 
 
 def test_injury_skill_forbids_a_hand_rolled_penalty():
-    """The measured finding in eval/injury_impact.py has to survive edits.
-
-    If someone helpfully adds "drop the odds 10% when a star is out", the agent
-    goes back to the behaviour that lost 15 of 19 overrides.
-    """
+    """An intuitive but unmeasured injury formula would change the experiment."""
     body = load_skills()["retrieve_injuries"].body.lower()
-    assert "do not apply your own injury penalty" in body
-    assert "eval.injury_impact" in body
+    assert "do not invent a numeric injury penalty" in body
+    assert "unsupported formula" in body
 
 
-def test_win_probability_skill_states_the_override_evidence():
+def test_win_probability_skill_states_predictor_path_identity():
     body = load_skills()["predict_win_probability"].body
-    assert "15 of them" in body or "15 times" in body, (
-        "the deference rule must carry the measurement that justifies it, or it "
-        "reads as arbitrary and gets edited away"
+    assert "exact Model A" in body
+    assert "same function" in body
+
+
+def test_model_c_treats_model_a_as_optional_peer_evidence():
+    """C is the B agent plus one data point, not an A-following wrapper."""
+    from agent.run import (
+        SYSTEM,
+        SYSTEM_NO_MODEL,
+        _AGENT_REASONING_CORE,
+        _MODEL_C_PREDICTOR_ADDITION,
+        _SHARED_RULES,
     )
+
+    skill = load_skills()["predict_win_probability"]
+    contract = " ".join(f"{skill.use_when}\n{skill.body}\n{SYSTEM}".lower().split())
+
+    assert "one additional data point" in contract
+    assert "may agree or disagree" in contract
+    assert "start from its home_win_prob" not in contract
+    assert "strongest single input" not in contract
+    assert "number the report is built around" not in contract
+    assert SYSTEM_NO_MODEL == _AGENT_REASONING_CORE + _SHARED_RULES
+    assert SYSTEM == (
+        _AGENT_REASONING_CORE + _MODEL_C_PREDICTOR_ADDITION + _SHARED_RULES
+    )
+    shared = " ".join(_SHARED_RULES.lower().split())
+    assert "two team-form results" in shared
+    assert "two injury results" in shared

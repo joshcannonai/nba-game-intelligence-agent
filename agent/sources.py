@@ -353,7 +353,7 @@ NO_SCHEDULE = (
 
 
 def schedule_context(away: str, home: str, game_date: date, as_of: date) -> dict:
-    """Rest, back-to-back, and H2H from game logs -- strictly before as_of.
+    """Rest, back-to-back, and H2H from logs, with outcomes through as_of.
 
     Returns nulls plus a reason when the schedule dataset is absent. We would
     rather show the agent a null than a number we made up.
@@ -421,13 +421,11 @@ def schedule_context(away: str, home: str, game_date: date, as_of: date) -> dict
     }
 
 
-from datetime import timedelta  # noqa: E402
-
 _ONE_DAY = timedelta(days=1)
 
 
 def team_form_as_of(team_abbr: str, as_of: date, last_n: int = 10) -> dict | None:
-    """A team's CURRENT strength from games PLAYED before as_of, not last season.
+    """A team's CURRENT strength from games PLAYED through as_of, not last season.
 
     The stale-ratings fix. Team ratings on file are end-of-season aggregates, so
     mid-season they either leak (current season) or go stale (prior season, wrong
@@ -444,8 +442,8 @@ def team_form_as_of(team_abbr: str, as_of: date, last_n: int = 10) -> dict | Non
     played = []
     for g in _game_logs(season):
         gd = parse_date(g["game_date"])
-        if gd >= as_of:
-            continue  # not yet played, or the game itself -- would leak
+        if gd > as_of:
+            continue  # after the requested knowledge cutoff -- would leak
         h, a = normalize_abbr(g["home"]), normalize_abbr(g["away"])
         if team not in (h, a):
             continue
@@ -471,7 +469,7 @@ def team_form_as_of(team_abbr: str, as_of: date, last_n: int = 10) -> dict | Non
         "last_n": len(window),
         "recent_record": f"{recent_wins}-{len(window) - recent_wins}",
         "avg_point_diff": round(avg_margin, 2),
-        "basis": f"rolling over last {len(window)} games before {as_of.isoformat()}",
+        "basis": f"rolling over last {len(window)} games through {as_of.isoformat()}",
     }
 
 
@@ -680,9 +678,7 @@ def player_features_as_of(
 
     target_location = "HOME" if is_home else "AWAY"
     venue_rows = [
-        r
-        for r in observed
-        if r.get("location", "").strip().upper() == target_location
+        r for r in observed if r.get("location", "").strip().upper() == target_location
     ]
     if not venue_rows:
         return {
@@ -733,8 +729,7 @@ def player_features_as_of(
         parse_date(g["game_date"])
         for g in _game_logs(season_end_year(game_date))
         if parse_date(g["game_date"]) < game_date
-        and player_abbr
-        in {normalize_abbr(g["home"]), normalize_abbr(g["away"])}
+        and player_abbr in {normalize_abbr(g["home"]), normalize_abbr(g["away"])}
     ]
     if scheduled_dates:
         rest_days = (game_date - max(scheduled_dates)).days
@@ -821,7 +816,12 @@ class MockSource:
             "injuries": out,
         }
 
-    def player_splits(self, player_name: str, back_to_back: bool = False) -> dict:
+    def player_splits(
+        self,
+        player_name: str,
+        as_of_date: str,
+        back_to_back: bool = False,
+    ) -> dict:
         data = self._fixture()
         for p in data["key_players"]:
             if p["name"].lower() == player_name.lower():
@@ -964,14 +964,22 @@ class CsvSource:
             ]
         return payload
 
-    def player_splits(self, player_name: str, back_to_back: bool = False) -> dict:
+    def player_splits(
+        self,
+        player_name: str,
+        as_of_date: str,
+        back_to_back: bool = False,
+    ) -> dict:
         # Without game logs we cannot compute a true back-to-back split, so we
         # say so rather than inventing one.
-        today_season = season_end_year(date.today())
-        for season in (today_season - 1, today_season - 2):
+        cutoff = parse_date(as_of_date)
+        prior_completed_season = season_end_year(cutoff) - 1
+        for season in (prior_completed_season, prior_completed_season - 1):
             avg = player_season_averages(player_name, season)
             if avg:
                 avg["source"] = self.name
+                avg["as_of_date"] = cutoff.isoformat()
+                avg["season_basis"] = f"{season - 1}-{str(season)[-2:]} completed"
                 if back_to_back:
                     avg["b2b_pts_avg"] = None
                     avg["b2b_unavailable"] = (
@@ -1023,7 +1031,7 @@ class CsvSource:
                 "team": normalize_abbr(team_abbr),
                 "as_of": as_of_date,
                 "unavailable": (
-                    "No games played this season before as_of (opening week), or no "
+                    "No games played this season through as_of (opening week), or no "
                     f"game logs for season {season_end_year(parse_date(as_of_date))}. "
                     "Fall back to prior-season ratings; do not guess."
                 ),

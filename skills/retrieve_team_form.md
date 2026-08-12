@@ -6,7 +6,7 @@ use_when: You need current strength rather than last season's.
 ## What it gives you
 
 A rolling 10-game record and average point differential, using only games played
-before `as_of_date`.
+on or before `as_of_date`.
 
 ## When to call it
 
@@ -26,3 +26,8 @@ describing a roster that may no longer exist.
 - This is *not* opponent-adjusted. A 5–0 run against weak teams looks identical to
   5–0 against strong ones. If a team's record and its point differential disagree,
   trust the differential and say why.
+- For Model B, compare both teams and treat the difference in rolling point
+  differential as the primary strength signal. Use current win percentage only as
+  corroboration. Start from the 55% home-team base rate, keep an otherwise even
+  matchup near that base rate, and reserve 60-70% for cases where form margin and
+  record agree strongly.

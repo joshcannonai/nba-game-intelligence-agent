@@ -25,11 +25,12 @@ import json
 import os
 import subprocess
 import sys
+from datetime import date, timedelta
 
 import pytest
 
 from agent.sources import REPO_ROOT, team_form_as_of
-from models.features import FEATURE_NAMES, build_season
+from models.features import FEATURE_NAMES, _replay_injury_cutoff, build_season
 from models.predict import load_model, predict, score_features
 from models.train import TEST_SEASON, TRAIN_SEASONS
 
@@ -97,6 +98,11 @@ def test_a_game_cannot_see_its_own_result(season_2026):
         assert r.features[idx["away_games_played"]] == 0.0, r.game_id
 
 
+def test_date_only_injuries_stop_before_game_day():
+    """An injury transaction without a timestamp is unsafe on game day."""
+    assert _replay_injury_cutoff(date(2026, 1, 14)) == date(2026, 1, 13)
+
+
 def test_games_played_never_exceeds_the_games_actually_behind_it(season_2026):
     """A cheap monotonicity check that a full-season groupby would fail loudly."""
     idx = {name: i for i, name in enumerate(FEATURE_NAMES)}
@@ -140,8 +146,9 @@ def test_form_agrees_with_the_accessor_the_agent_uses(season_2026):
         if r.features[idx["away_games_played"]] < 1:
             continue
 
-        home_form = team_form_as_of(r.home, r.game_date, FORM_WINDOW)
-        away_form = team_form_as_of(r.away, r.game_date, FORM_WINDOW)
+        cutoff = r.game_date - timedelta(days=1)
+        home_form = team_form_as_of(r.home, cutoff, FORM_WINDOW)
+        away_form = team_form_as_of(r.away, cutoff, FORM_WINDOW)
         assert home_form and away_form, r.game_id
 
         expected = home_form["avg_point_diff"] - away_form["avg_point_diff"]
@@ -182,8 +189,9 @@ def test_score_features_matches_predict(season_2026):
     spec = load_model()
     assert spec is not None
     r = next(r for r in season_2026 if r.game_date.isoformat() == AS_OF)
-    p = score_features(r.features)
-    assert 0.0 < p < 1.0
+    cutoff = (r.game_date - timedelta(days=1)).isoformat()
+    ui = predict(r.home, r.away, cutoff, r.game_date.isoformat())["home_win_prob"]
+    assert ui == pytest.approx(score_features(r.features), abs=1e-4)
 
 
 def test_missing_model_reports_awaiting_input_instead_of_guessing(

@@ -36,7 +36,7 @@ TEAM_KEYS = {
     "GSW": "GOLDEN_STATE_WARRIORS",
     "HOU": "HOUSTON_ROCKETS",
     "IND": "INDIANA_PACERS",
-    "LAC": "LA_CLIPPERS",
+    "LAC": "LOS_ANGELES_CLIPPERS",
     "LAL": "LOS_ANGELES_LAKERS",
     "MEM": "MEMPHIS_GRIZZLIES",
     "MIA": "MIAMI_HEAT",
@@ -197,9 +197,9 @@ def _predict_player_stat_lines(
     latest_observed = train_df.sort_values(["slug", "game_date"]).drop_duplicates(
         "slug", keep="last"
     )
-    roster = latest_observed[
-        latest_observed["team_key"].isin([home_key, away_key])
-    ][["slug", "name", "team_key"]]
+    roster = latest_observed[latest_observed["team_key"].isin([home_key, away_key])][
+        ["slug", "name", "team_key"]
+    ]
     roster = roster[
         ~roster["name"].map(
             lambda player: player_is_out(
@@ -229,8 +229,7 @@ def _predict_player_stat_lines(
             ]:
                 latest[f"rolling_{stem}_{window}"] = recent[source].mean()
             latest[f"rolling_fg_pct_{window}"] = (
-                recent["made_field_goals"].sum()
-                / recent["attempted_field_goals"].sum()
+                recent["made_field_goals"].sum() / recent["attempted_field_goals"].sum()
                 if recent["attempted_field_goals"].sum()
                 else np.nan
             )
@@ -291,7 +290,9 @@ def _predict_player_stat_lines(
     return result.replace({np.nan: None}).to_dict(orient="records")
 
 
-def _first_existing_numeric(df: pd.DataFrame, candidates: list[str]) -> pd.Series | None:
+def _first_existing_numeric(
+    df: pd.DataFrame, candidates: list[str]
+) -> pd.Series | None:
     for c in candidates:
         if c in df.columns:
             return pd.to_numeric(df[c], errors="coerce")
@@ -313,7 +314,9 @@ def _read_team_data() -> pd.DataFrame:
             loc.str.contains("home") | loc.isin(["h", "1", "true"])
         ).astype(int)
     elif "is_home" in df.columns:
-        df["_is_home"] = pd.to_numeric(df["is_home"], errors="coerce").fillna(0).astype(int)
+        df["_is_home"] = (
+            pd.to_numeric(df["is_home"], errors="coerce").fillna(0).astype(int)
+        )
     else:
         raise ValueError("Team CSV needs a location or is_home column.")
 
@@ -341,7 +344,9 @@ def _read_team_data() -> pd.DataFrame:
     elif "win" in df.columns:
         df["_won"] = pd.to_numeric(df["win"], errors="coerce")
     elif "result" in df.columns:
-        df["_won"] = df["result"].astype(str).str.upper().str.startswith("W").astype(int)
+        df["_won"] = (
+            df["result"].astype(str).str.upper().str.startswith("W").astype(int)
+        )
     elif points is not None and opp_points is not None:
         df["_won"] = (df["_points"] > df["_opp_points"]).astype(int)
     else:
@@ -350,8 +355,7 @@ def _read_team_data() -> pd.DataFrame:
     missing_features = [c for c in TEAM_FEATURE_COLS if c not in df.columns]
     if missing_features:
         raise ValueError(
-            "Team CSV is missing pregame feature columns: "
-            f"{missing_features}."
+            f"Team CSV is missing pregame feature columns: {missing_features}."
         )
 
     return df
@@ -373,9 +377,9 @@ def _team_feature_snapshot(
     as_of: pd.Timestamp,
     is_home: int,
 ) -> dict[str, float]:
-    observed = df[(df["team_key"] == team_key) & (df["game_date"] <= as_of)].sort_values(
-        "game_date"
-    )
+    observed = df[
+        (df["team_key"] == team_key) & (df["game_date"] <= as_of)
+    ].sort_values("game_date")
     if observed.empty:
         raise ValueError(f"No team history for {team_key} by {as_of.date()}")
     venue = observed[observed["_is_home"] == is_home]
@@ -407,7 +411,14 @@ def _predict_win_probability(
     home_rows = df[df["_is_home"] == 1].copy()
     away_rows = df[df["_is_home"] == 0].copy()
 
-    base_keep = ["game_date", "team_key", "opponent_key", "_won", "_points", "_opp_points"]
+    base_keep = [
+        "game_date",
+        "team_key",
+        "opponent_key",
+        "_won",
+        "_points",
+        "_opp_points",
+    ]
     keep = [c for c in base_keep + TEAM_FEATURE_COLS if c in df.columns]
 
     matchups = home_rows[keep].merge(

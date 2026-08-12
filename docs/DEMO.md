@@ -1,5 +1,8 @@
 # Demo runbook
 
+> **Superseded runbook.** This documents the 2026-08-04 prompt and sample results.
+> Use the repository README for the current submission demo and evaluator.
+
 Every command below was run end to end on 2026-08-04 and the timings are real.
 Two terminals: one for `ollama serve`, one for everything else.
 

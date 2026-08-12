@@ -1,6 +1,6 @@
 # Agent skills — review copy
 
-**NBA Game Intelligence Agent · CECS 499 · generated 2026-08-03**
+**NBA Game Intelligence Agent · CECS 499 · generated 2026-08-11**
 
 Each of the agent's tools has a *skill*: a short set of rules telling it when to call
 that tool and what to do with the answer. The agent loads these at startup, so these
@@ -36,7 +36,7 @@ Source of truth is `skills/` in the repo. Regenerate this document with
 | `retrieve_team_form` | You need current strength rather than last season's. |
 | `retrieve_injuries` | You need who was unavailable on the morning of the game. |
 | `predict_stat_line` | A projected points/rebounds/assists line is asked for. |
-| `predict_win_probability` | Always. This is the number the report is built around. |
+| `predict_win_probability` | After matchup context. Adds Model A output as one additional data point for Model C. |
 
 ---
 
@@ -71,6 +71,10 @@ tools are follow-ups on what it shows.
   not know", which is different from "nobody is hurt".
 - If `h2h_last_5` is empty, the teams have not met yet this season. Say so; do not
   reach for last season's meetings as though they were this season's.
+- Head-to-head is descriptive context, not a primary prediction signal. A few games
+  between changing rosters should not outweigh current rolling form.
+- Rest and back-to-backs are tie-breakers. Do not let a one-day rest edge overwhelm
+  a clear difference in rolling point differential and current record.
 
 
 ## `retrieve_player_splits`
@@ -79,12 +83,13 @@ tools are follow-ups on what it shows.
 
 ## What it gives you
 
-Season averages for one player, and optionally their back-to-back split.
+Season averages for one player from a season completed before `as_of_date`, and
+optionally their back-to-back split.
 
 ### When to call it
 
-Sparingly. Only when you are naming a player in the narrative and need their actual
-numbers, or when a team is on a back-to-back and you want the fatigue split.
+Only for an explicit player question. Do not call it for the team-level winner
+prediction. Always pass the authorized run cutoff as `as_of_date`.
 
 ### How to read it
 
@@ -105,25 +110,29 @@ fatigue effect".
 
 ## What it gives you
 
-Currently nothing. It returns `status: awaiting_input` because the forward-looking
-schedule table has not been committed.
+The fixtures tipping off in the days after `as_of_date`: matchup id, date, away and
+home. Read from the season's game log, filtered to the window.
 
 ### When to call it
 
-Only if asked what else is on tonight. For rest and back-to-backs, use
-`retrieve_matchup_context` — that already carries them.
+Only if asked what else is on tonight, or when the slate itself is part of the
+answer. For rest and back-to-backs use `retrieve_matchup_context`, which already
+carries them. This is not part of the win-probability path.
+
+### How to read it
+
+- `count` is how many games are in the window, not how many exist in the season.
+- Teams and dates only. There are no tip-off times in the dataset, so if you are
+  asked when a game starts, say that is not available rather than guessing.
 
 ### Rules
 
-- `awaiting_input` is not an error and not an empty result. It means the data does
-  not exist yet. Report the gap and carry on; do not retry it, and do not substitute
-  a guess about the slate.
-
-### Note for whoever fills this in
-
-`data/pull_games.py` already writes `season_schedule_2026.csv`. It just has not been
-committed. `data/raw/` stopped being gitignored on 2026-07-21, so nothing is blocking
-it now.
+- **Never report a score or a winner from this tool.** It does not return them, and
+  that is deliberate: the rows it reads carry `home_pts`, `away_pts` and `winner`
+  right next to the fixture, and only the identity fields are copied out.
+- Knowing *who plays whom* on a future date is not leakage. The NBA publishes its
+  schedule in August, so a fixture is knowable on any as-of date. Knowing *how it
+  went* is leakage. Keep that line.
 
 
 ## `retrieve_team_form`
@@ -133,7 +142,7 @@ it now.
 ## What it gives you
 
 A rolling 10-game record and average point differential, using only games played
-before `as_of_date`.
+on or before `as_of_date`.
 
 ### When to call it
 
@@ -153,6 +162,11 @@ describing a roster that may no longer exist.
 - This is *not* opponent-adjusted. A 5–0 run against weak teams looks identical to
   5–0 against strong ones. If a team's record and its point differential disagree,
   trust the differential and say why.
+- For Model B, compare both teams and treat the difference in rolling point
+  differential as the primary strength signal. Use current win percentage only as
+  corroboration. Start from the 55% home-team base rate, keep an otherwise even
+  matchup near that base rate, and reserve 60-70% for cases where form margin and
+  record agree strongly.
 
 
 ## `retrieve_injuries`
@@ -180,24 +194,9 @@ explain a prediction that hinges on availability.
 
 ### Rules
 
-- **Do not apply your own injury penalty on top of the model's number.** This is the
-  most important rule in this directory, and it is measured, not a preference.
-
-  We tested the obvious rule — "a player averaging over 20 ppg is out, so drop the
-  odds by N%" — and could not find an N that the data supports. Comparing each team
-  against **itself**, with its top scorer versus without, the difference in win rate
-  is **+0.0% (standard error 3.3%, n = 21 teams)**. The spread across teams runs from
-  −32% to +36%. A pooled comparison across teams looks significant (+5.6%, z = 2.6)
-  and points the wrong way, because having a 20 ppg scorer is a property of good
-  teams. Reproduce with `python -m eval.injury_impact`.
-
-  The fitted model already carries an injury term (`injury_weight_diff`, standardised
-  weight −0.246) learned over two seasons. Your job is to *report* the injury list,
-  not to re-price it.
-
-- This matters because we measured the cost of ignoring it. When the agent overruled
-  the model, it was wrong **15 times out of 19** (`docs/REPORT.md` §9.6), and
-  over-weighting the injury list is our leading explanation.
+- **Do not invent a numeric injury penalty.** Current form already reflects established
+  absences, and Model C's predictor has its own learned injury-load feature. Use the
+  list to explain availability and uncertainty, not to apply an unsupported formula.
 - Report who is out and how much they played. Stop there.
 
 
@@ -207,26 +206,65 @@ explain a prediction that hinges on availability.
 
 ## What it gives you
 
-Currently nothing — `status: awaiting_input`. The regression behind it was never
-built.
+Projected `points`, `rebounds` and `assists` for one player in one game, from ridge
+regressions on that player's trailing 5- and 10-game form, minutes, shooting
+percentages, home/away split and rest. Fitted on 2023-24, validated on 2024-25, and
+never fitted on the season being replayed.
+
+The payload also carries `points_mae` and `points_mae_trailing_5_baseline` — the
+model's average error and the error of simply using the player's last-5 average.
+
+### When to call it
+
+Only when a stat line is actually asked for, or when you are naming a player in the
+narrative and a projection makes the point better than a season average would. It is
+not part of the win-probability path — do not call it on every run.
+
+### How to read it
+
+- `status: ok` means there is a projection. `status: unavailable` means either the
+  gated injury report lists the player as out or the gated history lacks enough
+  observable pregame inputs. It does not reveal any later participation.
+- A single game is high variance. The mean absolute error on points is a few points,
+  which is a large fraction of a typical scoring line. The number is a central
+  estimate, not a fact, and should be reported with that framing.
+- Compare the projection to `points_mae_trailing_5_baseline` before leaning on it. If
+  the model barely beats the trailing-5 average, say the projection is roughly the
+  player's recent form rather than implying the model found something extra.
 
 ### Rules
 
-- Report it as missing. Never estimate a stat line yourself from season averages and
-  present it as a projection; that is exactly the invented number this whole
-  interface exists to prevent.
-- Projected stat lines were a stated deliverable in the proposal. Saying "not built"
-  is correct and expected. Saying "LeBron will score about 25" is not.
+- **Never estimate a stat line yourself.** If the tool returns `unavailable`, that is
+  the answer. Do not fall back to `retrieve_player_splits` season averages and
+  present them as a projection — that is the invented number this whole interface
+  exists to prevent.
+- **Do not project a player listed out.** Check `retrieve_injuries` first when
+  availability matters. The tool also enforces this boundary and returns
+  `unavailable` if the gated injury report already lists the requested player out.
+- **Report the error alongside the number.** "About 26 points, give or take the
+  model's ~5-point average error" is honest. A bare "26.3 points" implies a precision
+  the model does not have.
+- Never infer future participation from `unavailable`. Use `retrieve_injuries` for
+  availability information known by the as-of date.
+- One or two players, not a roster. The report is about a game.
+
+### Provenance
+
+Model fitted by `python -m models.train_stat_line` from prior-season box scores in
+`data/raw/player_box_scores_prior/`. At inference the features come through
+`agent/sources.py` like every other read. It recomputes them from outcome-history
+rows dated on or before `as_of`; structural snapshots physically remove later rows.
+Weights live in `models/stat_line.json` and are readable in a diff.
 
 
 ## `predict_win_probability`
 
-**Use when:** Always. This is the number the report is built around.
+**Use when:** After matchup context. Adds Model A output as one additional data point for Model C.
 
 ## What it gives you
 
-`home_win_prob` from a logistic regression trained on 2023-24 and 2024-25, plus the
-eight features it used and its holdout accuracy.
+The exact Model A `home_win_prob` shown by the UI, plus the pregame feature values,
+training seasons, and holdout accuracy recorded with the fitted model.
 
 ### When to call it
 
@@ -234,21 +272,18 @@ Every run, after `retrieve_matchup_context`.
 
 ### How to read it
 
-It scored **66.5%** on all 1,322 games of 2025-26, a season it never trained on,
-against 55.5% for always picking the home team and 69.0% for the Vegas closing line.
-It sees form, win percentage, rest, back-to-backs and injury load — nothing your
-retrieval tools cannot also show you.
+It is a logistic regression over rolling point margin, win percentage, rest,
+back-to-backs, injury load, and games played. The fitted weights use only the two
+training seasons. Live feature inputs stop at the requested cutoff. This tool and
+the UI's Model A button call the same function.
 
 ### Rules
 
-- **Treat its number as the answer unless you have a concrete, specific reason it is
-  wrong** — and if you move off it, say exactly why in `key_factors`.
-- This is not deference for its own sake. We measured it. Across two paired 40-game
-  samples the agent overruled the model 19 times and was wrong on 15 of them
-  (two-sided sign test p ≈ 0.019). Overruling made the prediction worse, reliably.
-- Good reasons to move off it: a tool returned something the model provably cannot
-  see. Bad reasons: the injury list looks alarming (see
-  `skills/retrieve_injuries.md`), the favourite "feels" wrong, or the probability
-  seems too confident.
-- If it returns `awaiting_input`, the model file is missing. Say so. Do not
-  substitute your own estimate.
+- Treat `home_win_prob` as peer evidence alongside the matchup, team-form, injury,
+  and rest outputs. It is one additional data point, not the starting answer.
+- Synthesize the final probability from the complete gated evidence. Model C may
+  agree or disagree with Model A.
+- State a material agreement or disagreement and the evidence behind it in
+  `key_factors`.
+- If it returns an error or unavailable status, report that in `missing`. Do not
+  substitute your own version of Model A.

@@ -38,3 +38,10 @@ data/snapshots/
 
 # Rendered docs -- regenerate with ./scripts/render_docs.sh
 docs/html/
+
+# Actual-UI evaluation outputs are long-running local artifacts. The evaluator
+# is committed; checkpoints, errors and CSV exports are reproducible and may
+# contain thousands of rows, so keep them out of pull requests.
+eval/results_actual_ui_*.csv
+eval/results_actual_ui_*.jsonl
+eval/results_full_season_skill_policy.csv
