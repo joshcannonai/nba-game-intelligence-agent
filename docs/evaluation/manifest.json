@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "artifact": "NBA-Actual-UI-Agent-Evaluation-Shared-10-Games.xlsx",
+  "artifact_sha256": "fd954db88b75d82f5020eb101273a21650dc66ecfe45c60533781298337d76dd",
+  "git_diffable_rows": "verified-actual-ui-results.csv",
+  "evaluation_contract": "shared-10-fixed-cutoff-2026-04-05",
+  "game_count_per_model": 10,
+  "models": {
+    "A": {
+      "execution_path": "POST /api/predict",
+      "correct": 5,
+      "tool_calls_per_game": 0
+    },
+    "B": {
+      "execution_path": "POST /api/run SSE",
+      "language_model": "gemma4:latest via Ollama",
+      "correct": 4,
+      "required_tool_calls_per_game": 5
+    },
+    "C": {
+      "execution_path": "POST /api/run SSE with predictor tool",
+      "language_model": "gemma4:latest via Ollama",
+      "correct": 6,
+      "required_tool_calls_per_game": 6
+    }
+  },
+  "gate_failures": 0,
+  "caveats": [
+    "This shared 10-game comparison does not establish full-season Model B or Model C accuracy.",
+    "Agent narratives may cite prior completed-season records and ratings as date-gated historical context.",
+    "Outcomes and pre-game odds were joined only after prediction for scoring."
+  ]
+}
