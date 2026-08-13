@@ -267,27 +267,25 @@ _HISTORICAL_DATE_FIELDS = {
 }
 
 
-def _historical_dates(value, tool_name: str) -> list[date]:
+def _historical_dates(value) -> list[date]:
     """Dates in a tool result that describe evidence available to the prediction.
 
-    Target game dates and future schedule identities are intentionally excluded:
-    the NBA schedule is knowable before tip-off, while its result is not.
+    Target game dates are not in this field list. Schedule identities are no
+    longer an agent tool, so they cannot appear here as a special case.
     """
     found: list[date] = []
     if isinstance(value, dict):
         for key, child in value.items():
             if key in _HISTORICAL_DATE_FIELDS and isinstance(child, str):
-                if tool_name == "retrieve_schedule" and key == "date":
-                    continue
                 try:
                     found.append(date.fromisoformat(child))
                 except ValueError:
                     pass
             else:
-                found.extend(_historical_dates(child, tool_name))
+                found.extend(_historical_dates(child))
     elif isinstance(value, list):
         for child in value:
-            found.extend(_historical_dates(child, tool_name))
+            found.extend(_historical_dates(child))
     return found
 
 
@@ -300,20 +298,19 @@ def _gate_receipt(
     tool_cutoff = args.get("as_of_date")
     try:
         payload = json.loads(str(getattr(message, "content", "")))
-        dates = _historical_dates(payload, tool_name)
+        dates = _historical_dates(payload)
     except (TypeError, ValueError, json.JSONDecodeError):
         dates = []
     cutoff = date.fromisoformat(requested_cutoff)
     late = [observed for observed in dates if observed > cutoff]
-    cutoff_matches = tool_cutoff in (None, requested_cutoff)
-    applicable = tool_cutoff is not None or bool(dates)
-    status = (
-        "not_applicable"
-        if not applicable
-        else "passed"
-        if cutoff_matches and not late
-        else "failed"
-    )
+    # Strict: the tool must have been invoked with the authorized cutoff.
+    # A missing as_of_date is a failure, not a pass. There is no OR path.
+    if tool_cutoff != requested_cutoff:
+        status = "failed"
+    elif late:
+        status = "failed"
+    else:
+        status = "passed"
     return {
         "tool": tool_name,
         "source": source_name,
@@ -323,7 +320,7 @@ def _gate_receipt(
         "latest_historical_date": max(dates).isoformat() if dates else None,
         "post_cutoff_records": len(late),
         "status": status,
-        "scope": "serialized historical date fields; target and schedule game dates excluded",
+        "scope": "serialized historical date fields; target game dates excluded",
     }
 
 

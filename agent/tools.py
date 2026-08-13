@@ -1,48 +1,39 @@
 """The tools the agent can call. This file IS the contract with the rest of the team.
 
-Seven tools, down from ten. The three that went, and why -- because a scope cut
-nobody can explain later just looks like work that was abandoned:
+Vocabulary, because these words get used as if they were interchangeable:
 
-    retrieve_news         No source was ever found. Highest effort of the ten,
-                          least measurable contribution. Cut on merit.
-    predict_best_player   Depended entirely on predict_stat_line, which has not
-                          started. A placeholder behind a placeholder.
-    retrieve_betting_line REMOVED FROM THE AGENT, kept for scoring. This one is
-                          not scope, it is a leak. Watching the live agent run
-                          on 2026-01-14, it pulled the closing line into its own
-                          reasoning -- "the closing line favors ORL (-5.5)" --
-                          and the closing line is the thing we grade ourselves
-                          AGAINST. An agent that reads the market and repeats it
-                          scores well and has predicted nothing. Telling the
-                          model not to peek is a request; taking the tool away
-                          is a guarantee. `agent.sources.closing_line` still
-                          exists and eval/ still calls it directly.
+    A TOOL is a Python function in this file. Deterministic. Date-gated. It
+    returns JSON. It has no opinion about who wins.
 
-Every function the agent needs in order to produce the report we described on 7/07
-(who wins · a narrative · statistics) exists here NOW, with a stable name and a
-stable signature.
+    THE AGENT is the LLM loop in agent/run.py. It chooses which tools to call
+    and writes the report. It has no CSV access, no web, and no second path
+    around the gate. If a fact is not in a tool result, the agent does not
+    have it.
 
-EVERY tool in this file is written by the agent lane (Josh). Nobody else writes
-agent code. What varies is whether the data or model each tool reads from exists
-yet -- so a placeholder returns:
+    THE PREDICTOR (Model A) is a logistic regression. It is not an agent. It
+    is not a tool except when Model C is allowed to call predict_win_probability,
+    which wraps the same function POST /api/predict uses.
 
-    {"status": "awaiting_input", "needs_from": "...", "needs": "..."}
+Seven tools. retrieve_schedule is not one of them: the UI already loads the
+game list from the CSV, and rest/B2B already live on retrieve_matchup_context.
+Listing other games on the slate does not help a bound one-game prediction.
+The three that were cut, and why:
+
+    retrieve_news         No source with reliable publication timestamps.
+    retrieve_schedule     Slate picker, not a prediction input. Forbidden so
+                          it cannot come back as a no-op tool.
+    retrieve_betting_line REMOVED FROM THE AGENT, kept for scoring. Watching
+                          the live agent on 2026-01-14, it pulled the closing
+                          line into its own reasoning. Telling the model not
+                          to peek is a request; taking the tool away is a
+                          guarantee.
+
+predict_best_player is back. It ranks the gated rotation with predict_stat_line
+and returns the highest projected points. It is optional on the winner path
+(same rule as predict_stat_line) and exists so a player question has a real
+answer instead of a placeholder behind a placeholder.
 
 `needs_from` names whoever produces that INPUT, not someone who owes a function.
-Sarvesh trains the model; the tool that calls it is still mine. Patrick pulls the
-schedule; the tool that reads it is still mine.
-
-That is deliberate. A placeholder is not a stub that lies -- it tells the agent, in
-plain terms, that the input does not exist yet and where it comes from. The agent
-reports the gap instead of inventing an answer, so running it today prints an honest
-status board of the whole project.
-
-To finish one: keep the name and the arguments, replace the body once its input
-lands. The agent never notices -- that is the entire point of the interface.
-
-    inputs: data     (Patrick + Kirtan) -> feeds the retrieve_* tools
-    inputs: models   (Sarvesh)         -> feeds the predict_* tools
-    all tools + loop (Josh)             -> this file and agent/run.py
 """
 
 from __future__ import annotations
@@ -209,24 +200,6 @@ def build_tools(
             indent=2,
         )
 
-    # ------------------------------------------------- DATA LAYER (P + K) TODO
-
-    @tool
-    def retrieve_schedule(as_of_date: str, days_ahead: int = 1) -> str:
-        """The games on the slate -- what the user picks from in the UI.
-
-        The NBA publishes its schedule in August, so future GAME DATES are knowable
-        on any as_of_date and are NOT leakage. Future RESULTS are.
-
-        Args:
-            as_of_date: ISO date the user is asking from.
-            days_ahead: How many days of upcoming games to return.
-        """
-        rejected = reject_unbound_request("retrieve_schedule", as_of_date=as_of_date)
-        if rejected:
-            return rejected
-        return json.dumps(source.schedule(as_of_date, days_ahead=days_ahead), indent=2)
-
     @tool
     def retrieve_team_form(team_abbr: str, as_of_date: str, last_n: int = 10) -> str:
         """A team's CURRENT strength as of a date -- record and rating over recent games.
@@ -267,17 +240,16 @@ def build_tools(
     def retrieve_injuries(team_abbr: str, as_of_date: str) -> str:
         """Who was KNOWN to be out, on the morning of the game.
 
-        Works today by replaying the injury transaction log and stopping at as_of_date.
-        The log now runs to 2026-05-29, so the 2025-26 replay window is covered.
+        Gated the same way every other historical read is: the transaction log
+        is replayed and stopped at as_of_date. The JSON says so (`gated`,
+        `knowledge_cutoff`, `injury_gate`). Later rows are unread.
 
-        Known limit: these are transaction dates -- when a player was placed on or
-        activated from the injured list -- not the moment the news broke. The season
-        replay therefore stops at the previous calendar day. An interactive query
-        uses the explicit as_of_date and should describe the source as date-granular.
+        Known limit: these are transaction dates -- when a player was placed on
+        or activated from the injured list -- not the moment the news broke.
 
         Args:
             team_abbr: Team abbreviation.
-            as_of_date: ISO date.
+            as_of_date: ISO date. Transaction Date must be <= this cutoff.
         """
         rejected = reject_unbound_request(
             "retrieve_injuries",
@@ -404,13 +376,123 @@ def build_tools(
             run_stat_line(source, player_name, matchup_id, as_of_date), indent=2
         )
 
+    @tool
+    def predict_best_player(matchup_id: str, as_of_date: str) -> str:
+        """Highest projected points among the gated rotation for this matchup.
+
+        Uses predict_stat_line on players last seen on these two teams on or
+        before as_of_date. Injured players are skipped. The candidate list is
+        built from historical feature rows, never from the target box score.
+
+        Args:
+            matchup_id: AWAY-HOME-YYYY-MM-DD.
+            as_of_date: ISO date. Same cutoff as every other tool.
+        """
+        rejected = reject_unbound_request(
+            "predict_best_player",
+            as_of_date=as_of_date,
+            matchup_id=matchup_id,
+        )
+        if rejected:
+            return rejected
+        away, home, game_date = parse_matchup_id(matchup_id)
+        if parse_date(as_of_date) >= game_date:
+            return json.dumps(
+                {
+                    "status": "error",
+                    "tool": "predict_best_player",
+                    "error": "as_of_date must be before the game date",
+                    "matchup_id": matchup_id,
+                    "as_of_date": as_of_date,
+                },
+                indent=2,
+            )
+        rotation = source.observable_rotation(matchup_id, as_of_date)
+        scored: list[dict] = []
+        skipped: list[dict] = []
+        for player in rotation:
+            name = player["name"]
+            if player_is_out(name, (away, home), parse_date(as_of_date)):
+                skipped.append({"player": name, "reason": "listed Out as of cutoff"})
+                continue
+            if not stat_line_available():
+                return _todo(
+                    "predict_best_player",
+                    "josh",
+                    "models/stat_line.json is missing. Run "
+                    "`python -m models.train_stat_line`.",
+                    matchup_id=matchup_id,
+                    as_of_date=as_of_date,
+                )
+            line = run_stat_line(source, name, matchup_id, as_of_date)
+            if line.get("status") != "ok":
+                skipped.append(
+                    {
+                        "player": name,
+                        "reason": line.get("reason", line.get("status")),
+                    }
+                )
+                continue
+            scored.append(
+                {
+                    "player": name,
+                    "team": player.get("team") or line.get("team"),
+                    "projection": line.get("projection"),
+                    "points_mae": line.get("points_mae"),
+                }
+            )
+        scored.sort(
+            key=lambda item: (
+                -float((item.get("projection") or {}).get("points") or 0),
+                item["player"],
+            )
+        )
+        if not scored:
+            return json.dumps(
+                {
+                    "status": "unavailable",
+                    "tool": "predict_best_player",
+                    "matchup_id": matchup_id,
+                    "as_of_date": as_of_date,
+                    "reason": (
+                        "No gated rotation player produced a stat-line projection."
+                    ),
+                    "skipped": skipped,
+                    "gated": True,
+                },
+                indent=2,
+            )
+        best = scored[0]
+        return json.dumps(
+            {
+                "status": "ok",
+                "tool": "predict_best_player",
+                "matchup_id": matchup_id,
+                "as_of_date": as_of_date,
+                "best_player": best["player"],
+                "team": best.get("team"),
+                "projection": best.get("projection"),
+                "points_mae": best.get("points_mae"),
+                "ranked": scored[:5],
+                "skipped": skipped,
+                "uses": "predict_stat_line",
+                "gated": True,
+                "caveat": (
+                    "Ranks the observable rotation by projected points. Same ridge "
+                    "model and same as-of gate as predict_stat_line. Not part of "
+                    "the required winner-path retrievals."
+                ),
+            },
+            indent=2,
+        )
+
     tools = [
         retrieve_matchup_context,
         retrieve_player_splits,
-        retrieve_schedule,
         retrieve_team_form,
         retrieve_injuries,
         predict_stat_line,
+        predict_best_player,
     ]
     if include_model:
         tools.append(predict_win_probability)

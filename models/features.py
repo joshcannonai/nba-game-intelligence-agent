@@ -7,9 +7,14 @@ would be measuring our plumbing instead of our ideas.
 
 Two gates run in series, same as the agent's:
 
-    the snapshot   data/snapshots/<as_of>/ physically holds nothing later
-    these features every value below is derived from games strictly BEFORE the
-                   game being predicted
+    1. server bind   ui/serve.py locks matchup + cutoff before any feature read
+    2. these features every value below is derived from games whose RESULTS are
+                     knowable on as_of (result_is_knowable). Rest uses scheduled
+                     dates up to the target game (fixture_is_known_before_tip).
+
+A snapshot directory is an optional extra physical copy for a demo date. It is
+not a substitute for either filter. Future game ROWS stay in the log so the
+target matchup still exists; their scores are blank or unread.
 
 The second gate is the one that is easy to get wrong, so it is worth naming the
 trap: a team's season win percentage is a legitimate feature, but the obvious
@@ -39,7 +44,13 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from functools import lru_cache
 
-from agent.sources import SAMPLE_DIR, injuries_as_of, parse_date
+from agent.sources import (
+    SAMPLE_DIR,
+    injuries_as_of,
+    parse_date,
+    fixture_is_known_before_tip,
+    result_is_knowable,
+)
 from agent.teams import normalize_abbr
 
 # Rolling window, in games. Ten is what `team_form_as_of` uses and what the
@@ -266,10 +277,10 @@ def live_features(
     state: dict[str, _TeamState] = defaultdict(_TeamState)
     scheduled_last: dict[str, date] = {}
     for r in rows:
-        if r.game_date < target_date:
+        if fixture_is_known_before_tip(r.game_date, target_date):
             scheduled_last[r.home] = r.game_date
             scheduled_last[r.away] = r.game_date
-        if r.game_date <= as_of and r.home_won is not None:
+        if result_is_knowable(r.game_date, as_of) and r.home_won is not None:
             hs, as_s = state[r.home], state[r.away]
             hs.played += 1
             as_s.played += 1

@@ -1,12 +1,45 @@
 """Data sources behind the agent's tools.
 
+A tool is a Python function. An agent is the LLM loop that may call those
+functions. This module is neither: it is the date-gated data layer every tool
+reads. The LLM never opens a CSV.
+
 Two implementations share one interface:
 
   MockSource  fixed JSON fixture, deterministic, no data files needed.
   CsvSource   the real datasets on main, filtered so nothing published after
               as_of_date can reach the agent.
 
-Leakage rules enforced here (the 2026-07-07 class decision):
+Two runtime gates, always, with different jobs:
+
+  1. Server bind (ui/serve.py) locks matchup_id + as_of_date before the LLM
+     runs. A tool call that changes the question is rejected before this
+     module is touched.
+  2. These query-time filters. An authorized call still cannot read a later
+     historical record.
+
+A snapshot directory (scripts/gate_snapshot.py) is an optional extra physical
+copy for a single-date demo. The full-season evaluator does not use it.
+NBA_SNAPSHOT_DIR, when set, only changes which files this module opens; the
+filters below still run. When it is unset we read data/, which is why the
+filters cannot be optional.
+
+Two date filters, not one:
+
+  result_is_knowable(played_on, knowledge_cutoff)
+      May we read this game's SCORE? knowledge_cutoff is "this morning."
+  fixture_is_known_before_tip(played_on, target_game_date)
+      May we use this game's DATE to compute rest? The NBA publishes the
+      season schedule in August, so a future fixture is knowable. The
+      outcome of that fixture is not, and is not read here.
+
+They take different dates because you can scout Thursday's game on Monday:
+rest still uses Thursday as the target, form only uses results through Monday.
+
+Injuries use the same knowledge cutoff: transaction Date <= as_of_date.
+Later rows are unread, not summarised away.
+
+Leakage rules (the 2026-07-07 class decision):
 
 1. Injuries come from a transaction log. We replay it forward and stop at
    as_of_date, so the injury list is what a person could have known that
@@ -18,9 +51,8 @@ Leakage rules enforced here (the 2026-07-07 class decision):
    PRIOR completed season and label it. Current-season, as-of-accurate ratings
    need game logs (see rest/h2h below).
 
-3. Rest, back-to-back, and head-to-head need a game-by-game schedule. That
-   dataset does not exist on main yet. When it is missing we return nulls with
-   a reason -- we never guess a number.
+3. Rest, back-to-back, and head-to-head need a game-by-game schedule. When
+   that file is missing we return nulls with a reason -- we never guess.
 """
 
 from __future__ import annotations
@@ -36,12 +68,10 @@ from agent.teams import abbr_from_nickname, full_name, normalize_abbr, odds_abbr
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-# Set NBA_SNAPSHOT_DIR to a directory built by scripts/gate_snapshot.py and the
-# whole data layer reads from there instead -- a copy that physically never
-# held anything after the cutoff. Unset (the default) reads the full data
-# directory. Either way the query-time filters below still apply: the snapshot
-# removes what nobody may see, the filters decide what each tool may see.
-DATA_ROOT = Path(os.environ.get("NBA_SNAPSHOT_DIR") or REPO_ROOT / "data")
+# Optional extra physical copy from scripts/gate_snapshot.py. Unset is the
+# normal path: the query-time filters below are the live gate, not a fallback.
+_snapshot_dir = os.environ.get("NBA_SNAPSHOT_DIR")
+DATA_ROOT = Path(_snapshot_dir) if _snapshot_dir else REPO_ROOT / "data"
 MOCK_DIR = REPO_ROOT / "data" / "mock"
 RAW_DIR = DATA_ROOT / "raw"
 SAMPLE_DIR = DATA_ROOT / "samples"
@@ -87,6 +117,36 @@ def parse_matchup_id(matchup_id: str) -> tuple[str, str, date]:
         )
     away, home, y, m, d = parts
     return normalize_abbr(away), normalize_abbr(home), parse_date(f"{y}-{m}-{d}")
+
+
+def result_is_knowable(played_on: date, knowledge_cutoff: date) -> bool:
+    """True iff this game's outcome was knowable on the morning of knowledge_cutoff.
+
+    Inclusive: a game dated on the cutoff night has a published result by then.
+    The UI and the evaluator never set knowledge_cutoff on the target game's
+    date; they require the previous calendar day.
+    """
+    return played_on <= knowledge_cutoff
+
+
+def fixture_is_known_before_tip(played_on: date, target_game_date: date) -> bool:
+    """True iff this fixture's DATE may be used to compute rest for the target.
+
+    The NBA publishes the season schedule in August, so who plays whom is
+    knowable before tip-off. This filter does not authorize reading the score.
+    It is a different date than knowledge_cutoff: rest is measured to the game
+    being predicted, not to the morning we are asking from.
+    """
+    return played_on < target_game_date
+
+
+def injury_gate_fields(as_of_date: str) -> dict:
+    """Every injury payload states the cutoff in the JSON, not only in comments."""
+    return {
+        "gated": True,
+        "knowledge_cutoff": as_of_date,
+        "injury_gate": ("transaction Date <= knowledge_cutoff; later rows are unread"),
+    }
 
 
 # --------------------------------------------------------------------------
@@ -155,7 +215,7 @@ def injuries_as_of(team_abbr: str, as_of: date) -> list[dict]:
     last_team: dict[str, str] = {}
 
     for when, abbr, player, direction, note in _injury_rows():
-        if when > as_of:
+        if not result_is_knowable(when, as_of):
             break
         last_team[player] = abbr
         if abbr != team_abbr:
@@ -382,7 +442,7 @@ def schedule_context(away: str, home: str, game_date: date, as_of: date) -> dict
         played = [
             parse_date(g["game_date"])
             for g in logs
-            if parse_date(g["game_date"]) < game_date
+            if fixture_is_known_before_tip(parse_date(g["game_date"]), game_date)
             and normalize_abbr(abbr)
             in (normalize_abbr(g["home"]), normalize_abbr(g["away"]))
         ]
@@ -394,8 +454,9 @@ def schedule_context(away: str, home: str, game_date: date, as_of: date) -> dict
 
     home_rest, away_rest = days_rest(home), days_rest(away)
 
-    # Rest is a within-season question; head-to-head reaches back across every
-    # season on disk. Both stay strictly at or before as_of.
+    # Rest uses fixture_is_known_before_tip(target_game_date).
+    # Head-to-head uses result_is_knowable(knowledge_cutoff). Both filters
+    # exist because they answer different questions with different dates.
     h2h = [
         {
             "date": g["game_date"],
@@ -404,7 +465,7 @@ def schedule_context(away: str, home: str, game_date: date, as_of: date) -> dict
             "home": normalize_abbr(g["home"]),
         }
         for g in _all_game_logs()
-        if parse_date(g["game_date"]) <= as_of
+        if result_is_knowable(parse_date(g["game_date"]), as_of)
         and {normalize_abbr(g["home"]), normalize_abbr(g["away"])}
         == {normalize_abbr(home), normalize_abbr(away)}
     ]
@@ -442,7 +503,7 @@ def team_form_as_of(team_abbr: str, as_of: date, last_n: int = 10) -> dict | Non
     played = []
     for g in _game_logs(season):
         gd = parse_date(g["game_date"])
-        if gd > as_of:
+        if not result_is_knowable(gd, as_of):
             continue  # after the requested knowledge cutoff -- would leak
         h, a = normalize_abbr(g["home"]), normalize_abbr(g["away"])
         if team not in (h, a):
@@ -651,7 +712,7 @@ def player_features_as_of(
         r
         for r in _player_feature_rows()
         if r.get("name", "").strip().casefold() == wanted
-        and parse_date(r["game_date"]) <= as_of
+        and result_is_knowable(parse_date(r["game_date"]), as_of)
     ]
     observed.sort(key=lambda r: r["game_date"])
     if not observed:
@@ -728,7 +789,7 @@ def player_features_as_of(
     scheduled_dates = [
         parse_date(g["game_date"])
         for g in _game_logs(season_end_year(game_date))
-        if parse_date(g["game_date"]) < game_date
+        if fixture_is_known_before_tip(parse_date(g["game_date"]), game_date)
         and player_abbr in {normalize_abbr(g["home"]), normalize_abbr(g["away"])}
     ]
     if scheduled_dates:
@@ -770,6 +831,73 @@ STAT_LINE_FEATURE_KEYS = (
 )
 
 
+def observable_rotation(
+    away: str,
+    home: str,
+    as_of: date,
+    *,
+    min_minutes: float = 10.0,
+    per_team: int = 4,
+) -> list[dict]:
+    """Players last seen on these two teams on or before as_of.
+
+    Built from historical feature rows, never from the target game's box score,
+    so future participation cannot leak into the candidate list. Injured players
+    stay in this list; predict_best_player drops them before scoring.
+    """
+    home_key = full_name(home).upper().replace(" ", "_")
+    away_key = full_name(away).upper().replace(" ", "_")
+    wanted = {home_key, away_key}
+    latest: dict[str, dict] = {}
+    for row in _player_feature_rows():
+        name = row.get("name", "").strip()
+        if not name:
+            continue
+        try:
+            played_on = parse_date(row["game_date"])
+        except (KeyError, ValueError):
+            continue
+        if not result_is_knowable(played_on, as_of):
+            continue
+        prev = latest.get(name)
+        if prev is None or row["game_date"] >= prev["game_date"]:
+            latest[name] = row
+
+    by_team: dict[str, list[dict]] = {home_key: [], away_key: []}
+    for row in latest.values():
+        team = row.get("team", "").strip().upper().replace(" ", "_")
+        if team not in wanted:
+            continue
+        try:
+            minutes = float(row.get("rolling_min_5") or row.get("minutes") or 0)
+        except (TypeError, ValueError):
+            minutes = 0.0
+        if minutes < min_minutes:
+            continue
+        try:
+            points = float(row.get("rolling_pts_5") or row.get("points") or 0)
+        except (TypeError, ValueError):
+            points = 0.0
+        abbr = home if team == home_key else away
+        by_team[team].append(
+            {
+                "name": row.get("name"),
+                "team": abbr,
+                "minutes": round(minutes, 1),
+                "recent_points": round(points, 1),
+            }
+        )
+
+    out: list[dict] = []
+    for team_key in (away_key, home_key):
+        ranked = sorted(
+            by_team[team_key],
+            key=lambda item: (-item["minutes"], -item["recent_points"], item["name"]),
+        )
+        out.extend(ranked[:per_team])
+    return out
+
+
 # --------------------------------------------------------------------------
 # Sources
 # --------------------------------------------------------------------------
@@ -803,6 +931,7 @@ class MockSource:
             "rest": data["rest"],
             "injuries": [i for i in data["injuries"] if i["published"] <= as_of_date],
             "h2h_last_5": [g for g in data["h2h_last_5"] if g["date"] <= as_of_date],
+            **injury_gate_fields(as_of_date),
         }
 
     def injuries(self, team_abbr: str, as_of_date: str) -> dict:
@@ -814,6 +943,7 @@ class MockSource:
             "team": team_abbr.upper(),
             "as_of_date": as_of_date,
             "injuries": out,
+            **injury_gate_fields(as_of_date),
         }
 
     def player_splits(
@@ -840,6 +970,18 @@ class MockSource:
                     )
                 return out
         return {"error": f"player not found: {player_name}"}
+
+    def observable_rotation(self, matchup_id: str, as_of_date: str) -> list[dict]:
+        data = self._fixture(matchup_id)
+        return [
+            {
+                "name": p["name"],
+                "team": p["team"],
+                "minutes": None,
+                "recent_points": p.get("pts_avg"),
+            }
+            for p in data.get("key_players", [])
+        ]
 
     def schedule(self, as_of_date: str, days_ahead: int = 1) -> dict:
         """The fixture list is real data, not a fixture value, so mock says so."""
@@ -925,6 +1067,7 @@ class CsvSource:
             "home_team": home_ratings or {"abbr": home, "name": full_name(home)},
             "away_team": away_ratings or {"abbr": away, "name": full_name(away)},
             "injuries": injuries_as_of(home, as_of) + injuries_as_of(away, as_of),
+            **injury_gate_fields(as_of_date),
             "ratings_basis": (
                 f"Team ratings are {prior - 1}-{str(prior)[2:]} final. Current-season "
                 "as-of ratings would require game logs (not on main yet); using the "
@@ -949,6 +1092,7 @@ class CsvSource:
             "team": normalize_abbr(team_abbr),
             "as_of_date": as_of_date,
             "injuries": injuries_as_of(normalize_abbr(team_abbr), as_of),
+            **injury_gate_fields(as_of_date),
             "importance_basis": (
                 "importance = 0.6*(min/36) + 0.4*(pts/28) from the PRIOR completed "
                 "season; tier is a band on that. A minutes/points proxy for role, "
@@ -1014,6 +1158,10 @@ class CsvSource:
         )
         payload["source"] = self.name
         return payload
+
+    def observable_rotation(self, matchup_id: str, as_of_date: str) -> list[dict]:
+        away, home, _ = parse_matchup_id(matchup_id)
+        return observable_rotation(away, home, parse_date(as_of_date))
 
     def betting_line(self, matchup_id: str, as_of_date: str) -> dict:
         # The week-5 branch had a second betting_line with no as-of gate, reading

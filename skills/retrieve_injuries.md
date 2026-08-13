@@ -21,6 +21,9 @@ explain a prediction that hinges on availability.
   since November is priced into their recent form; counting it again double-counts.
 - These are **transaction dates**, not news timestamps — when a player was placed on
   or activated from the injured list. A same-day placement can appear here.
+- The payload is gated in the JSON: `gated` is true, `knowledge_cutoff` is the
+  as-of date, and `injury_gate` states the rule (`Date <= knowledge_cutoff`).
+  Later rows are unread.
 
 ## Rules
 

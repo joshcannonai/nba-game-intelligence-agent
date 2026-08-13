@@ -2,7 +2,7 @@
 
     streamlit run ui/chat.py
 
-Same seven tools and the same as-of gate as ui/app.py -- this is the
+Same tools and the same as-of gate as ui/app.py -- this is the
 conversational view of them. It runs free and key-less by default:
 "deterministic" mode routes your question to one tool and shows you exactly
 what that tool returned, with no LLM in the loop. Switch the backend in the
@@ -83,7 +83,8 @@ def parse_iso(s: str) -> date:
 ROUTES: list[tuple[tuple[str, ...], str]] = [
     (("injur", "out", "hurt", "available"), "retrieve_injuries"),
     (("form", "streak", "last 10", "recent"), "retrieve_team_form"),
-    (("rest", "back-to-back", "b2b", "schedule"), "retrieve_schedule"),
+    (("rest", "back-to-back", "b2b"), "retrieve_matchup_context"),
+    (("best player", "who to watch", "star"), "predict_best_player"),
     (
         ("win", "probability", "odds of winning", "who wins", "predict"),
         "predict_win_probability",
