@@ -57,7 +57,7 @@ def _detail_last(n: int) -> int:
     return n + 2
 
 
-def _grouped(name: str, rows: list[list], widths: list[float], collapse: bool) -> dict:
+def _grouped(name: str, rows: list[list], widths: list[float], group: bool) -> dict:
     spec = {
         "name": name,
         "rows": rows,
@@ -66,9 +66,13 @@ def _grouped(name: str, rows: list[list], widths: list[float], collapse: bool) -
         "widths": widths,
     }
     n_detail = max(len(rows) - 2, 0)
-    if collapse and n_detail:
+    if group and n_detail:
         spec["group"] = (3, 2 + n_detail)
-        spec["collapsed"] = True
+        # Open expanded. The per-game rows are the evidence these sheets exist to show,
+        # and a reader who opened one to a single total row had to discover the outline
+        # control before seeing anything. The grouping stays, so collapsing is still one
+        # click for anyone who wants the summary alone.
+        spec["collapsed"] = False
         spec["summary_below"] = False
     return spec
 
@@ -336,8 +340,8 @@ def _summary_rows(stats: dict) -> list[list]:
             "",
         ],
         [
-            "How to read the model sheets: row 2 is the season total. Games are "
-            "collapsed. Click the + to the left of row 2, or outline button 2, to expand.",
+            "How to read the model sheets: row 2 is the season total. Every game is "
+            "visible below it.",
             "",
             "",
             "",
@@ -642,9 +646,9 @@ def build_workbook(games: list[dict], stats: dict, path: Path) -> Path:
             "freeze": 1,
             "widths": SUMMARY_WIDTHS,
         },
-        _grouped("Model_A", _model_rows(games, "A"), MODEL_WIDTHS, True),
-        _grouped("Model_B", _model_rows(games, "B"), MODEL_WIDTHS, True),
-        _grouped("Model_C", _model_rows(games, "C"), MODEL_WIDTHS, True),
+        _grouped("Model_A", _model_rows(games, "A"), MODEL_WIDTHS, False),
+        _grouped("Model_B", _model_rows(games, "B"), MODEL_WIDTHS, False),
+        _grouped("Model_C", _model_rows(games, "C"), MODEL_WIDTHS, False),
         {
             "name": "Methodology",
             "rows": _methodology_rows(stats),

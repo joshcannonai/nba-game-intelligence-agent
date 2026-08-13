@@ -1,7 +1,7 @@
 {
 	"schema_version": 3,
 	"artifact": "NBA-Actual-UI-Agent-Evaluation.xlsx",
-	"artifact_sha256": "794a6acd382c860a9df65fb4c39ef55db9572caf1f7031ecfe1d2efcad2f9f26",
+	"artifact_sha256": "784428e002e1ceece102399de4671da997bb957964b668f22a9fad5068b2ebfa",
 	"evaluation_contract": "full-season-abc-2025-26",
 	"models_in_submission": ["A", "B", "C"],
 	"models_deferred": ["D", "E"],
