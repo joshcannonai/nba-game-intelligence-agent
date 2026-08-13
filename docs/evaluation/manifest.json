@@ -1,33 +1,61 @@
 {
-  "schema_version": 1,
-  "artifact": "NBA-Actual-UI-Agent-Evaluation-Shared-10-Games.xlsx",
-  "artifact_sha256": "fd954db88b75d82f5020eb101273a21650dc66ecfe45c60533781298337d76dd",
-  "git_diffable_rows": "verified-actual-ui-results.csv",
-  "evaluation_contract": "shared-10-fixed-cutoff-2026-04-05",
-  "game_count_per_model": 10,
-  "models": {
-    "A": {
-      "execution_path": "POST /api/predict",
-      "correct": 5,
-      "tool_calls_per_game": 0
-    },
-    "B": {
-      "execution_path": "POST /api/run SSE",
-      "language_model": "gemma4:latest via Ollama",
-      "correct": 4,
-      "required_tool_calls_per_game": 5
-    },
-    "C": {
-      "execution_path": "POST /api/run SSE with predictor tool",
-      "language_model": "gemma4:latest via Ollama",
-      "correct": 6,
-      "required_tool_calls_per_game": 6
-    }
-  },
-  "gate_failures": 0,
-  "caveats": [
-    "This shared 10-game comparison does not establish full-season Model B or Model C accuracy.",
-    "Agent narratives may cite prior completed-season records and ratings as date-gated historical context.",
-    "Outcomes and pre-game odds were joined only after prediction for scoring."
-  ]
+	"schema_version": 3,
+	"artifact": "NBA-Actual-UI-Agent-Evaluation.xlsx",
+	"artifact_sha256": "794a6acd382c860a9df65fb4c39ef55db9572caf1f7031ecfe1d2efcad2f9f26",
+	"evaluation_contract": "full-season-abc-2025-26",
+	"models_in_submission": ["A", "B", "C"],
+	"models_deferred": ["D", "E"],
+	"git_diffable_rows": {
+		"summary": "verified-full-season-abc-summary.csv",
+		"games": "verified-full-season-abc-results.csv"
+	},
+	"season": {
+		"contract": "actual-ui-full-season-previous-day-v3",
+		"game_count_per_model": 1322,
+		"role": "season claim; same game_ids for A, B, and C",
+		"stake_per_game": 100,
+		"odds": "reconstructed from closing spread; sigma=14; hold=3.75%; not quoted moneylines; not tickets",
+		"a_source": "docs/evaluation/full-season-mass-eval.csv joined onto eval/results_actual_ui_full_season.jsonl",
+		"bc_source": "eval/results_actual_ui_full_season.jsonl",
+		"models": {
+			"A": {
+				"execution_path": "POST /api/predict",
+				"correct": 871,
+				"n": 1322,
+				"accuracy": 0.65885,
+				"net_pnl": -2720.6
+			},
+			"B": {
+				"execution_path": "POST /api/run SSE",
+				"language_model": "gemma4:latest via Ollama",
+				"correct": 813,
+				"n": 1322,
+				"accuracy": 0.614977,
+				"net_pnl": -5229.85,
+				"required_tool_calls_per_game": 5
+			},
+			"C": {
+				"execution_path": "POST /api/run SSE with predictor tool",
+				"language_model": "gemma4:latest via Ollama",
+				"correct": 860,
+				"n": 1322,
+				"accuracy": 0.65053,
+				"net_pnl": -3175.21,
+				"required_tool_calls_per_game": 6
+			}
+		}
+	},
+	"gate_failures": 0,
+	"caveats": [
+		"Hypothesis was C beats A and B. Full season: A 65.9% best of three; C 65.1% beats B 61.5%; C did not beat the logistic.",
+		"All three arms lose money at $100/game versus reconstructed vig. A is least bad. Hold makes favorites -EV.",
+		"Prices are reconstructed from the closing spread, not quoted moneylines and not tickets.",
+		"Model A is not in the B/C jsonl; A rows were joined from the mass-eval CSV on the same 1,322 game_ids.",
+		"A P&L uses the B/C 2-decimal settlement (-$2,720.60). The mass-eval CSV 4-decimal A sum is -$2,720.97.",
+		"5 of 1,322 Model B games also called predict_win_probability (B is specified as retrieval-only). They are not dropped.",
+		"Agent narratives may cite prior completed-season records and ratings as date-gated historical context.",
+		"Outcomes and pre-game odds were joined only after prediction for scoring.",
+		"Models D and E are not part of this CECS 499 submission.",
+		"The old 10-game classroom sample is not in this workbook."
+	]
 }

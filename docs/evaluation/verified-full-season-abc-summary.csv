@@ -1,0 +1,4 @@
+arm,n,correct,accuracy,net_pnl,staked,roi_pct,execution_path,note
+A,1322,871,0.65885,-2720.6,132200,-2.0579,POST /api/predict,reconstructed closing-spread moneylines; not tickets
+B,1322,813,0.614977,-5229.85,132200,-3.956,POST /api/run SSE; Gemma 4; 5 retrieval tools,reconstructed closing-spread moneylines; not tickets
+C,1322,860,0.65053,-3175.21,132200,-2.4018,POST /api/run SSE; Gemma 4; 5 retrieval tools + predict_win_probability,reconstructed closing-spread moneylines; not tickets
