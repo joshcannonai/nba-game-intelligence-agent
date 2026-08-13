@@ -1,6 +1,6 @@
 # Agent skills — review copy
 
-**NBA Game Intelligence Agent · CECS 499 · generated 2026-08-12**
+**NBA Game Intelligence Agent · CECS 499 · generated 2026-08-13**
 
 Each of the agent's tools has a *skill*: a short set of rules telling it when to call
 that tool and what to do with the answer. The agent loads these at startup, so these
@@ -32,10 +32,10 @@ Source of truth is `skills/` in the repo. Regenerate this document with
 |---|---|
 | `retrieve_matchup_context` | Always, first, before any other tool. |
 | `retrieve_player_splits` | A specific player's production is load-bearing in your explanation. |
-| `retrieve_schedule` | You need to know what other games are on the slate. |
 | `retrieve_team_form` | You need current strength rather than last season's. |
 | `retrieve_injuries` | You need who was unavailable on the morning of the game. |
 | `predict_stat_line` | A projected points/rebounds/assists line is asked for. |
+| `predict_best_player` | You need the highest projected-points player in this matchup. |
 | `predict_win_probability` | After matchup context. Adds Model A output as one additional data point for Model C. |
 
 ---
@@ -107,37 +107,6 @@ fatigue effect".
   this season's form.
 
 
-## `retrieve_schedule`
-
-**Use when:** You need to know what other games are on the slate.
-
-## What it gives you
-
-The fixtures tipping off in the days after `as_of_date`: matchup id, date, away and
-home. Read from the season's game log, filtered to the window.
-
-### When to call it
-
-Only if asked what else is on tonight, or when the slate itself is part of the
-answer. For rest and back-to-backs use `retrieve_matchup_context`, which already
-carries them. This is not part of the win-probability path.
-
-### How to read it
-
-- `count` is how many games are in the window, not how many exist in the season.
-- Teams and dates only. There are no tip-off times in the dataset, so if you are
-  asked when a game starts, say that is not available rather than guessing.
-
-### Rules
-
-- **Never report a score or a winner from this tool.** It does not return them, and
-  that is deliberate: the rows it reads carry `home_pts`, `away_pts` and `winner`
-  right next to the fixture, and only the identity fields are copied out.
-- Knowing *who plays whom* on a future date is not leakage. The NBA publishes its
-  schedule in August, so a fixture is knowable on any as-of date. Knowing *how it
-  went* is leakage. Keep that line.
-
-
 ## `retrieve_team_form`
 
 **Use when:** You need current strength rather than last season's.
@@ -197,6 +166,9 @@ explain a prediction that hinges on availability.
   since November is priced into their recent form; counting it again double-counts.
 - These are **transaction dates**, not news timestamps — when a player was placed on
   or activated from the injured list. A same-day placement can appear here.
+- The payload is gated in the JSON: `gated` is true, `knowledge_cutoff` is the
+  as-of date, and `injury_gate` states the rule (`Date <= knowledge_cutoff`).
+  Later rows are unread.
 
 ### Rules
 
@@ -264,6 +236,36 @@ Model fitted by `python -m models.train_stat_line` from prior-season box scores 
 `agent/sources.py` like every other read. It recomputes them from outcome-history
 rows dated on or before `as_of`; structural snapshots physically remove later rows.
 Weights live in `models/stat_line.json` and are readable in a diff.
+
+
+## `predict_best_player`
+
+**Use when:** You need the highest projected-points player in this matchup.
+
+## What it gives you
+
+The player on either side with the highest `predict_stat_line` points projection,
+plus a short ranked list. Candidates are the gated rotation: players last seen on
+these two teams on or before `as_of_date`, with injured players skipped.
+
+### When to call it
+
+When someone asks who to watch, who scores, or who the best player is tonight.
+It is not part of the required winner-path retrievals. Do not call it to decide
+who wins the game.
+
+### How to read it
+
+- `status: ok` means there is a ranked projection. `status: unavailable` means
+  no gated rotation player produced a line.
+- `points_mae` is the model's average error. Report it with the number.
+- `uses: predict_stat_line` is the whole implementation. There is no second model.
+
+### Rules
+
+- **Never pick a best player yourself** from season averages or memory.
+- **Do not use this to move the win probability.** It answers a player question.
+- Report the projection as a central estimate, not a fact.
 
 
 ## `predict_win_probability`

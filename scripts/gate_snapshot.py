@@ -1,22 +1,25 @@
 """Materialise a date-gated copy of the data directory.
 
-The agent's query-time filters in `agent/sources.py` already refuse records
-dated after an as-of date. This is the second, structural half the advisor
-asked for on 2026-07-28: build a directory that physically never held the
-future, then point the agent at only that directory. A filter you can audit is
-good; a directory that cannot contain the answer is better.
+This is an optional extra physical copy for a single-date demo. It is not one
+of the two runtime gates. Live requests and the full-season evaluator bind the
+cutoff in ui/serve.py, then filter every read in agent/sources.py. Pointing
+NBA_SNAPSHOT_DIR at a snapshot only changes which files those filters open.
+
+WHY FUTURE GAME ROWS ARE KEPT. The agent is asked "who wins GAME X?" GAME X's
+row is the question: teams and date. Dropping it would hide the matchup. The
+answer lives in home_pts, away_pts, and winner, and those three columns are
+blanked for any game after as_of. tests/test_snapshot_gate.py asserts both
+halves: future rows exist, and they have no scores.
+
+Injuries ARE gated here the same way injuries_as_of is: Date <= as_of. Rows
+filed after the cutoff are dropped, not summarised.
 
     python -m scripts.gate_snapshot --as-of 2026-01-14
     NBA_SNAPSHOT_DIR=data/snapshots/2026-01-14 streamlit run ui/app.py
 
-The two layers are complementary, not redundant. A snapshot can only be as
-strict as its loosest legitimate reader -- `team_form_as_of` wants games
-strictly before as_of, while `schedule_context` wants games through as_of --
-so per-tool precision still comes from the query-time filter. The snapshot
-removes what *nobody* may see; the filter decides what *each tool* may see.
-
-Every file is written through a rule that is stated in the manifest, so the
-snapshot can be audited without reading this module.
+The two runtime filters still apply after this copy is built. A snapshot can
+only be as strict as its loosest legitimate reader, so per-tool precision
+(rest vs form) stays in agent/sources.py.
 """
 
 from __future__ import annotations

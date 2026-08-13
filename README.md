@@ -167,16 +167,26 @@ Everything shown in the UI runs without either.
 
 ## How it works
 
+Three different things here could be called "the model." They are not the same.
+
+| Term | What it is | What it is not |
+|---|---|---|
+| **A tool** | A Python function in `agent/tools.py`. Deterministic. Date-gated. Returns JSON. | An opinion about who wins. |
+| **The agent** | The LLM loop in `agent/run.py`. It chooses tools and writes the report. | A database. It cannot open a CSV or the web. |
+| **The predictor (Model A)** | A logistic regression over eight features. `POST /api/predict`. | An agent. It is a tool only when Model C is allowed to call it. |
+
 ```
    you pick a game        ┌────────────────────────────────────────┐
-   and a date D    ─────▶ │  GATE 1 — scripts/gate_snapshot.py     │  plain Python.
-                          │  copies data → data/snapshots/D/       │  no AI involved.
-                          │  future results physically absent      │
+   and a date D    ─────▶ │  GATE 1 — ui/serve.py                  │  lock the question
+                          │  matchup_id + D bound before the LLM   │  before any CSV
+                          │  a different date/game/team is rejected│
                           └───────────────────┬────────────────────┘
                                               │
                           ┌───────────────────▼────────────────────┐
-                          │  GATE 2 — agent/sources.py             │  per-tool precision
-                          │  every read filtered to ≤ D            │
+                          │  GATE 2 — agent/sources.py             │  filter the evidence
+                          │  results:  played_on ≤ D               │
+                          │  rest:     scheduled dates < tip-off   │
+                          │  injuries: transaction Date ≤ D        │
                           └────────┬──────────────────┬────────────┘
                                    │                  │
                     ┌──────────────▼─────┐   ┌────────▼────────────────┐
@@ -191,45 +201,24 @@ Everything shown in the UI runs without either.
                                └──────────┬───────────┘
                                           │
                           ┌───────────────▼────────────────────────┐
-                          │  eval/three_arms.py                    │  reads results ONLY
+                          │  eval/ui_agent_eval.py                 │  reads results ONLY
                           │  accuracy · log loss · Brier           │  to score, after the
                           │  vs always-home · vs Vegas             │  prediction is made
                           └────────────────────────────────────────┘
 ```
 
-Two halves answer the same question by different means.
+`scripts/gate_snapshot.py` is an optional extra physical copy for a single-date demo. It is not gate 1. The 1,322-game evaluator does not build 1,322 snapshots.
 
-**The model** (`models/`) is a logistic regression over eight features — rolling form,
-win percentage, rest, back-to-backs, injury load — all computed strictly from games
-*before* the one being predicted. It returns a win probability and nothing else.
+Gemma 4's ~January 2025 knowledge cutoff is a third *kind* of protection (the LLM remembering the result). It is not a data gate.
 
-**The agent** (`agent/`) is an LLM with seven tools. It decides what to retrieve for a
-specific matchup, calls the tools, and writes a report in plain language. It has no
-database, no web access, and no way to invent a number.
+Both the agent tools and Model A read through the same gated accessors, which is what makes comparing them fair.
 
-Both read through the same gated accessors, which is what makes comparing them fair.
+### The two runtime gates
 
-### The three gates
-
-| | What it stops | Where |
-|---|---|---|
-| **1. On-disk snapshot** | Future data reaching *anything* | `scripts/gate_snapshot.py` |
-| **2. Query-time filter** | Future data reaching a *specific tool* | `agent/sources.py` |
-| **3. Model knowledge cutoff** | The LLM *remembering* the result | Gemma 4, cutoff ~Jan 2025 |
-
-Gate 1 is the one the advisor asked for by name on 2026-07-28: *"you're not relying on the
-LLM to gate its own data. You pre-gate it."* Running it prints exactly what it removed:
-
-```
-$ python -m scripts.gate_snapshot --as-of 2026-01-14
-Snapshot as of 2026-01-14 -> data/snapshots/2026-01-14
-
-  samples/game_logs_2026.csv                       1,322 kept      719 outcomes cleared
-  samples/odds_only.csv                           23,714 kept      726 dropped
-  raw/injury_pst_2025_2026/injury_data.csv         2,272 kept    1,309 dropped
-  raw/nba_stats_1947_present/Player Per Game.csv  32,606 kept      733 dropped
-  ...
-```
+| | What it stops | Where | Strictness |
+|---|---|---|---|
+| **1. Server bind** | The LLM changing the question | `ui/serve.py` + `reject_unbound_request` | Tool `as_of_date` must equal the authorized cutoff. Missing cutoff is a **failed** receipt, not a pass. There is no OR. |
+| **2. Query-time filter** | An authorized query returning later history | `agent/sources.py` | `result_is_knowable` / `fixture_is_known_before_tip` / injury `Date <= D` |
 
 ---
 
@@ -237,20 +226,22 @@ Snapshot as of 2026-01-14 -> data/snapshots/2026-01-14
 
 Six decisions that were not obvious, and the reasoning behind each.
 
-### 1. Two gates, not one
+### 1. Two gates, not one — and they are not interchangeable
 
-They look redundant. They are not. **A snapshot can only be as strict as its loosest
-legitimate reader** — `team_form_as_of` needs game outcomes *through* the as-of date, while
-`schedule_context` needs games *through* it. One on-disk cut cannot serve both without
-starving one. So the snapshot removes what *nobody* may see, and the query-time filter
-draws the finer per-tool line.
+Gate 1 stops the language model from asking a different question (later date, other game, other team) before any file is opened. Gate 2 stops an *authorized* question from returning later historical records. One cannot do the other's job: a locked cutoff still has to filter the CSVs, and a CSV filter still has to refuse a model-selected date.
+
+They also use two date filters, not one:
+
+- **`knowledge_cutoff` (D)** — which RESULTS exist. Form, H2H, injuries, player history.
+- **`target_game_date`** — which GAME we are asking about. Rest and back-to-backs.
+
+You can scout Thursday's game on Monday. Rest still uses Thursday as tip-off. Form only uses results through Monday. Collapsing those into one comparison would either invent 53 days of rest for a game scouted seven weeks out, or hide scheduled games the NBA published in August.
 
 ### 2. Future games keep their row; only the result is erased
 
-The obvious implementation — drop future rows — is wrong. The agent is being asked to
-preview a game that has not been played, so it must be able to see the game *exists*. What
-it must not see is how it *ended*. So `gate_snapshot.py` keeps the row and blanks
-`home_pts`, `away_pts`, `winner`.
+The question is "who wins GAME X?" GAME X's row is the question: two teams and a date. Dropping future rows would hide the matchup. The answer lives in `home_pts`, `away_pts`, and `winner`. Those three columns are blanked (snapshot) or unread (query-time). `test_future_games_are_still_visible` and `test_no_game_result_after_as_of` pin both halves.
+
+Injuries are gated the same way. The payload itself says so: `gated: true`, `knowledge_cutoff`, `injury_gate: "transaction Date <= knowledge_cutoff; later rows are unread"`.
 
 ### 3. The betting line was taken away from the agent
 
@@ -319,10 +310,10 @@ Seven functions are the agent's entire world. Every retrieval tool takes an `as_
 | 1 | `retrieve_matchup_context(matchup_id, as_of_date)` | ✅ | Team ratings, rest, injuries, head-to-head as of a date |
 | 2 | `retrieve_player_splits(player_name, as_of_date, back_to_back)` | ✅ | Prior-completed-season averages, optional fatigue split |
 | 3 | `retrieve_team_form(team_abbr, as_of_date, last_n)` | ✅ | Rolling 10-game record and point differential |
-| 4 | `retrieve_injuries(team_abbr, as_of_date)` | ✅ | Who was known to be out that morning |
+| 4 | `retrieve_injuries(team_abbr, as_of_date)` | ✅ | Who was known to be out that morning. Payload includes `gated` and the cutoff. |
 | 5 | `predict_win_probability(matchup_id, as_of_date)` | ✅ | The same gated Model A output, available only to Model C |
-| 6 | `retrieve_schedule(as_of_date, days_ahead)` | ✅ | Fixtures from the season game log. Teams and dates only, never a score |
-| 7 | `predict_stat_line(player, matchup_id, as_of_date)` | ✅ | Points / rebounds / assists. Ridge on 2023-24, validated on 2024-25 |
+| 6 | `predict_stat_line(player, matchup_id, as_of_date)` | ✅ | Points / rebounds / assists. Ridge on 2023-24, validated on 2024-25 |
+| 7 | `predict_best_player(matchup_id, as_of_date)` | ✅ | Highest projected points on the gated rotation. Calls `predict_stat_line`. |
 
 Live status: `python -m agent.run --status --source real`
 
@@ -358,7 +349,7 @@ work, so:
 | Cut | Reason |
 |---|---|
 | `retrieve_news` | No source with reliable publication timestamps was ever found. Highest effort of the ten, least measurable contribution. Cut on merit. |
-| `predict_best_player` | Depended entirely on `predict_stat_line`, which was not built at the time. Cut then; `predict_stat_line` has since landed, so this could be revisited. |
+| `retrieve_schedule` | Listed other games on the slate. Rest and back-to-backs already live on `retrieve_matchup_context`. The UI loads the game list from the CSV directly. Not a prediction input, so it is forbidden rather than left as a no-op. |
 | `retrieve_betting_line` | **Not a scope cut — a leak.** See design decision 3 above. |
 </details>
 
@@ -417,15 +408,27 @@ how all the stuff that you put together works"*).
 
 **Q: Walk me through what happens, step by step, when I press the predict button. Where exactly does the gating happen?**
 
-The actual UI evaluator enforces two runtime boundaries. The server first binds the run to one matchup and a strictly pregame cutoff, then every tool rejects any model-selected matchup, team, or cutoff that differs before touching its data source. `agent/sources.py` independently filters every historical read through that cutoff. `scripts/gate_snapshot.py` is an optional manual third layer that can materialize a filtered data directory for a fixed-date demo, but the full-season evaluator does not pretend to build 1,322 different snapshots.
+Gate 1: the server binds `matchup_id` and `as_of_date` before the LLM is invoked. Every tool call with a different matchup, team, or cutoff is rejected before `agent/sources.py` is touched. A missing cutoff on the receipt is a failure, not a pass.
+
+Gate 2: `agent/sources.py` filters every historical read. Results and injuries use `knowledge_cutoff` D. Rest uses scheduled dates before tip-off. Future game rows may exist so the matchup is visible; their scores are unread.
+
+The optional snapshot is not this path. Gemma 4's cutoff is a separate constraint on what the LLM can remember.
 
 **Q: Why do you need both? Isn't the second one redundant if the first one works?**
 
-The server binding prevents the language model from changing the question. The source filter prevents an authorized query from returning later historical records. The optional snapshot is defense in depth for a fixed-date demonstration, not part of each full-season UI request.
+Gate 1 stops the model from changing the question. Gate 2 stops an authorized question from returning later records. Neither implies the other.
 
-**Q: If a game hasn't been played yet, why is it still in your snapshot at all?**
+**Q: Why two date filters?**
 
-Because the agent is being asked to preview a game that has not happened, so it has to be able to see that the game *exists*. Dropping the row would hide the question along with the answer. `gate_snapshot.py` keeps the row and erases three columns — `home_pts`, `away_pts`, `winner`. On a 2026-01-14 snapshot that clears 719 results while keeping all 1,322 scheduled games.
+Because they take different dates. `result_is_knowable(played_on, D)` is "may I read this score this morning?" `fixture_is_known_before_tip(played_on, game_date)` is "may I use this scheduled date to compute rest?" Scouting Thursday on Monday needs both.
+
+**Q: If a game hasn't been played yet, why is it still in the data at all?**
+
+The row is the question. Dropping it hides the matchup. Blanking or not reading `home_pts` / `away_pts` / `winner` hides the answer.
+
+**Q: Is the injury data gated?**
+
+Yes. Same knowledge cutoff as every other historical read. `retrieve_injuries` returns `gated: true`, `knowledge_cutoff`, and the rule in the JSON. Transaction dates, not news timestamps — that residual is named in the next answer.
 
 **Q: How do you know your tests actually catch leakage? A test that always passes proves nothing.**
 
@@ -568,9 +571,7 @@ It is, which is why there is a test for it. The agent's `team_form_as_of` re-sca
 
 **Q: Your proposal promised projected stat lines and a best-player pick. Where are they?**
 
-Built as of 2026-08-04. `predict_stat_line` is backed by ridge regressions on a player's trailing 5- and 10-game form, fitted on 2023-24 and validated on 2024-25, and never on the season being replayed. It beats a trailing 5-game average by 0.061 points of MAE, which is real and small, and the skill tells the agent to say so rather than imply otherwise. `predict_best_player` was cut when it was a placeholder behind a placeholder, and `retrieve_news` because no source with reliable publication timestamps was ever found. `python -m agent.run --status` prints what is built and what is blocked, generated from the code.
-
-> **Weak spot:** This is a stated deliverable that does not exist, and "the status board reports it" is a good process answer to a scope question, not a substitute for the feature.
+Built. `predict_stat_line` is ridge on trailing form, fitted on 2023-24, validated on 2024-25, never on the season being replayed. `predict_best_player` ranks the gated rotation with that same function and skips anyone listed out. Neither is on the required winner-path retrievals (those stay matchup / form / injuries, plus Model A for C). `retrieve_news` is still cut: no source with reliable publication timestamps. `python -m agent.run --status` prints what is built.
 
 **Q: You built the win model. Wasn't that Sarvesh's piece?**
 
@@ -588,7 +589,7 @@ Yes after this submission PR is merged. The PR includes the runnable UI paths, e
 
 **Q: How much of this did you write, and how much did the AI write?**
 
-AI assistance was used throughout, and it is disclosed in §13 of the report rather than concealed. The constraint I held to is that every line merged is one I can explain and defend — which is what this conversation is testing. The architectural calls are mine and each has a reason behind it: two gates rather than one, keeping future rows while erasing outcomes, removing the betting-line tool instead of instructing around it, logistic regression over a tree ensemble, splitting by season.
+AI assistance was used throughout, and it is disclosed in §13 of the report rather than concealed. The constraint I held to is that every line merged is one I can explain and defend — which is what this conversation is testing. The architectural calls are mine and each has a reason behind it: two runtime gates with different jobs, keeping future rows while erasing outcomes, removing the betting-line tool and the slate tool instead of instructing around them, logistic regression over a tree ensemble, splitting by season.
 
 **Q: Does the OpenAI sandbox-escape incident connect to anything you ran into?**
 
@@ -621,7 +622,7 @@ Stated plainly, because the gaps we name are less dangerous than the ones we do 
 | | Item | Status |
 |---|---|---|
 | 1 | ~~**`predict_stat_line`**~~ | Built. Fitted on 2023-24, validated on 2024-25. |
-| 2 | ~~**`retrieve_schedule`**~~ | Built from the season game log. |
+| 2 | ~~**`retrieve_schedule` as an agent tool**~~ | Removed. Slate is UI data, not a prediction input. Rest lives on `retrieve_matchup_context`. |
 | 3 | ~~**Complete the actual-UI full-season runs for Models B and C**~~ | Done. Same 1,322 games: A 871, C 860, B 813. Packet: `docs/evaluation/NBA-Actual-UI-Agent-Evaluation.xlsx`. |
 | 4 | ~~**Build the full-season formula-linked workbook from the completed actual-UI CSV**~~ | Done for A/B/C. D/E remain deferred and are not in the class packet. |
 | 5 | **The "let it cheat" ablation** | Suggested by the advisor, not run. |

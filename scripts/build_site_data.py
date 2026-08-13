@@ -53,7 +53,6 @@ TOOL_FILES = {
     ],
     "retrieve_team_form": ["data/samples/game_logs_2026.csv"],
     "retrieve_player_splits": ["data/raw/nba_stats_1947_present/Player Per Game.csv"],
-    "retrieve_schedule": ["data/samples/game_logs_2026.csv"],
     "retrieve_injuries": [
         "data/raw/injury_data_2016_2025/injury_data.csv",
         "data/raw/injury_pst_2025_2026/injury_data.csv",
@@ -62,6 +61,10 @@ TOOL_FILES = {
     "predict_stat_line": [
         "models/stat_line.json",
         "data/samples/player_features_2026.csv",
+    ],
+    "predict_best_player": [
+        "models/stat_line.json",
+        "data/exports/player_stats_engineered.csv",
     ],
 }
 # Two injury files share a basename; say which is which.
@@ -135,8 +138,20 @@ LLM = {
 
 GATE_RULES = [
     {
+        "title": "Two gates, two jobs",
+        "body": "The server locks the matchup and cutoff before the LLM runs. Then every historical read is filtered to that cutoff. A tool call that changes the date or the game is rejected before any CSV is opened. There is no OR path around either gate.",
+    },
+    {
         "title": "It only sees yesterday's news",
-        "body": "Injuries come from a dated log. We replay it and stop at the cutoff, so the agent sees exactly what a person could have known that morning.",
+        "body": "Injuries come from a dated transaction log. We replay it and stop at the cutoff (Date <= as_of). The injury JSON itself carries gated=true and the cutoff, so you can see the gate without reading the Python.",
+    },
+    {
+        "title": "Future games keep their row",
+        "body": "The matchup you asked about has to exist as a scheduled game. Dropping future rows would hide the question. The scores on those rows are blanked or unread; that is the answer, and the answer stays hidden.",
+    },
+    {
+        "title": "Two date filters, not one",
+        "body": "Rest uses scheduled dates up to the target tip-off (the NBA publishes the season in August). Form and head-to-head use results through this morning. They take different dates because you can scout Thursday's game on Monday.",
     },
     {
         "title": "Last season's ratings, not this one's",

@@ -51,6 +51,7 @@ pytestmark = pytest.mark.skipif(
     reason="player_stats_engineered.csv is missing",
 )
 
+
 def test_feature_lists_agree_between_data_and_model_layers():
     """Feature order is positional in stat_line.json. Divergence would mis-score."""
     from models.stat_line_features import FEATURE_NAMES
@@ -109,3 +110,26 @@ def test_served_row_is_the_game_being_predicted():
     assert result["game_date"] == "2025-12-03"
     assert parse_date(result["feature_snapshot_date"]) <= date(2025, 12, 2)
     assert set(result["features"]) == set(STAT_LINE_FEATURE_KEYS)
+
+
+def test_predict_best_player_uses_stat_line_and_skips_known_out():
+    tools = {tool.name: tool for tool in build_tools(get_source("real"))}
+    payload = json.loads(
+        tools["predict_best_player"].invoke(
+            {
+                "matchup_id": "CHI-ORL-2025-12-01",
+                "as_of_date": "2025-11-30",
+            }
+        )
+    )
+    assert payload["status"] == "ok"
+    assert payload["uses"] == "predict_stat_line"
+    assert payload["gated"] is True
+    names = {row["player"] for row in payload["ranked"]}
+    skipped = {row["player"] for row in payload.get("skipped", [])}
+    assert "Paolo Banchero" not in names
+    assert "Paolo Banchero" in skipped
+    assert payload["best_player"] not in skipped
+    assert (
+        payload["projection"]["points"] == payload["ranked"][0]["projection"]["points"]
+    )

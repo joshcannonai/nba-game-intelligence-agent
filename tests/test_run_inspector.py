@@ -147,6 +147,35 @@ def test_run_stream_exposes_exact_inspectable_context(monkeypatch):
     assert '"status": "ok"' in body
 
 
+def test_gate_receipt_fails_when_the_tool_omits_the_cutoff():
+    """The old receipt treated a missing as_of_date as a pass via an OR."""
+    receipt = serve._gate_receipt(
+        SimpleNamespace(
+            name="retrieve_team_form",
+            content='{"record":"8-2","as_of":"2025-11-30"}',
+        ),
+        "2025-11-30",
+        "real",
+        {"args": {}},
+    )
+    assert receipt["status"] == "failed"
+    assert receipt["tool_cutoff"] is None
+
+
+def test_gate_receipt_fails_when_the_tool_cutoff_differs():
+    receipt = serve._gate_receipt(
+        SimpleNamespace(
+            name="retrieve_team_form",
+            content='{"record":"8-2","as_of":"2025-12-01"}',
+        ),
+        "2025-11-30",
+        "real",
+        {"args": {"as_of_date": "2025-12-01"}},
+    )
+    assert receipt["status"] == "failed"
+    assert receipt["tool_cutoff"] == "2025-12-01"
+
+
 def test_run_stream_accepts_a_valid_list_tool_payload(monkeypatch):
     monkeypatch.setattr(
         serve, "build_agent", lambda *_args, **_kwargs: FakeListResultAgent()

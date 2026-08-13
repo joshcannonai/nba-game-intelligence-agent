@@ -21,11 +21,13 @@ from agent.sources import (
     _injury_rows,
     _odds_rows,
     closing_line,
+    fixture_is_known_before_tip,
     parse_date,
     get_source,
     injuries_as_of,
     injury_data_through,
     parse_matchup_id,
+    result_is_knowable,
     season_end_year,
 )
 from agent import sources
@@ -85,6 +87,39 @@ def test_parse_matchup_id():
 def test_parse_matchup_id_rejects_garbage():
     with pytest.raises(ValueError):
         parse_matchup_id("LAL vs BOS")
+
+
+def test_the_two_date_filters_take_different_dates():
+    """Rest is measured to tip-off. Results are measured to this morning.
+
+    Scouting Thursday's game on Monday: Monday's results are knowable, Tuesday
+    and Wednesday fixtures still count for rest, and Thursday's score is not
+    readable on Monday.
+    """
+    monday = date(2026, 1, 12)
+    thursday = date(2026, 1, 15)
+    tuesday = date(2026, 1, 13)
+
+    assert result_is_knowable(monday, monday)
+    assert not result_is_knowable(tuesday, monday)
+    assert fixture_is_known_before_tip(tuesday, thursday)
+    assert not fixture_is_known_before_tip(thursday, thursday)
+
+
+def test_injury_payload_states_the_gate():
+    """A reader should not have to open sources.py to see that injuries are gated."""
+    payload = CsvSource().injuries("BOS", REAL_AS_OF)
+    assert payload["gated"] is True
+    assert payload["knowledge_cutoff"] == REAL_AS_OF
+    assert "Date <=" in payload["injury_gate"]
+    for inj in payload["injuries"]:
+        assert inj["published"] <= REAL_AS_OF
+
+
+def test_mock_injury_payload_states_the_gate():
+    payload = MockSource().injuries("LAL", "2026-01-14")
+    assert payload["gated"] is True
+    assert payload["knowledge_cutoff"] == "2026-01-14"
 
 
 def test_injuries_never_include_a_future_publish_date():
@@ -380,21 +415,20 @@ def test_player_splits_choose_a_season_completed_before_the_cutoff():
 EXPECTED_TOOLS = {
     "retrieve_matchup_context",
     "retrieve_player_splits",
-    "retrieve_schedule",
     "retrieve_team_form",
     "retrieve_injuries",
     "predict_win_probability",
     "predict_stat_line",
+    "predict_best_player",
 }
 
-# Cut in week 6. Named here rather than simply deleted, because "the agent must
-# not have a betting-line tool" is a live safety property, not a historical
-# note -- re-adding retrieve_betting_line would re-open the leak that made us
-# cut it. See the module docstring in agent/tools.py.
+# Cut, and kept cut. retrieve_betting_line leaked the benchmark.
+# retrieve_schedule listed other games on the slate and did not feed a
+# one-game prediction (rest already lives on retrieve_matchup_context).
 FORBIDDEN_TOOLS = {
     "retrieve_news",
-    "predict_best_player",
     "retrieve_betting_line",
+    "retrieve_schedule",
 }
 
 

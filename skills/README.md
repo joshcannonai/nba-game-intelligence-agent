@@ -38,5 +38,5 @@ use_when: one line, shown to the agent as the trigger
 We considered putting everything in Postgres and letting the agent query freely.
 Rejected: a free-form query surface is exactly how an agent reaches data nobody
 intended it to see, and the date gate depends on every read passing through
-`agent/sources.py`. Seven named tools with written rules is a smaller, checkable
+`agent/sources.py`. Named tools with written rules is a smaller, checkable
 surface. See `docs/REPORT.md` §5.

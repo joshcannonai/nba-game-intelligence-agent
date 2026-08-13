@@ -1,5 +1,9 @@
 """LangChain tool-calling analyst agent for a single NBA matchup.
 
+The AGENT is this loop. A TOOL is a Python function in agent/tools.py. The
+agent chooses tools and writes the report; it cannot open a CSV or the web.
+Every number in the report has to come from a tool result.
+
 Two chat model backends, picked with --model:
 
   anthropic (default)  Claude, personal API credits. Fast iteration while
@@ -50,8 +54,9 @@ _SHARED_RULES = """
 - A run is complete only after it has one matchup-context result, two team-form
   results, and two injury results. Check that all five are present before writing
   the final JSON. Model C must also have one predict_win_probability result.
-- Do not call retrieve_player_splits or predict_stat_line for a team-level winner
-  prediction. Those optional tools are reserved for an explicit player question.
+- Do not call retrieve_player_splits, predict_stat_line, or predict_best_player
+  for a team-level winner prediction. Those optional tools are reserved for an
+  explicit player question.
 - SOME TOOLS HAVE NO DATA YET. A tool may return {"status": "awaiting_input",
   "needs_from": ..., "needs": ...}. That is not an error and not an empty result.
   It means the data layer for it does not exist. When that happens, add a line to
@@ -201,7 +206,6 @@ def _probe_args(matchup_id: str, as_of_date: str) -> dict[str, dict]:
             "as_of_date": as_of_date,
             "back_to_back": True,
         },
-        "retrieve_schedule": {"as_of_date": as_of_date, "days_ahead": 1},
         "retrieve_team_form": {
             "team_abbr": home,
             "as_of_date": as_of_date,
@@ -214,6 +218,10 @@ def _probe_args(matchup_id: str, as_of_date: str) -> dict[str, dict]:
         },
         "predict_stat_line": {
             "player_name": player,
+            "matchup_id": matchup_id,
+            "as_of_date": as_of_date,
+        },
+        "predict_best_player": {
             "matchup_id": matchup_id,
             "as_of_date": as_of_date,
         },
