@@ -1,0 +1,73 @@
+{
+  "model": "logistic_regression_d_market_logit_v2",
+  "trained_by": "josh",
+  "feature_names": [
+    "form_margin_diff",
+    "win_pct_diff",
+    "rest_diff",
+    "home_back_to_back",
+    "away_back_to_back",
+    "injury_weight_diff",
+    "home_games_played",
+    "away_games_played",
+    "market_home_prob",
+    "market_logit"
+  ],
+  "coefficients": [
+    0.082439,
+    -0.162705,
+    0.003089,
+    -0.057987,
+    0.015321,
+    0.008434,
+    0.129512,
+    -0.213342,
+    -0.451942,
+    1.600668
+  ],
+  "intercept": 0.209296,
+  "scaler_mean": [
+    -0.14825,
+    -0.002058,
+    0.046436,
+    0.172709,
+    0.182485,
+    0.054619,
+    40.438289,
+    40.397556,
+    0.55072,
+    0.234513
+  ],
+  "scaler_scale": [
+    11.006211,
+    0.267799,
+    1.027267,
+    0.377995,
+    0.386244,
+    1.354355,
+    23.616422,
+    23.630833,
+    0.196354,
+    0.902981
+  ],
+  "train_seasons": [
+    2024,
+    2025
+  ],
+  "test_season": 2026,
+  "metrics": {
+    "train": {
+      "n": 2455,
+      "accuracy": 0.6957,
+      "log_loss": 0.5779,
+      "brier": 0.1974
+    },
+    "test": {
+      "n": 1322,
+      "accuracy": 0.6914,
+      "log_loss": 0.5788,
+      "brier": 0.1986
+    }
+  },
+  "note": "Model D may use the closing line because its objective is accuracy given the market. A/B/C must not. Test season 2026 is held out."
+}

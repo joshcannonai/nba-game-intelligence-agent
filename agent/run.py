@@ -81,6 +81,13 @@ Rules:
   Rest and back-to-backs are small tie-breakers. Current form already reflects
   established absences, so use the injury report as context rather than applying
   an unmeasured numeric penalty. Treat head-to-head as descriptive, not predictive.
+- If retrieve_team_form returns awaiting_input, form is missing, not 50/50.
+  Keep the 55% home base rate and use retrieve_matchup_context prior-season
+  offensive/defensive ratings as the strength signal. Do not pick the away team
+  just because form is empty, and do not emit 0.48/0.52 as a ritual close game.
+- Injuries are not equal names. A high-importance absence (star minutes/points)
+  is a larger availability concern than a low-importance rotation piece. Still
+  do not invent a numeric injury penalty.
 - Keep probabilities calibrated: close matchups should stay near 50-55%; use
   60-70% only when the gated form and record agree strongly; exceed 75% only when
   every available signal points the same way.

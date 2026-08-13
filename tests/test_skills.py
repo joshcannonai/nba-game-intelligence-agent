@@ -136,3 +136,12 @@ def test_model_c_treats_model_a_as_optional_peer_evidence():
     shared = " ".join(_SHARED_RULES.lower().split())
     assert "two team-form results" in shared
     assert "two injury results" in shared
+
+
+def test_reasoning_core_forbids_the_opening_night_coin_flip():
+    from agent.run import _AGENT_REASONING_CORE
+
+    text = _AGENT_REASONING_CORE.lower()
+    assert "awaiting_input" in text
+    assert "0.48/0.52" in text
+    assert "55%" in text

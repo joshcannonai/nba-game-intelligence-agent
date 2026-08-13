@@ -33,3 +33,6 @@ tools are follow-ups on what it shows.
   between changing rosters should not outweigh current rolling form.
 - Rest and back-to-backs are tie-breakers. Do not let a one-day rest edge overwhelm
   a clear difference in rolling point differential and current record.
+- When retrieve_team_form is awaiting_input, these prior-season ratings ARE the
+  strength signal. Use the offensive/defensive rating gap from 55% home. Do not
+  collapse to a coin flip because the rolling window is empty.

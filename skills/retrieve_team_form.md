@@ -31,3 +31,6 @@ describing a roster that may no longer exist.
   corroboration. Start from the 55% home-team base rate, keep an otherwise even
   matchup near that base rate, and reserve 60-70% for cases where form margin and
   record agree strongly.
+- If this tool returns awaiting_input, say form is unavailable and fall back to
+  retrieve_matchup_context ratings. Missing form is not a coin flip and not a
+  reason to pick the away team. Do not emit 0.48/0.52 as a ritual close game.
