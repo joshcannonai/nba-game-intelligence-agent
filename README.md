@@ -38,18 +38,21 @@ memory, not prediction. So we gate the data twice, pin the language model's know
 cutoff to before the test window, and score everything with plain Python against a file no
 agent tool can reach.
 
-**Verified Model A numbers:** all 1,322 games of 2025-26, a season the model never
-trained on:
+**Verified Models A, B, and C** on all 1,322 games of 2025-26, a season Model A
+never trained on. Same `game_id`s for every arm. $100/game at reconstructed
+closing-spread vig (not quoted moneylines, not tickets):
 
-| | accuracy | log loss | Brier |
+| Arm | Correct | Accuracy | $100 P&L |
 |---|---|---|---|
-| always pick home | 55.5% | 0.6871 | 0.2470 |
-| **our model** | **65.9%** | **0.6150** | **0.2130** |
-| Vegas closing line | 69.0% | 0.5782 | 0.1977 |
+| **A** logistic `POST /api/predict` | 871/1322 | **65.9%** | −$2,721 |
+| **B** Gemma 4 + five retrieval tools | 813/1322 | 61.5% | −$5,230 |
+| **C** same as B + Model A as a tool | 860/1322 | 65.1% | −$3,175 |
+| always pick home | 734/1322 | 55.5% | — |
+| Vegas closing favorite | 912/1322 | 69.0% | — |
 
-Results for Models B and C are not quoted here yet. Their current prompts must be run
-through the actual UI endpoint over the same complete season before those numbers are
-treated as evidence.
+Hypothesis was that C beats A and B. C beat B. C did not beat the logistic. All
+three A/B/C arms lose money to the reconstructed hold; A is least bad. Model A's
+test log loss is 0.6150 and Brier score is 0.2130 (Vegas 0.5782 / 0.1977).
 
 ---
 
@@ -379,21 +382,26 @@ its tool schema, and its matching instructions. It may agree or
 disagree with Model A, and the UI displays the actual system prompt, tool calls, tool
 results, and gate receipts used in the run.
 
-Model A has been re-run on every one of the 1,322 games through the same predictor path
-used by the UI. It produced 871 correct predictions, or **65.89%** accuracy. Its test log
-loss is 0.6150 and Brier score is 0.2130. These numbers differ from older reports because
-the replay now stops date-only injury records at the previous calendar day, which removes
-a same-day leakage risk.
+On the same 1,322 games: Model A 871/1322 = **65.89%**, Model C 860/1322 = **65.05%**,
+Model B 813/1322 = **61.50%**. $100/game P&L at reconstructed vig is A −$2,721,
+C −$3,175, B −$5,230. Model A's test log loss is 0.6150 and Brier score is 0.2130.
+These A calibration numbers differ from older reports because the replay now stops
+date-only injury records at the previous calendar day, which removes a same-day
+leakage risk.
 
 The submission evaluator is `eval/ui_agent_eval.py`. In `--full-season` mode it runs the
 same 1,322 games for A, B, and C, gives each the previous calendar day as its cutoff,
 requires all five retrieval calls for B and those same calls plus the predictor for C,
 requires passed gate receipts, and writes append-only checkpoints. The final outcome and
 a reconstructed decimal price derived from the pre-tip closing spread are joined only
-after the UI returns its prediction. The price is not a quoted moneyline.
+after the UI returns its prediction. The price is not a quoted moneyline. Model A
+full-season rows were scored on the predictor path and joined onto those same
+`game_id`s for the packet; A is not in the B/C jsonl.
 
 Older sample evaluations are historical artifacts from earlier prompts. They are not
-presented on the live site and should not be cited as current B or C performance.
+presented on the live site. The professor packet is
+[`docs/evaluation/NBA-Actual-UI-Agent-Evaluation.xlsx`](docs/evaluation/NBA-Actual-UI-Agent-Evaluation.xlsx)
+(full 2025-26 season, Models A/B/C). D and E are not in that file.
 
 ---
 
@@ -491,17 +499,17 @@ It caught the agent cheating, in the sense you have been describing all semester
 
 **Q: What was your hypothesis, and what did you actually find?**
 
-Our hypothesis is that Model C, the agent given Model A as one extra data point, will beat both A and B. The current B and C prompts have not completed their full-season actual-UI run, so the submission does not claim that hypothesis succeeded or failed yet.
+Hypothesis: Model C, the agent given Model A as one extra data point, beats both A and B. Full-season actual-UI result: A 65.9% (871/1322) is best of the three; C 65.1% (860/1322) beats B 61.5% (813/1322). Giving Gemma Model A as a tool helped versus retrieval-only B. It did not beat the logistic. All three lose money at $100/game versus reconstructed vig; A is least bad.
 
 **Q: Forty games is not many. How do you know that isn't noise?**
 
-It would be too small for a final claim. That is why the submission evaluator runs every arm on the same 1,322 games and checkpoints each actual UI result. Old 40-game samples remain historical artifacts, not current evidence.
+It would be too small for a final claim. That is why the scored comparison is the same 1,322 games for A, B, and C. Old 10-game and 40-game samples remain historical artifacts, not the season claim.
 
 **Q: What p-value, and was it one-sided or two-sided?**
 
-We will calculate a paired two-sided test after the current full-season run finishes. Quoting the old prompt's sample p-value for the current agent would mix two different systems.
+The packet reports paired counts on the same 1,322 games rather than a p-value. When C and A pick different teams (127 games), A is right and C wrong 69 times, C right and A wrong 58 times. When C and B differ (327 games), C is right and B wrong 187 times, B right and C wrong 140 times. Quoting the old prompt's sample p-value would mix two different systems.
 
-> **Weak spot:** No current p-value exists until the current B and C run is complete.
+> **Weak spot:** No formal McNemar / two-sided p-value is attached to the professor packet. The claim is the counts.
 
 **Q: Why do you think the agent overrules the model?**
 
@@ -517,19 +525,17 @@ No. The experiment measures this prompt, this local model, these tools, and this
 
 #### Verified actual-UI workbook
 
-[`NBA-Actual-UI-Agent-Evaluation-Shared-10-Games.xlsx`](docs/evaluation/NBA-Actual-UI-Agent-Evaluation-Shared-10-Games.xlsx)
-is the current manually assembled professor-review workbook. It records the
-same 10 games for all three models using the fixed 2026-04-05 cutoff. Model A ran through
-`POST /api/predict`; Models B and C ran through the website's `POST /api/run`
-SSE path with `gemma4:latest` via Ollama. The workbook contains formula-linked
-Summary, Model A, Model B, Model C, UI Trace, and Methodology sheets. Its 30
-model rows are also committed as a [Git-diffable CSV](docs/evaluation/verified-actual-ui-results.csv),
-with the artifact checksum and contract in the [manifest](docs/evaluation/manifest.json).
+[`NBA-Actual-UI-Agent-Evaluation.xlsx`](docs/evaluation/NBA-Actual-UI-Agent-Evaluation.xlsx)
+is the professor packet: the 1,322-game season for Models A, B, and C. Model A
+ran through `POST /api/predict`; Models B and C ran through the website's
+`POST /api/run` SSE path with `gemma4:latest` via Ollama. D and E are not in
+this file. Git-diffable rows:
+[summary](docs/evaluation/verified-full-season-abc-summary.csv),
+[games](docs/evaluation/verified-full-season-abc-results.csv). Checksum
+and contract: [manifest](docs/evaluation/manifest.json).
 
-The verified sample result is A 5/10, B 4/10, and C 6/10. Every required B/C
-gate receipt passed. This is a shared classroom comparison, not a claim of
-season-level B/C accuracy. The older full-season workbook is not included
-because its B/C rows predated the corrected actual-UI evaluation contract.
+Result: A 871/1322, C 860/1322, B 813/1322. Every required B/C gate receipt
+passed. The D/E betting workbook is not the class packet.
 
 **Q: Who is doing the scoring? Not the LLM, I hope.**
 
@@ -541,10 +547,8 @@ We checked rather than assumed, because the whole baseline rests on it. `eval/cr
 
 **Q: Are you and Sarvesh predicting on the same games?**
 
-Yes for the verified shared comparison. All three models ran the same 10 games
-provided by Sarvesh with the same fixed 2026-04-05 cutoff. The committed
-workbook and CSV show that exact list. The separate full-season actual-UI run
-is still incomplete, so we do not claim full-season Model B or C accuracy.
+Yes. The packet uses the same ordered 1,322-game list for A, B, and C with a
+previous-day cutoff.
 
 ### Do you understand your own code?
 
@@ -606,7 +610,7 @@ Ranked by exposure, with how to handle each.
 
 5. **"Are all models on the same games?"** — Yes. Full-season mode selects the same ordered 1,322-game list for A, B, and C.
 
-**Two more worth rehearsing:** the `home_games_played` weight (concede it may be a schedule artifact), and the difference between a completed code path and a still-running evaluation.
+**Two more worth rehearsing:** the `home_games_played` weight (concede it may be a schedule artifact), and that C beating B but not A is the finding — do not dress it up as the hypothesis succeeding.
 
 ---
 
@@ -618,8 +622,8 @@ Stated plainly, because the gaps we name are less dangerous than the ones we do 
 |---|---|---|
 | 1 | ~~**`predict_stat_line`**~~ | Built. Fitted on 2023-24, validated on 2024-25. |
 | 2 | ~~**`retrieve_schedule`**~~ | Built from the season game log. |
-| 3 | **Complete the actual-UI full-season runs for Models B and C** | Evaluator is built and resumable; results are intentionally not claimed until every row finishes. |
-| 4 | **Build the full-season formula-linked workbook from the completed actual-UI CSV** | The verified shared 10-game workbook is included. The full-season workbook remains pending the B and C rows. |
+| 3 | ~~**Complete the actual-UI full-season runs for Models B and C**~~ | Done. Same 1,322 games: A 871, C 860, B 813. Packet: `docs/evaluation/NBA-Actual-UI-Agent-Evaluation.xlsx`. |
+| 4 | ~~**Build the full-season formula-linked workbook from the completed actual-UI CSV**~~ | Done for A/B/C. D/E remain deferred and are not in the class packet. |
 | 5 | **The "let it cheat" ablation** | Suggested by the advisor, not run. |
 
 Known weaknesses in what *is* built are documented in [`docs/REPORT.md` §11](docs/REPORT.md)
