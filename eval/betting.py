@@ -97,6 +97,15 @@ def priced(prob: float) -> float:
     return 1.0 / (prob * (1.0 + HOLD))
 
 
+def decimal_to_american(decimal_odds: float) -> int:
+    """Convert decimal odds to an American moneyline integer."""
+    if decimal_odds <= 1.0:
+        raise ValueError(f"decimal odds must be > 1, got {decimal_odds}")
+    if decimal_odds >= 2.0:
+        return int(round((decimal_odds - 1.0) * 100.0))
+    return int(round(-100.0 / (decimal_odds - 1.0)))
+
+
 def settle(pick_home: bool, home_won: bool, p_home: float) -> float:
     """Profit or loss on one $100 bet."""
     win = pick_home == home_won
@@ -106,32 +115,48 @@ def settle(pick_home: bool, home_won: bool, p_home: float) -> float:
     return STAKE * (odds - 1.0)
 
 
-def load_odds() -> dict:
+def load_odds(season: str | None = "2026") -> dict:
+    """Load closing-line rows, keyed by (date, away, home).
+
+    Pass season=None to keep every season. The 2025-26 evaluator still defaults
+    to "2026" so existing callers do not silently pick up earlier years.
+    """
     path = ROOT / "data/samples/odds_only.csv"
     out = {}
     with path.open(newline="", encoding="utf-8") as fh:
         for r in csv.DictReader(fh):
-            if r.get("season") != "2026":
+            if season is not None and r.get("season") != season:
                 continue
             key = (r["date"], r["away"].strip().lower(), r["home"].strip().lower())
             out[key] = r
     return out
 
 
-def odds_for_game(game_id: str, odds: dict) -> dict | None:
-    """Return the project's pre-tip closing line for one canonical game id."""
-    from agent.sources import parse_matchup_id
+def odds_for_matchup(away: str, home: str, game_date, odds: dict) -> dict | None:
+    """Look up a closing line by teams and date, independent of game_id format."""
+
     from agent.teams import normalize_abbr
 
-    away, home, game_date = parse_matchup_id(game_id)
+    if hasattr(game_date, "isoformat"):
+        day = game_date.isoformat()
+    else:
+        day = str(game_date)
     away = normalize_abbr(away).lower()
     home = normalize_abbr(home).lower()
     for away_key in (away, TEAM_ALIASES.get(away, away)):
         for home_key in (home, TEAM_ALIASES.get(home, home)):
-            row = odds.get((game_date.isoformat(), away_key, home_key))
+            row = odds.get((day, away_key, home_key))
             if row:
                 return row
     return None
+
+
+def odds_for_game(game_id: str, odds: dict) -> dict | None:
+    """Return the project's pre-tip closing line for one canonical game id."""
+    from agent.sources import parse_matchup_id
+
+    away, home, game_date = parse_matchup_id(game_id)
+    return odds_for_matchup(away, home, game_date, odds)
 
 
 def load_predictions(path: Path, arms: list[str]) -> list[dict]:

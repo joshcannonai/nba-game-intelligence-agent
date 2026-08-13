@@ -1,6 +1,6 @@
 # Agent skills — review copy
 
-**NBA Game Intelligence Agent · CECS 499 · generated 2026-08-11**
+**NBA Game Intelligence Agent · CECS 499 · generated 2026-08-12**
 
 Each of the agent's tools has a *skill*: a short set of rules telling it when to call
 that tool and what to do with the answer. The agent loads these at startup, so these
@@ -75,6 +75,9 @@ tools are follow-ups on what it shows.
   between changing rosters should not outweigh current rolling form.
 - Rest and back-to-backs are tie-breakers. Do not let a one-day rest edge overwhelm
   a clear difference in rolling point differential and current record.
+- When retrieve_team_form is awaiting_input, these prior-season ratings ARE the
+  strength signal. Use the offensive/defensive rating gap from 55% home. Do not
+  collapse to a coin flip because the rolling window is empty.
 
 
 ## `retrieve_player_splits`
@@ -167,6 +170,9 @@ describing a roster that may no longer exist.
   corroboration. Start from the 55% home-team base rate, keep an otherwise even
   matchup near that base rate, and reserve 60-70% for cases where form margin and
   record agree strongly.
+- If this tool returns awaiting_input, say form is unavailable and fall back to
+  retrieve_matchup_context ratings. Missing form is not a coin flip and not a
+  reason to pick the away team. Do not emit 0.48/0.52 as a ritual close game.
 
 
 ## `retrieve_injuries`
@@ -197,6 +203,9 @@ explain a prediction that hinges on availability.
 - **Do not invent a numeric injury penalty.** Current form already reflects established
   absences, and Model C's predictor has its own learned injury-load feature. Use the
   list to explain availability and uncertainty, not to apply an unsupported formula.
+- Rank absences by `importance` when it is not None. A high-importance player is a
+  larger availability concern than a low-importance one (Kyrie vs a backup center).
+  Do not treat every name on the list as equal.
 - Report who is out and how much they played. Stop there.
 
 

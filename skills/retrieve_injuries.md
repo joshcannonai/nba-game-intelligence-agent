@@ -27,4 +27,7 @@ explain a prediction that hinges on availability.
 - **Do not invent a numeric injury penalty.** Current form already reflects established
   absences, and Model C's predictor has its own learned injury-load feature. Use the
   list to explain availability and uncertainty, not to apply an unsupported formula.
+- Rank absences by `importance` when it is not None. A high-importance player is a
+  larger availability concern than a low-importance one (Kyrie vs a backup center).
+  Do not treat every name on the list as equal.
 - Report who is out and how much they played. Stop there.

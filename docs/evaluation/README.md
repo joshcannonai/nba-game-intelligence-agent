@@ -1,6 +1,8 @@
 # Verified actual-UI evaluation
 
-The workbook in this folder is the current professor-review artifact:
+Two professor-facing artifacts live in this folder.
+
+## Shared 10-game actual-UI workbook (B and C)
 
 - `NBA-Actual-UI-Agent-Evaluation-Shared-10-Games.xlsx`
 - `verified-actual-ui-results.csv` is the Git-diffable export of the exact 30
@@ -20,6 +22,17 @@ formula-linked Summary, Model A, Model B, Model C, UI Trace, and Methodology
 sheets. Its verified result is A 5/10, B 4/10, and C 6/10. This sample supports
 a shared classroom comparison only. It does not establish full-season B/C
 accuracy.
+
+## Full-season mass-eval (deferred D/E)
+
+CECS 499 is Models A, B, and C. D and E (market-aware follow-ons) live in
+`eval/policies.py` / `eval/mass_eval.py` for later self-improvement work, not
+this submission. Do not run `python -m eval.gemma_de` until that loop exists.
+
+The 2025-26 odds file has spreads and no quoted moneylines. Prices are
+reconstructed from the closing spread with a 3.75% hold; validate with
+`python -m eval.betting --validate`. Polymarket historical closes are not in
+the repository yet.
 
 The agent narratives may cite records and ratings from the prior completed
 season because that is the date-gated historical context available to the

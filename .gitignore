@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+vendor/
 
 # Secrets
 .env
@@ -45,3 +46,9 @@ docs/html/
 eval/results_actual_ui_*.csv
 eval/results_actual_ui_*.jsonl
 eval/results_full_season_skill_policy.csv
+eval/results_mass_eval.csv
+eval/results_gemma_de.jsonl
+eval/.watch_bc.pid
+eval/.bc_notified
+eval/.gemma_de_started
+.scratchpad/
